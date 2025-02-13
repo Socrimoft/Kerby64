@@ -5,8 +5,7 @@ import { CharacterController } from "../components/characterController";
 import { PlayerCamera } from "../components/playerCamera";
 import { Component } from "../components/component";
 
-export class Player
-{
+export class Player {
     public scene: LevelScene;
     public mesh: Mesh;
     public characterController: CharacterController;

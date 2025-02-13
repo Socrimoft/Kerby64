@@ -1,7 +1,6 @@
 import { AdvancedDynamicTexture, Button, Control, Image, TextBlock } from "@babylonjs/gui";
 
-export class Menu
-{
+export class Menu {
     public ui: AdvancedDynamicTexture;
 
     constructor(name: string, idealWidth: number) {

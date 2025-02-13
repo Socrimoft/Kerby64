@@ -2,8 +2,7 @@ import { Color3, CubeTexture, HemisphericLight, MeshBuilder, Scene, StandardMate
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 
-export class Level1 extends Environment
-{
+export class Level1 extends Environment {
     private segmentWidth: number = 10;
     private lastSegmentX: number = -this.segmentWidth;
 
@@ -21,7 +20,7 @@ export class Level1 extends Environment
         skyboxMaterial.specularColor = new Color3(0, 0, 0);
         this.skybox.material = skyboxMaterial;
     }
-    
+
     async loadEnvironment(): Promise<void> {
         for (let i = -2; i < 5; i++) {
             this.createGroundSegment(i * this.segmentWidth);

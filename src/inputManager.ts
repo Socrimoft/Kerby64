@@ -1,7 +1,6 @@
 import { ActionManager, ExecuteCodeAction, Scene } from "@babylonjs/core";
 
-export class InputManager
-{
+export class InputManager {
     public inputMap: any;
 
     public upKey: string;

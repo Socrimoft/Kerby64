@@ -1,8 +1,7 @@
 import { CreateBox, Mesh, Scene, Vector3 } from "@babylonjs/core";
 import { Player } from "../actors/player";
 
-export abstract class Environment
-{
+export abstract class Environment {
     protected scene: Scene;
     protected player: Player;
 

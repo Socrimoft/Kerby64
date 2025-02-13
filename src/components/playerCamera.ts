@@ -1,8 +1,7 @@
 import { ArcRotateCamera, Mesh, Scene, TransformNode, Vector3 } from "@babylonjs/core";
 import { Component } from "./component";
 
-export class PlayerCamera extends ArcRotateCamera implements Component
-{
+export class PlayerCamera extends ArcRotateCamera implements Component {
     private mesh: Mesh;
     private camRoot: TransformNode;
     private camTilt: TransformNode;

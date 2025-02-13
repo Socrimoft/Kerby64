@@ -3,8 +3,7 @@ import { Button, Control, Grid, ScrollViewer, StackPanel, TextBlock } from "@bab
 import { Game } from "../game";
 import { Menu } from "../gui/menu";
 
-export class MainMenuScene extends Scene
-{
+export class MainMenuScene extends Scene {
     constructor(engine: Engine) {
         super(engine);
     }
@@ -17,8 +16,7 @@ export class MainMenuScene extends Scene
         this.createMainMenu();
     }
 
-    private createMainMenu(): void
-    {
+    private createMainMenu(): void {
         const guiMenu = new Menu("menu", 720);
 
         guiMenu.addBackground("backgroundImage", "./assets/images/background.jpg");
@@ -32,8 +30,7 @@ export class MainMenuScene extends Scene
         });
     }
 
-    private createLevelSelectionMenu(): void
-    {
+    private createLevelSelectionMenu(): void {
         const levelSelectMenu = new Menu("levelSelectMenu", 720);
         levelSelectMenu.addTextBlock("title", "Choose a level to play", 35, "white", "-40%", Control.VERTICAL_ALIGNMENT_CENTER, Control.HORIZONTAL_ALIGNMENT_CENTER)
 
@@ -48,8 +45,7 @@ export class MainMenuScene extends Scene
         panel.isVertical = true;
         levelsScrollViewer.addControl(panel);
 
-        for (var i = 0; i < levels.length; i++)
-        {
+        for (var i = 0; i < levels.length; i++) {
             const row = new Grid();
             row.height = "35px";
             row.width = "500px";
@@ -94,8 +90,7 @@ export class MainMenuScene extends Scene
         });
     }
 
-    private switchToCutScene(levelToLoad: number): void
-    {
+    private switchToCutScene(levelToLoad: number): void {
         this.detachControl();
         Game.Instance.switchToCutScene(levelToLoad);
         this.dispose();

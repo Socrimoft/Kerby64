@@ -3,8 +3,7 @@ import { Control } from "@babylonjs/gui";
 import { Game } from "../game";
 import { Menu } from "../gui/menu";
 
-export class CutSceneScene extends Scene
-{
+export class CutSceneScene extends Scene {
     constructor(engine: Engine) {
         super(engine);
     }
