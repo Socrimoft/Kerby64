@@ -16,29 +16,34 @@ enum State {
 export class Game {
     private static instance: Game;
     public canvas: HTMLCanvasElement;
-    public engine!: Engine
-    private mainMenuScene!: MainMenuScene;
-    private cutScene!: CutSceneScene;
-    private levelScene!: LevelScene;
+    public engine: Engine
+    private mainMenuScene: MainMenuScene;
+    private cutScene: CutSceneScene;
+    private levelScene: LevelScene;
 
     private state: State = State.MAINMENU;
     private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true }
 
     constructor() {
         this.canvas = this.createCanvas();
-        // ---------- Only Dev Mode ----------
-        window.addEventListener("keydown", (ev) => {
-            if (ev.ctrlKey && ev.altKey && ev.key === "i") {
-                if (this.CurrentScene!.debugLayer.isVisible()) {
-                    this.CurrentScene!.debugLayer.hide();
+        this.engine = new Engine(this.canvas, false, this.options);
+        this.cutScene = new CutSceneScene(this.engine);
+        this.levelScene = new LevelScene(this.engine);
+        this.mainMenuScene = new MainMenuScene(this.engine);
+        console.log(process.env.NODE_ENV)
+        if (process.env.NODE_ENV === "development") {
+            this.engine.enableOfflineSupport = false;
+            window.addEventListener("keydown", (ev) => {
+                if (ev.ctrlKey && ev.altKey && ev.key === "i") {
+                    if (this.CurrentScene.debugLayer.isVisible()) {
+                        this.CurrentScene.debugLayer.hide();
+                    }
+                    else {
+                        this.CurrentScene.debugLayer.show();
+                    }
                 }
-                else {
-                    this.CurrentScene!.debugLayer.show();
-                }
-            }
-        });
-        // -----------------------------------
-
+            });
+        }
         this.main();
     }
 
@@ -48,12 +53,12 @@ export class Game {
 
     public get CurrentScene() {
         switch (this.state) {
-            case State.MAINMENU:
-               return this.mainMenuScene;
             case State.CUTSCENE:
                 return this.cutScene;
             case State.LEVEL:
                 return this.levelScene;
+            default:
+                return this.mainMenuScene;
         }
     }
 
@@ -79,9 +84,7 @@ export class Game {
         return this.canvas;
     }
 
-    private async main(): Promise<void> 
-    {
-        this.engine = new Engine(this.canvas, false, this.options);
+    private async main(): Promise<void> {
         await this.switchToMainMenu();
 
         this.engine.runRenderLoop(() => {
@@ -93,8 +96,7 @@ export class Game {
         });
     }
 
-    public async switchToMainMenu() 
-    {
+    public async switchToMainMenu() {
         this.engine.displayLoadingUI();
 
         this.mainMenuScene = new MainMenuScene(this.engine);
