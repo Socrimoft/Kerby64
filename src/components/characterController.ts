@@ -12,16 +12,25 @@ export class CharacterController implements Component {
     private jumpSpeed: number = 0.15;
     private gravity: number = -0.06;
 
-    private idleAnim: AnimationGroup | null;
-    private runAnim: AnimationGroup | null;
+    private idleAnim: AnimationGroup;
+    private runAnim: AnimationGroup;
 
     constructor(mesh: Mesh, animations: Array<AnimationGroup>, input: InputManager, scene: LevelScene) {
         this.mesh = mesh;
         this.input = input;
         this.scene = scene;
-        console.log(animations);
-        this.idleAnim = animations.find(ag => ag.name.toLowerCase().includes("idle")) || null;
-        this.runAnim = animations.find(ag => ag.name.toLowerCase().includes("run")) || null;
+        const idleAnim = animations.find(ag => ag.name.toLowerCase().includes("idle"));
+        const runAnim = animations.find(ag => ag.name.toLowerCase().includes("run"));
+
+        if (!idleAnim) {
+            throw new Error("Idle animation not found for " + mesh.name);
+        }
+        if (!runAnim) {
+            throw new Error("Run animation not found for " + mesh.name);
+        }
+
+        this.idleAnim = idleAnim;
+        this.runAnim = runAnim;
         this.playIdleAnim();
     }
 
@@ -30,15 +39,15 @@ export class CharacterController implements Component {
     }
 
     private playIdleAnim(): void {
-        if (this.idleAnim && !this.idleAnim.isPlaying) {
-            this.runAnim && this.runAnim.stop();
+        if (!this.idleAnim.isPlaying) {
+            this.runAnim.stop();
             this.idleAnim.play(true);
         }
     }
 
     private playRunAnim(): void {
-        if (this.runAnim && !this.runAnim.isPlaying) {
-            this.idleAnim && this.idleAnim.stop();
+        if (!this.runAnim.isPlaying) {
+            this.idleAnim.stop();
             this.runAnim.play(true);
         }
     }
