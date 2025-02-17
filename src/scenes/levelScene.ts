@@ -1,10 +1,11 @@
-import { AnimationGroup, Color4, Engine, MeshBuilder, Scene, Vector3 } from "@babylonjs/core";
+import { AnimationGroup, Color4, MeshBuilder, Scene, Vector3 } from "@babylonjs/core";
 import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { InputManager } from "../inputManager";
 import { AssetsLoader } from "../assets/assetsLoader";
 import { Player } from "../actors/player";
 import { Environment } from "../environments/environment";
 import { Rush } from "../environments/minigames/rush";
+import { GameEngine } from "../game";
 
 export class LevelScene extends Scene {
     private player!: Player;
@@ -15,7 +16,7 @@ export class LevelScene extends Scene {
     public score: number = 0;
     public scoreText: TextBlock;
 
-    constructor(engine: Engine) {
+    constructor(engine: GameEngine) {
         console.log("new level scene");
         super(engine);
         this.input = new InputManager(this);

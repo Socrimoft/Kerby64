@@ -1,7 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine } from "@babylonjs/core";
+import { Engine, WebGPUEngine } from "@babylonjs/core";
 import { MainMenuScene } from "./scenes/mainMenuScene";
 import { CutSceneScene } from "./scenes/cutSceneScene";
 import { LevelScene } from "./scenes/levelScene";
@@ -12,33 +12,32 @@ enum State {
     LEVEL,
     GAMEOVER
 }
+export type GameEngine = Engine | WebGPUEngine
+
+const allowWebGPU = false;
 
 export class Game {
     private static instance: Game;
     public canvas: HTMLCanvasElement;
-    public engine: Engine
-    private mainMenuScene: MainMenuScene;
-    private cutScene: CutSceneScene;
-    private levelScene: LevelScene;
+    public engine: GameEngine
+    private mainMenuScene!: MainMenuScene;
+    private cutScene!: CutSceneScene;
+    private levelScene!: LevelScene;
 
     private state: State = State.MAINMENU;
     private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true }
 
     constructor() {
         this.canvas = this.createCanvas();
-        this.engine = new Engine(this.canvas, false, this.options);
-        this.cutScene = new CutSceneScene(this.engine);
-        this.levelScene = new LevelScene(this.engine);
-        this.mainMenuScene = new MainMenuScene(this.engine);
-        console.log(process.env.NODE_ENV)
+        this.engine = this.createEngine();
+        console.log(process.env.NODE_ENV);
         if (process.env.NODE_ENV === "development") {
             this.engine.enableOfflineSupport = false;
             window.addEventListener("keydown", (ev) => {
                 if (ev.ctrlKey && ev.altKey && ev.key === "i") {
                     if (this.CurrentScene.debugLayer.isVisible()) {
                         this.CurrentScene.debugLayer.hide();
-                    }
-                    else {
+                    } else {
                         this.CurrentScene.debugLayer.show();
                     }
                 }
@@ -83,8 +82,17 @@ export class Game {
 
         return this.canvas;
     }
+    private createEngine(): GameEngine {
+        if (allowWebGPU && navigator.gpu) { // should be the synchronous variant of "await WebGPUEngine.IsSupportedAsync"
+            return new WebGPUEngine(this.canvas, this.options);
+        } else {
+            return new Engine(this.canvas, false, this.options);
+        }
+    }
 
     private async main(): Promise<void> {
+        if (this.engine instanceof WebGPUEngine)
+            await this.engine.initAsync();
         await this.switchToMainMenu();
 
         this.engine.runRenderLoop(() => {

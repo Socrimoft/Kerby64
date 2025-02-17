@@ -1,10 +1,10 @@
-import { Color4, Engine, FreeCamera, Scene, Vector3 } from "@babylonjs/core";
+import { Color4, FreeCamera, Scene, Vector3 } from "@babylonjs/core";
 import { Control } from "@babylonjs/gui";
-import { Game } from "../game";
+import { Game, GameEngine } from "../game";
 import { Menu } from "../gui/menu";
 
 export class CutSceneScene extends Scene {
-    constructor(engine: Engine) {
+    constructor(engine: GameEngine) {
         super(engine);
     }
 
