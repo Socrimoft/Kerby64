@@ -10,7 +10,7 @@ module.exports = {
         clean: true,
     },
     resolve: {
-        extensions: [".tsx", ".ts", ".js"],
+        extensions: [".ts", ".js"],
     },
     devServer: {
         host: "0.0.0.0",
