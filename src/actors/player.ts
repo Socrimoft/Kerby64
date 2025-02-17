@@ -1,24 +1,19 @@
 import { AnimationGroup, Mesh } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { LevelScene } from "../scenes/levelScene";
-import { CharacterController } from "../components/characterController";
+import { PlayerController } from "../components/playerController";
 import { PlayerCamera } from "../components/playerCamera";
-import { Component } from "../components/component";
+import { GameEntity } from "./gameEntity";
 
-export class Player {
-    public scene: LevelScene;
-    public mesh: Mesh;
-    public characterController: CharacterController;
+export class Player extends GameEntity {
+    public entityController: PlayerController;
     public cameraController: PlayerCamera;
-    public components: Component[] = [];
 
     constructor(mesh: Mesh, animations: Array<AnimationGroup>, scene: LevelScene, input: InputManager) {
-        this.scene = scene;
-        this.mesh = mesh;
-        this.characterController = new CharacterController(this.mesh, animations, input, scene);
-        this.components.push(this.characterController);
-        this.cameraController = new PlayerCamera(this.mesh, this.scene);
-        this.components.push(this.cameraController);
+        super(mesh, scene)
+        this.entityController = new PlayerController(mesh, animations, input, scene)
+        this.cameraController = new PlayerCamera(mesh, scene);
+        this.components.push(this.entityController, this.cameraController);
     }
 
     public activatePlayerComponents(): void {

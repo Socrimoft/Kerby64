@@ -1,11 +1,11 @@
-import { AnimationGroup, Color4, MeshBuilder, Scene, Vector3 } from "@babylonjs/core";
+import { Color4, MeshBuilder, Scene, Vector3 } from "@babylonjs/core";
 import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { InputManager } from "../inputManager";
-import { AssetsLoader } from "../assets/assetsLoader";
 import { Player } from "../actors/player";
 import { Environment } from "../environments/environment";
 import { Rush } from "../environments/minigames/rush";
 import { GameEngine } from "../game";
+import { GameEntity } from "../actors/gameEntity";
 
 export class LevelScene extends Scene {
     private player!: Player;
@@ -37,11 +37,8 @@ export class LevelScene extends Scene {
     // set up the level without gui, in the background
     public async setUpLevelAsync(levelToLoad: number): Promise<void> {
         // instanciate player
-        var animations: Array<AnimationGroup> = [];
-        const playerRoot = await AssetsLoader.loadCharacterAssets("player", "kerby.glb", animations, this);
-        playerRoot.scaling = new Vector3(1, 1, 1);
-        playerRoot.position = new Vector3(0, -0.5, 0);
-        playerRoot.rotation = new Vector3(3 * Math.PI / 2, 0, 0);
+        const { root: playerRoot, animations } = await GameEntity.loadCharacterAssets("player", "kerby.glb", this);
+        playerRoot.scaling = new Vector3(0.01, 0.01, 0.01)
 
         const playerCollider = MeshBuilder.CreateBox("playerCollider", { width: 1, height: 2, depth: 1 }, this);
         playerCollider.position = new Vector3(0, 20, 0);

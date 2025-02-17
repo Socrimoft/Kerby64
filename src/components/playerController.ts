@@ -1,64 +1,17 @@
 import { AnimationGroup, Mesh, Ray, Vector3 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { InputManager } from "../inputManager";
-import { Component } from "./component";
+import { EntityController } from "./entityController";
 
-export class CharacterController implements Component {
-    public scene: LevelScene;
-    private mesh: Mesh;
+export class PlayerController extends EntityController {
     private input: InputManager;
 
-    private linearSpeed: number = 20;
-    private gravity: number = -12;
-    private jumpSpeed: number = 20;
-    private jumpThreshold: number = 8;
-    private k: number = 3;
-
-
-    private jumpStartTime: number = 0;
-    private isJumping: boolean = false;
-    private remainingJumps: number = 3;
-
-    private idleAnim: AnimationGroup;
-    private walkAnim: AnimationGroup;
-    private runAnim: AnimationGroup;
-    private meshAnimations: Array<AnimationGroup> = [];
-
     constructor(mesh: Mesh, animations: Array<AnimationGroup>, input: InputManager, scene: LevelScene) {
-        this.mesh = mesh;
+        super(mesh, animations, scene)
         this.input = input;
-        this.scene = scene;
-        const idleAnim = animations.find(ag => ag.name.toLowerCase().includes("idle"));
-        const walkAnim = animations.find(ag => ag.name.toLowerCase().includes("walk"));
-        const runAnim = animations.find(ag => ag.name.toLowerCase().includes("run"));
-
-        if (!idleAnim) {
-            throw new Error("Idle animation not found for " + mesh.name);
-        }
-        if (!walkAnim) {
-            throw new Error("Walk animation not found for " + mesh.name);
-        }
-        if (!runAnim) {
-            throw new Error("Run animation not found for " + mesh.name);
-        }
-
-        this.idleAnim = idleAnim;
-        this.walkAnim = walkAnim;
-        this.runAnim = runAnim;
-        this.meshAnimations.push(this.idleAnim);
-        this.meshAnimations.push(this.walkAnim);
-        this.meshAnimations.push(this.runAnim);
-        this.playAnimation(this.idleAnim);
     }
-
-    private playAnimation(anim: AnimationGroup): void {
-        if (!anim.isPlaying) {
-            this.meshAnimations.forEach(ag => ag.stop());
-            anim.play(true);
-        }
-    }
-
     public beforeRenderUpdate(): void {
+        console.log("helooelloo")
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
 
         if (this.input.inputMap[this.input.jumpKey] && !this.isJumping && this.remainingJumps) {
