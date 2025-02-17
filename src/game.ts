@@ -14,6 +14,8 @@ enum State {
 }
 export type GameEngine = Engine | WebGPUEngine
 
+const allowWebGPU = false;
+
 export class Game {
     private static instance: Game;
     public canvas: HTMLCanvasElement;
@@ -81,7 +83,7 @@ export class Game {
         return this.canvas;
     }
     private createEngine(): GameEngine {
-        if (navigator.gpu) { // should be the synchronous variant of "await WebGPUEngine.IsSupportedAsync"
+        if (allowWebGPU && navigator.gpu) { // should be the synchronous variant of "await WebGPUEngine.IsSupportedAsync"
             return new WebGPUEngine(this.canvas, this.options);
         } else {
             return new Engine(this.canvas, false, this.options);
