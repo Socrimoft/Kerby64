@@ -4,7 +4,7 @@ import { InputManager } from "../inputManager";
 import { AssetsLoader } from "../assets/assetsLoader";
 import { Player } from "../actors/player";
 import { Environment } from "../environments/environment";
-import { Level1 } from "../environments/levels/level1";
+import { Rush } from "../environments/minigames/rush";
 
 export class LevelScene extends Scene {
     private player!: Player;
@@ -54,10 +54,10 @@ export class LevelScene extends Scene {
         // environment
         switch (levelToLoad) {
             case 1:
-                this.environment = new Level1(this, this.player);
+                this.environment = new Rush(this, this.player);
                 break;
             default:
-                this.environment = new Level1(this, this.player);
+                this.environment = new Rush(this, this.player);
                 break;
         }
         await this.environment.load();

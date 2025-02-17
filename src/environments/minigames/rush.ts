@@ -2,8 +2,9 @@ import { Color3, CubeTexture, HemisphericLight, MeshBuilder, Scene, StandardMate
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 
-export class Level1 extends Environment {
+export class Rush extends Environment {
     private segmentWidth: number = 10;
+    private segmentHeight: number = 20;
     private lastSegmentX: number = -this.segmentWidth;
 
     constructor(scene: Scene, player: Player) {
@@ -46,7 +47,7 @@ export class Level1 extends Environment {
         const ground = MeshBuilder.CreateBox("groundSegment", {
             width: this.segmentWidth,
             depth: 10,
-            height: 1
+            height: this.segmentHeight
         }, this.scene);
 
         ground.position = new Vector3(x + this.segmentWidth / 2, heightOffset - 0.5, 0);
