@@ -16,45 +16,21 @@ export abstract class EntityController implements Component {
     protected jumpStartTime: number = 0;
     protected isJumping: boolean = false;
     protected remainingJumps: number = 3;
+    protected meshAnimations: AnimationGroup[] = [];
 
-    protected idleAnim: AnimationGroup;
-    protected walkAnim: AnimationGroup;
-    protected runAnim: AnimationGroup;
-    protected meshAnimations: Array<AnimationGroup> = [];
-
-    constructor(mesh: Mesh, animations: Array<AnimationGroup>, scene: LevelScene) {
+    constructor(mesh: Mesh, scene: LevelScene) {
         this.mesh = mesh;
         this.scene = scene;
-        const idleAnim = animations.find(ag => ag.name.toLowerCase().includes("idle"));
-        const walkAnim = animations.find(ag => ag.name.toLowerCase().includes("walk"));
-        const runAnim = animations.find(ag => ag.name.toLowerCase().includes("run"));
-
-        if (!idleAnim) {
-            throw new Error("Idle animation not found for " + mesh.name);
-        }
-        if (!walkAnim) {
-            throw new Error("Walk animation not found for " + mesh.name);
-        }
-        if (!runAnim) {
-            throw new Error("Run animation not found for " + mesh.name);
-        }
-
-        this.idleAnim = idleAnim;
-        this.walkAnim = walkAnim;
-        this.runAnim = runAnim;
-        this.meshAnimations.push(this.idleAnim);
-        this.meshAnimations.push(this.walkAnim);
-        this.meshAnimations.push(this.runAnim);
-        this.playAnimation(this.idleAnim);
     }
-
-    protected playAnimation(anim: AnimationGroup): void {
-        if (!anim.isPlaying) {
+    protected playAnimation(anim?: AnimationGroup): void {
+        if (anim && !anim.isPlaying) {
             this.meshAnimations.forEach(ag => ag.stop());
             anim.play(true);
         }
     }
-
+    protected playAnimationByName(name: string): void {
+        this.playAnimation(this.meshAnimations.find((anim) => anim.name.toLowerCase().includes(name)))
+    }
     protected updateShaderLightDirection(direction: Vector3) {
         this.mesh.getChildMeshes().forEach(mesh => {
             if (mesh.material && mesh.material instanceof ShaderMaterial) {

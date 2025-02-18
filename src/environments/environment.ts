@@ -1,8 +1,10 @@
-import { CreateBox, DirectionalLight, Mesh, Scene, Vector3 } from "@babylonjs/core";
+import { CreateBox, DirectionalLight, Mesh, Vector3 } from "@babylonjs/core";
 import { Player } from "../actors/player";
+import { GameEntity } from "../actors/gameEntity";
+import { LevelScene } from "../scenes/levelScene";
 
 export abstract class Environment {
-    protected scene: Scene;
+    protected scene: LevelScene;
     protected player: Player;
 
     protected light?: DirectionalLight;
@@ -12,9 +14,9 @@ export abstract class Environment {
 
     private groundSegments: Array<Mesh> = [];
     private staticObjects: Array<Mesh> = [];
-    private entitiesObjects: Array<Mesh> = [];
+    private entitiesObjects: Array<GameEntity> = [];
 
-    constructor(scene: Scene, player: Player) {
+    constructor(scene: LevelScene, player: Player) {
         this.scene = scene;
         this.player = player
         this.skybox = CreateBox("skybox", { size: this.skyboxSize }, this.scene);
@@ -38,9 +40,11 @@ export abstract class Environment {
         this.staticObjects.push(mesh);
     }
 
-    protected pushEntityObject(mesh: Mesh, position: Vector3) {
-        mesh.position = position;
-        this.entitiesObjects.push(mesh);
+    protected pushEntityObject(entity: GameEntity, position: Vector3) {
+        entity.mesh.position = position;
+        entity.activateEntityComponents();
+        this.entitiesObjects.push(entity);
+
     }
 
     public async load(): Promise<void> {

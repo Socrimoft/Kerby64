@@ -2,12 +2,35 @@ import { AnimationGroup, Mesh, Ray, Vector3 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
+import { Anim } from "./anim";
 
-export class PlayerController extends EntityController {
+export class PlayerController extends EntityController implements Anim {
     private input: InputManager;
+    public idleAnim: AnimationGroup;
+    public walkAnim: AnimationGroup;
+    public runAnim: AnimationGroup;
 
-    constructor(mesh: Mesh, animations: Array<AnimationGroup>, input: InputManager, scene: LevelScene) {
-        super(mesh, animations, scene)
+    constructor(mesh: Mesh, animations: AnimationGroup[], input: InputManager, scene: LevelScene) {
+        super(mesh, scene)
+        const idleAnim = animations.find(ag => ag.name.toLowerCase().includes("idle"));
+        const walkAnim = animations.find(ag => ag.name.toLowerCase().includes("walk"));
+        const runAnim = animations.find(ag => ag.name.toLowerCase().includes("run"));
+
+        if (!idleAnim) {
+            throw new Error("Idle animation not found for " + mesh.name);
+        }
+        if (!walkAnim) {
+            throw new Error("Walk animation not found for " + mesh.name);
+        }
+        if (!runAnim) {
+            throw new Error("Run animation not found for " + mesh.name);
+        }
+
+        this.idleAnim = idleAnim;
+        this.walkAnim = walkAnim;
+        this.runAnim = runAnim;
+        this.meshAnimations.push(this.idleAnim, this.walkAnim, this.runAnim)
+        this.playAnimation(this.idleAnim);
         this.input = input;
     }
 

@@ -2,21 +2,13 @@ import { AnimationGroup, LoadAssetContainerAsync, Mesh, Vector3 } from "@babylon
 import { LevelScene } from "../scenes/levelScene";
 import { Component } from "../components/component";
 import { ToonMaterial } from "../materials/toonMaterial";
+import { GameEntity } from "./gameEntity";
+import { EntityController } from "../components/entityController";
+import { Anim } from "../components/anim";
 
-export class GameEntity {
-    public scene: LevelScene;
-    public mesh: Mesh;
-    public name: string;
-    public animations: AnimationGroup[] = [];
-    public components: Array<Component> = [];
-    public baseSourceURI = "./assets/models/";
-
-    constructor(name: string, scene: LevelScene, ...components: Component[]) {
-        this.scene = scene;
-        this.name = name
-        this.mesh = new Mesh(name, scene);
-        this.mesh.position = Vector3.Zero();
-        this.components.concat(components);
+export class Koomba extends GameEntity {
+    constructor(scene: LevelScene, ...components: Component[]) {
+        super("koomba", scene, ...components)
     }
 
     public async loadEntityAssets(lightDirection: Vector3): Promise<void> {
@@ -33,9 +25,12 @@ export class GameEntity {
         models.animationGroups.forEach((ag) => {
             this.animations.push(ag);
         });
-        console.log(this.animations)
         this.mesh.dispose();
         this.mesh = root;
+        this.mesh.scaling = new Vector3(0.03, 0.03, 0.03);
+        this.mesh.position = new Vector3(0, 12, 0);
+        this.mesh.rotation = new Vector3(0, -Math.PI / 2, 0)
+        this.addComponent(new koombaController(this.mesh, this.animations, this.scene))
     }
 
     public addComponent(component: Component) {
@@ -49,4 +44,27 @@ export class GameEntity {
             });
         });
     }
+}
+
+class koombaController extends EntityController implements Anim {
+    idleAnim = undefined;
+    walkAnim: AnimationGroup;
+    runAnim = undefined;
+
+    constructor(mesh: Mesh, animations: AnimationGroup[], scene: LevelScene) {
+        super(mesh, scene)
+        const walkAnim = animations.find(ag => ag.name.toLowerCase().includes("take 001"));
+        console.log(animations)
+        if (!walkAnim) {
+            throw new Error("Walk animation not found for " + mesh.name);
+        }
+        this.walkAnim = walkAnim;
+        this.meshAnimations.push(this.walkAnim)
+        this.playAnimation(this.idleAnim);
+    }
+
+    beforeRenderUpdate(): void {
+        throw new Error("Method not implemented.");
+    }
+
 }

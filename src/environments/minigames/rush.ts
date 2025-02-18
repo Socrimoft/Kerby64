@@ -1,14 +1,18 @@
-import { Color3, CubeTexture, DirectionalLight, MeshBuilder, Scene, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { ToonMaterial } from "../../materials/toonMaterial";
+import { GameEntity } from "../../actors/gameEntity";
+import { LevelScene } from "../../scenes/levelScene";
+import { Koomba } from "../../actors/koomba";
 
 export class Rush extends Environment {
     private segmentWidth: number = 10;
     private segmentHeight: number = 20;
     private lastSegmentX: number = -this.segmentWidth;
+    private koombas: GameEntity[] = []
 
-    constructor(scene: Scene, player: Player) {
+    constructor(scene: LevelScene, player: Player) {
         super(scene, player);
     }
 
@@ -27,6 +31,8 @@ export class Rush extends Environment {
         for (let i = -2; i < 5; i++) {
             this.createGroundSegment(i * this.segmentWidth);
         }
+        //this.koombas[0] = new Koomba(this.scene)
+        //await this.koombas[0].loadEntityAssets(this.getLightDirection());
     }
 
     setupLight(): void {
@@ -67,6 +73,15 @@ export class Rush extends Environment {
 
         this.pushGroundSegment(ground);
         this.lastSegmentX = x;
+        /*if (this.koombamesh && this.koombanimation) {
+            const koombaCloneX = this.koombamesh.clone("koomba" + x)
+            const koombaController = new EntityController(koombaCloneX, this.koombanimation, this.scene)
+            koombaController.beforeRenderUpdate = () => {
+                koombaCloneX.moveWithCollisions(koombaCloneX.forward.scale(10));
+            }
+            const koomba = new GameEntity(koombaCloneX, this.scene, koombaController)
+            koomba.activateEntityComponents()
+        }*/
     }
 
     beforeRenderUpdate(): void {
