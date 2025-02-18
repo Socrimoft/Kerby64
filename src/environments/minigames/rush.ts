@@ -2,7 +2,6 @@ import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, T
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { ToonMaterial } from "../../materials/toonMaterial";
-import { GameEntity } from "../../actors/gameEntity";
 import { LevelScene } from "../../scenes/levelScene";
 import { Koomba } from "../../actors/koomba";
 
@@ -10,7 +9,8 @@ export class Rush extends Environment {
     private segmentWidth: number = 10;
     private segmentHeight: number = 20;
     private lastSegmentX: number = -this.segmentWidth;
-    private koombas: GameEntity[] = []
+    private koombas: Koomba[] = []
+    private groundMaterial?: ToonMaterial;
 
     constructor(scene: LevelScene, player: Player) {
         super(scene, player);
@@ -31,8 +31,9 @@ export class Rush extends Environment {
         for (let i = -2; i < 5; i++) {
             this.createGroundSegment(i * this.segmentWidth);
         }
-        //this.koombas[0] = new Koomba(this.scene)
-        //await this.koombas[0].loadEntityAssets(this.getLightDirection());
+        this.koombas[0] = new Koomba(this.scene)
+        await this.koombas[0].loadEntityAssets(this.getLightDirection());
+        this.koombas[0].activateEntityComponents()
     }
 
     setupLight(): void {
@@ -69,19 +70,21 @@ export class Rush extends Environment {
         ground.position = new Vector3(x + this.segmentWidth / 2, heightOffset - 0.5, 0);
         ground.checkCollisions = true;
 
-        ground.material = new ToonMaterial(new Color3(0.8, 0.5, 0.25), this.getLightDirection(), false, this.scene);
+        ground.material = this.groundMaterial || (this.groundMaterial = new ToonMaterial(new Color3(0.8, 0.5, 0.25), this.getLightDirection(), false, this.scene));
 
         this.pushGroundSegment(ground);
         this.lastSegmentX = x;
-        /*if (this.koombamesh && this.koombanimation) {
-            const koombaCloneX = this.koombamesh.clone("koomba" + x)
-            const koombaController = new EntityController(koombaCloneX, this.koombanimation, this.scene)
-            koombaController.beforeRenderUpdate = () => {
-                koombaCloneX.moveWithCollisions(koombaCloneX.forward.scale(10));
-            }
-            const koomba = new GameEntity(koombaCloneX, this.scene, koombaController)
-            koomba.activateEntityComponents()
-        }*/
+        if (this.koombas[0] && random < 1) {
+            const koombaCloneX = new Koomba(this.scene);
+            koombaCloneX.loadEntityAssets(this.getLightDirection(), {
+                mesh: this.koombas[0].mesh.clone("koomba" + x),
+                animations: this.koombas[0].animations,
+                newposX: x
+            }).then(() => {
+                this.koombas.push(koombaCloneX);
+                koombaCloneX.activateEntityComponents();
+            })
+        }
     }
 
     beforeRenderUpdate(): void {
@@ -96,5 +99,10 @@ export class Rush extends Environment {
             }
             return true;
         }));
+        this.koombas.forEach((koomba, index) => {
+            if (index && koomba) {
+
+            }
+        })
     }
 }

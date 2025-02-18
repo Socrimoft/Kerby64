@@ -24,8 +24,9 @@ export class GameEntity {
         const root = (models.rootNodes.length == 1 && models.rootNodes[0] instanceof Mesh) ? models.rootNodes[0] : models.createRootMesh();
         root.name = this.name;
         root.id = this.name;
+        const texture = new ToonMaterial(models.textures[0], lightDirection, models.animationGroups.length > 0, this.scene);
         models.meshes.forEach((mesh) => {
-            mesh.material = new ToonMaterial(models.textures[0], lightDirection, models.animationGroups.length > 0, this.scene);
+            mesh.material = texture;
         });
 
         models.addAllToScene();
@@ -33,7 +34,6 @@ export class GameEntity {
         models.animationGroups.forEach((ag) => {
             this.animations.push(ag);
         });
-        console.log(this.animations)
         this.mesh.dispose();
         this.mesh = root;
     }
@@ -43,10 +43,13 @@ export class GameEntity {
     }
 
     public activateEntityComponents(): void {
-        this.scene.registerBeforeRender(() => {
-            this.components.forEach((comp) => {
+        this.components.forEach((comp) => {
+            this.scene.registerBeforeRender(() => {
                 comp.beforeRenderUpdate();
             });
         });
+    }
+    public dispose() {
+        this.mesh.dispose(true, true);
     }
 }

@@ -18,10 +18,6 @@ export class Player extends GameEntity {
         this.cameraController = new PlayerCamera(this.mesh, this.scene);
         this.components.push(this.entityController, this.cameraController);
 
-        this.scene.registerBeforeRender(() => {
-            this.components.forEach((comp) => {
-                comp.beforeRenderUpdate();
-            });
-        });
+        super.activateEntityComponents()
     }
 }
