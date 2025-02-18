@@ -12,6 +12,7 @@
   "devDependencies": {
     "@babylonjs/core": "^7.49.0",
     "@babylonjs/inspector": "^7.49.0",
+    "glsl-shader-loader": "^0.1.6",
     "html-webpack-plugin": "^5.6.3",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",

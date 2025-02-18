@@ -10,7 +10,7 @@ module.exports = {
         clean: true,
     },
     resolve: {
-        extensions: [".ts", ".js"],
+        extensions: [".tsx", ".ts", ".js", ".glsl", ".vert", ".frag"],
     },
     devServer: {
         host: "0.0.0.0",
@@ -28,6 +28,15 @@ module.exports = {
                 use: "ts-loader",
                 exclude: /node_modules/,
             },
+            {
+                test: /\.(glsl|vert|frag)$/,
+                use: [
+                    {
+                        loader: 'glsl-shader-loader',
+                        options: {}
+                    }
+                ]
+            }
         ],
     },
     plugins: [
