@@ -1,17 +1,38 @@
-import { AnimationGroup, LoadAssetContainerAsync, Mesh } from "@babylonjs/core";
+import { AnimationGroup, LoadAssetContainerAsync, Mesh, Vector3 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Component } from "../components/component";
+import { ToonMaterial } from "../materials/toonMaterial";
 
 export class GameEntity {
     public scene: LevelScene;
     public mesh: Mesh;
-    public components: Component[] = [];
-    public static baseSourceURI = "./assets/models/";
+    public animations: Array<AnimationGroup> = [];
+    public components: Array<Component> = [];
+    public baseSourceURI = "./assets/models/";
 
-    constructor(mesh: Mesh, scene: LevelScene, ...components: Component[]) {
+    constructor(scene: LevelScene, ...components: Component[]) {
         this.scene = scene;
-        this.mesh = mesh;
+        this.mesh = new Mesh("entity", scene);
+        this.mesh.position = Vector3.Zero();
         this.components.concat(components);
+    }
+
+    public async loadEntityAssets(name: string, lightDirection: Vector3): Promise<void> {
+        const models = await LoadAssetContainerAsync(this.baseSourceURI + name + ".glb", this.scene);
+        const root = (models.rootNodes.length == 1 && models.rootNodes[0] instanceof Mesh) ? models.rootNodes[0] : models.createRootMesh();
+        root.name = name;
+
+        models.meshes.forEach((mesh) => {
+            mesh.material = new ToonMaterial(models.textures[0], lightDirection, models.animationGroups.length > 0, this.scene);
+        });
+
+        models.addAllToScene();
+
+        models.animationGroups.forEach((ag) => {
+            this.animations.push(ag);
+        });
+
+        this.mesh = root;
     }
 
     public addComponent(component: Component) {
@@ -24,19 +45,5 @@ export class GameEntity {
                 comp.beforeRenderUpdate();
             });
         });
-    }
-
-    public static async loadEntityAssets(name: string, filename: string, scene: LevelScene): Promise<{ root: Mesh, animations: Array<AnimationGroup> }> {
-        const models = await LoadAssetContainerAsync(this.baseSourceURI + filename, scene);
-        let root = models.createRootMesh();
-        root.name = name;
-        models.addAllToScene();
-
-        const animations: AnimationGroup[] = [];
-        models.animationGroups.forEach((ag) => {
-            animations.push(ag);
-        });
-
-        return { root, animations };
     }
 }

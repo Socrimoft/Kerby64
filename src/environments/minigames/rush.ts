@@ -1,6 +1,7 @@
-import { Color3, CubeTexture, HemisphericLight, MeshBuilder, Scene, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, MeshBuilder, Scene, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
+import { ToonMaterial } from "../../materials/toonMaterial";
 
 export class Rush extends Environment {
     private segmentWidth: number = 10;
@@ -29,7 +30,16 @@ export class Rush extends Environment {
     }
 
     setupLight(): void {
-        const light = new HemisphericLight("HemiLight", new Vector3(0, 1, 0), this.scene);
+        this.light = new DirectionalLight("dirLight", new Vector3(1, 1, 0), this.scene);
+    }
+
+    getLightDirection(): Vector3 {
+        return this.light ? this.light.direction.normalize() : Vector3.Zero();
+    }
+
+    setLightDirection(direction: Vector3): void {
+        if (this.light)
+            this.light.direction = direction;
     }
 
     private createGroundSegment(x: number): void {
@@ -53,9 +63,7 @@ export class Rush extends Environment {
         ground.position = new Vector3(x + this.segmentWidth / 2, heightOffset - 0.5, 0);
         ground.checkCollisions = true;
 
-        const mat = new StandardMaterial("groundMat", this.scene);
-        mat.diffuseColor = new Color3(0.8, 0.5, 0.25);
-        ground.material = mat;
+        ground.material = new ToonMaterial(new Color3(0.8, 0.5, 0.25), this.getLightDirection(), false, this.scene);
 
         this.pushGroundSegment(ground);
         this.lastSegmentX = x;

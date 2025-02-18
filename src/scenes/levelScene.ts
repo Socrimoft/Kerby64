@@ -1,25 +1,24 @@
-import { Color4, MeshBuilder, Scene, Vector3 } from "@babylonjs/core";
+import { Color4, Scene, Vector3 } from "@babylonjs/core";
 import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { InputManager } from "../inputManager";
 import { Player } from "../actors/player";
 import { Environment } from "../environments/environment";
 import { Rush } from "../environments/minigames/rush";
 import { GameEngine } from "../game";
-import { GameEntity } from "../actors/gameEntity";
 
 export class LevelScene extends Scene {
-    private player!: Player;
+    private player: Player;
     public input: InputManager;
 
-    public environment!: Environment;
+    public environment?: Environment;
 
     public score: number = 0;
     public scoreText: TextBlock;
 
     constructor(engine: GameEngine) {
-        console.log("new level scene");
         super(engine);
         this.input = new InputManager(this);
+        this.player = new Player(this);
         this.clearColor = new Color4(0.8, 0.9, 1, 1);
         this.scoreText = new TextBlock("score", "Score : 0");
     }
@@ -36,13 +35,6 @@ export class LevelScene extends Scene {
 
     // set up the level without gui, in the background
     public async setUpLevelAsync(levelToLoad: number): Promise<void> {
-        // instanciate player
-        const { root: playerRoot, animations } = await GameEntity.loadEntityAssets("player", "kerby.glb", this);
-        playerRoot.scaling = new Vector3(0.01, 0.01, 0.01);
-        playerRoot.position = new Vector3(0, 20, 0);
-        playerRoot.rotation = new Vector3(0, Math.PI / 2, 0);
-        this.player = new Player(playerRoot, animations, this, this.input);
-
         // environment
         switch (levelToLoad) {
             case 1:
@@ -54,10 +46,17 @@ export class LevelScene extends Scene {
         }
         await this.environment.load();
 
-        this.player.activatePlayerComponents();
+        // instanciate player
+        await this.player.loadEntityAssets("kerby", this.environment.getLightDirection());
+        this.player.mesh.scaling = new Vector3(0.01, 0.01, 0.01);
+        this.player.mesh.position = new Vector3(0, 20, 0);
+        this.player.mesh.rotation = new Vector3(0, Math.PI / 2, 0);
+
+        this.player.activatePlayerComponents(this, this.input);
 
         this.registerBeforeRender(() => {
-            this.environment.beforeRenderUpdate();
+            if (this.environment)
+                this.environment.beforeRenderUpdate();
         });
     }
 }

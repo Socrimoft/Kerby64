@@ -1,9 +1,11 @@
-import { CreateBox, Mesh, Scene, Vector3 } from "@babylonjs/core";
+import { CreateBox, DirectionalLight, Mesh, Scene, Vector3 } from "@babylonjs/core";
 import { Player } from "../actors/player";
 
 export abstract class Environment {
     protected scene: Scene;
     protected player: Player;
+
+    protected light?: DirectionalLight;
 
     protected skybox: Mesh;
     protected skyboxSize = 10000;
@@ -43,12 +45,14 @@ export abstract class Environment {
 
     public async load(): Promise<void> {
         this.setupSkybox();
-        await this.loadEnvironment();
         this.setupLight();
+        await this.loadEnvironment();
     }
 
     abstract setupSkybox(): void;
     abstract loadEnvironment(): Promise<void>;
     abstract setupLight(): void;
+    abstract getLightDirection(): Vector3;
+    abstract setLightDirection(direction: Vector3): void;
     abstract beforeRenderUpdate(): void;
 }

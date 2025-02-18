@@ -1,8 +1,8 @@
-import { AnimationGroup, Mesh } from "@babylonjs/core";
+import { AnimationGroup, Mesh, ShaderMaterial, Vector3 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Component } from "./component";
 
-export class EntityController implements Component {
+export abstract class EntityController implements Component {
     public scene: LevelScene;
     protected mesh: Mesh;
 
@@ -54,5 +54,14 @@ export class EntityController implements Component {
             anim.play(true);
         }
     }
-    public beforeRenderUpdate(): void { };
+
+    protected updateShaderLightDirection(direction: Vector3) {
+        this.mesh.getChildMeshes().forEach(mesh => {
+            if (mesh.material && mesh.material instanceof ShaderMaterial) {
+                mesh.material.setVector3("lightDir", direction);
+            }
+        });
+    }
+
+    abstract beforeRenderUpdate(): void;
 }

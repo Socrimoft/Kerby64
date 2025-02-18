@@ -1,10 +1,12 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine, WebGPUEngine } from "@babylonjs/core";
+import { Animation, Effect, Engine, WebGPUEngine } from "@babylonjs/core";
 import { MainMenuScene } from "./scenes/mainMenuScene";
 import { CutSceneScene } from "./scenes/cutSceneScene";
 import { LevelScene } from "./scenes/levelScene";
+import toonVertexShader from "./shaders/toon/vertex.glsl";
+import toonFragmentShader from "./shaders/toon/fragment.glsl";
 
 enum State {
     MAINMENU,
@@ -43,6 +45,12 @@ export class Game {
                 }
             });
         }
+
+        // load shaders
+        Effect.ShadersStore["toonVertexShader"] = toonVertexShader;
+        Effect.ShadersStore["toonFragmentShader"] = toonFragmentShader;
+        Animation.AllowMatricesInterpolation = true;
+
         this.main();
     }
 

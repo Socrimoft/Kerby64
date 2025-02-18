@@ -10,8 +10,8 @@ export class PlayerController extends EntityController {
         super(mesh, animations, scene)
         this.input = input;
     }
+
     public beforeRenderUpdate(): void {
-        console.log("helooelloo")
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
 
         if (this.input.inputMap[this.input.jumpKey] && !this.isJumping && this.remainingJumps) {
@@ -34,11 +34,13 @@ export class PlayerController extends EntityController {
 
         if (this.input.inputMap[this.input.rightKey]) {
             this.mesh.rotation = new Vector3(0, Math.PI / 2, 0);
+            this.updateShaderLightDirection(new Vector3(1, 1, 0));
             this.playAnimation(this.runAnim);
             this.mesh.moveWithCollisions(this.mesh.forward.scale(this.linearSpeed * deltaTime));
         }
         else if (this.input.inputMap[this.input.leftKey]) {
             this.mesh.rotation = new Vector3(0, -Math.PI / 2, 0);
+            this.updateShaderLightDirection(new Vector3(-1, 1, 0));
             this.playAnimation(this.runAnim);
             this.mesh.moveWithCollisions(this.mesh.forward.scale(this.linearSpeed * deltaTime));
         }
