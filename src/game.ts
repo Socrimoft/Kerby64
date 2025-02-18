@@ -1,10 +1,12 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine } from "@babylonjs/core";
+import { Animation, Effect, Engine, WebGPUEngine } from "@babylonjs/core";
 import { MainMenuScene } from "./scenes/mainMenuScene";
 import { CutSceneScene } from "./scenes/cutSceneScene";
 import { LevelScene } from "./scenes/levelScene";
+import toonVertexShader from "./shaders/toon/vertex.glsl";
+import toonFragmentShader from "./shaders/toon/fragment.glsl";
 
 enum State {
     MAINMENU,
@@ -12,11 +14,14 @@ enum State {
     LEVEL,
     GAMEOVER
 }
+export type GameEngine = Engine | WebGPUEngine
+
+const allowWebGPU = false;
 
 export class Game {
     private static instance: Game;
     public canvas: HTMLCanvasElement;
-    public engine!: Engine
+    public engine: GameEngine
     private mainMenuScene!: MainMenuScene;
     private cutScene!: CutSceneScene;
     private levelScene!: LevelScene;
@@ -26,18 +31,25 @@ export class Game {
 
     constructor() {
         this.canvas = this.createCanvas();
-        // ---------- Only Dev Mode ----------
-        window.addEventListener("keydown", (ev) => {
-            if (ev.ctrlKey && ev.altKey && ev.key === "i") {
-                if (this.CurrentScene!.debugLayer.isVisible()) {
-                    this.CurrentScene!.debugLayer.hide();
+        this.engine = this.createEngine();
+        console.log(process.env.NODE_ENV);
+        if (process.env.NODE_ENV === "development") {
+            this.engine.enableOfflineSupport = false;
+            window.addEventListener("keydown", (ev) => {
+                if (ev.ctrlKey && ev.altKey && ev.key === "i") {
+                    if (this.CurrentScene.debugLayer.isVisible()) {
+                        this.CurrentScene.debugLayer.hide();
+                    } else {
+                        this.CurrentScene.debugLayer.show();
+                    }
                 }
-                else {
-                    this.CurrentScene!.debugLayer.show();
-                }
-            }
-        });
-        // -----------------------------------
+            });
+        }
+
+        // load shaders
+        Effect.ShadersStore["toonVertexShader"] = toonVertexShader;
+        Effect.ShadersStore["toonFragmentShader"] = toonFragmentShader;
+        Animation.AllowMatricesInterpolation = true;
 
         this.main();
     }
@@ -48,12 +60,12 @@ export class Game {
 
     public get CurrentScene() {
         switch (this.state) {
-            case State.MAINMENU:
-               return this.mainMenuScene;
             case State.CUTSCENE:
                 return this.cutScene;
             case State.LEVEL:
                 return this.levelScene;
+            default:
+                return this.mainMenuScene;
         }
     }
 
@@ -78,10 +90,17 @@ export class Game {
 
         return this.canvas;
     }
+    private createEngine(): GameEngine {
+        if (allowWebGPU && navigator.gpu) { // should be the synchronous variant of "await WebGPUEngine.IsSupportedAsync"
+            return new WebGPUEngine(this.canvas, this.options);
+        } else {
+            return new Engine(this.canvas, false, this.options);
+        }
+    }
 
-    private async main(): Promise<void> 
-    {
-        this.engine = new Engine(this.canvas, false, this.options);
+    private async main(): Promise<void> {
+        if (this.engine instanceof WebGPUEngine)
+            await this.engine.initAsync();
         await this.switchToMainMenu();
 
         this.engine.runRenderLoop(() => {
@@ -93,8 +112,7 @@ export class Game {
         });
     }
 
-    public async switchToMainMenu() 
-    {
+    public async switchToMainMenu() {
         this.engine.displayLoadingUI();
 
         this.mainMenuScene = new MainMenuScene(this.engine);

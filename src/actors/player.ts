@@ -1,28 +1,23 @@
-import { AnimationGroup, Mesh } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { LevelScene } from "../scenes/levelScene";
-import { CharacterController } from "../components/characterController";
+import { PlayerController } from "../components/playerController";
 import { PlayerCamera } from "../components/playerCamera";
+import { GameEntity } from "./gameEntity";
 import { Component } from "../components/component";
 
-export class Player
-{
-    public scene: LevelScene;
-    public mesh: Mesh;
-    public characterController: CharacterController;
-    public cameraController: PlayerCamera;
-    public components: Component[] = [];
+export class Player extends GameEntity {
+    private entityController?: PlayerController;
+    private cameraController?: PlayerCamera;
 
-    constructor(mesh: Mesh, animations: Array<AnimationGroup>, scene: LevelScene, input: InputManager) {
-        this.scene = scene;
-        this.mesh = mesh;
-        this.characterController = new CharacterController(this.mesh, animations, input, scene);
-        this.components.push(this.characterController);
-        this.cameraController = new PlayerCamera(this.mesh, this.scene);
-        this.components.push(this.cameraController);
+    constructor(scene: LevelScene, ...components: Component[]) {
+        super("kerby", scene, ...components)
     }
 
-    public activatePlayerComponents(): void {
+    public activatePlayerComponents(input: InputManager): void {
+        this.entityController = new PlayerController(this.mesh, this.animations, input, this.scene);
+        this.cameraController = new PlayerCamera(this.mesh, this.scene);
+        this.components.push(this.entityController, this.cameraController);
+
         this.scene.registerBeforeRender(() => {
             this.components.forEach((comp) => {
                 comp.beforeRenderUpdate();

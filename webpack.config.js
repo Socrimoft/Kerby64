@@ -2,15 +2,15 @@ const path = require("path");
 const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const appDirectory = fs.realpathSync(process.cwd());
-
 module.exports = {
     entry: path.resolve(appDirectory, "src/game.ts"),
     output: {
-        filename: "js/game.js",
+        filename: "js/[name].js",
+        chunkFilename: "js/[name].chunk.js",
         clean: true,
     },
     resolve: {
-        extensions: [".tsx", ".ts", ".js"],
+        extensions: [".tsx", ".ts", ".js", ".glsl", ".vert", ".frag"],
     },
     devServer: {
         host: "0.0.0.0",
@@ -28,6 +28,15 @@ module.exports = {
                 use: "ts-loader",
                 exclude: /node_modules/,
             },
+            {
+                test: /\.(glsl|vert|frag)$/,
+                use: [
+                    {
+                        loader: 'glsl-shader-loader',
+                        options: {}
+                    }
+                ]
+            }
         ],
     },
     plugins: [
@@ -37,4 +46,10 @@ module.exports = {
         })
     ],
     mode: "development",
+    optimization: {
+        splitChunks: {
+            chunks: 'all',
+            maxSize: 10000000, // limit is 25MB, way lower value to be sure
+        },
+    }
 };

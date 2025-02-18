@@ -1,13 +1,18 @@
-import { Color3, CubeTexture, HemisphericLight, MeshBuilder, Scene, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
+import { ToonMaterial } from "../../materials/toonMaterial";
+import { GameEntity } from "../../actors/gameEntity";
+import { LevelScene } from "../../scenes/levelScene";
+import { Koomba } from "../../actors/koomba";
 
-export class Level1 extends Environment
-{
+export class Rush extends Environment {
     private segmentWidth: number = 10;
+    private segmentHeight: number = 20;
     private lastSegmentX: number = -this.segmentWidth;
+    private koombas: GameEntity[] = []
 
-    constructor(scene: Scene, player: Player) {
+    constructor(scene: LevelScene, player: Player) {
         super(scene, player);
     }
 
@@ -21,15 +26,26 @@ export class Level1 extends Environment
         skyboxMaterial.specularColor = new Color3(0, 0, 0);
         this.skybox.material = skyboxMaterial;
     }
-    
+
     async loadEnvironment(): Promise<void> {
         for (let i = -2; i < 5; i++) {
             this.createGroundSegment(i * this.segmentWidth);
         }
+        //this.koombas[0] = new Koomba(this.scene)
+        //await this.koombas[0].loadEntityAssets(this.getLightDirection());
     }
 
     setupLight(): void {
-        const light = new HemisphericLight("HemiLight", new Vector3(0, 1, 0), this.scene);
+        this.light = new DirectionalLight("dirLight", new Vector3(1, 1, 0), this.scene);
+    }
+
+    getLightDirection(): Vector3 {
+        return this.light ? this.light.direction.normalize() : Vector3.Zero();
+    }
+
+    setLightDirection(direction: Vector3): void {
+        if (this.light)
+            this.light.direction = direction;
     }
 
     private createGroundSegment(x: number): void {
@@ -47,18 +63,25 @@ export class Level1 extends Environment
         const ground = MeshBuilder.CreateBox("groundSegment", {
             width: this.segmentWidth,
             depth: 10,
-            height: 1
+            height: this.segmentHeight
         }, this.scene);
 
         ground.position = new Vector3(x + this.segmentWidth / 2, heightOffset - 0.5, 0);
         ground.checkCollisions = true;
 
-        const mat = new StandardMaterial("groundMat", this.scene);
-        mat.diffuseColor = new Color3(0.8, 0.5, 0.25);
-        ground.material = mat;
+        ground.material = new ToonMaterial(new Color3(0.8, 0.5, 0.25), this.getLightDirection(), false, this.scene);
 
         this.pushGroundSegment(ground);
         this.lastSegmentX = x;
+        /*if (this.koombamesh && this.koombanimation) {
+            const koombaCloneX = this.koombamesh.clone("koomba" + x)
+            const koombaController = new EntityController(koombaCloneX, this.koombanimation, this.scene)
+            koombaController.beforeRenderUpdate = () => {
+                koombaCloneX.moveWithCollisions(koombaCloneX.forward.scale(10));
+            }
+            const koomba = new GameEntity(koombaCloneX, this.scene, koombaController)
+            koomba.activateEntityComponents()
+        }*/
     }
 
     beforeRenderUpdate(): void {

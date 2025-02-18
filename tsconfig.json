@@ -6,11 +6,13 @@
     "noResolve": false,
     "noImplicitAny": false,
     "sourceMap": true,
-    "preserveConstEnums":true,
+    "preserveConstEnums": true,
     "lib": [
-        "dom",
-        "es6"
+      "dom",
+      "es6"
     ],
-    "rootDir": "src"
+    "rootDir": "src",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true
   }
 }
