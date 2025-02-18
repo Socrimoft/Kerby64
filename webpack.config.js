@@ -2,11 +2,11 @@ const path = require("path");
 const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const appDirectory = fs.realpathSync(process.cwd());
-
 module.exports = {
     entry: path.resolve(appDirectory, "src/game.ts"),
     output: {
-        filename: "js/game.js",
+        filename: "js/[name].js",
+        chunkFilename: "js/[name].chunk.js",
         clean: true,
     },
     resolve: {
@@ -46,4 +46,10 @@ module.exports = {
         })
     ],
     mode: "development",
+    optimization: {
+        splitChunks: {
+            chunks: 'all',
+            maxSize: 25000000, // 25MB in bytes
+        },
+    }
 };
