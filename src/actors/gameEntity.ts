@@ -1,4 +1,4 @@
-import { AnimationGroup, LoadAssetContainerAsync, Mesh, TransformNode } from "@babylonjs/core";
+import { AnimationGroup, LoadAssetContainerAsync, Mesh } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Component } from "../components/component";
 
@@ -25,13 +25,14 @@ export class GameEntity {
             });
         });
     }
-    public static async loadCharacterAssets(name: string, filename: string, scene: LevelScene): Promise<{ root: TransformNode, animations: Array<AnimationGroup> }> {
-        const models = await LoadAssetContainerAsync(this.baseSourceURI + filename, scene);
-        let root = models.createRootMesh()
-        root.name = name;
-        models.addAllToScene()
 
-        const animations: AnimationGroup[] = []
+    public static async loadEntityAssets(name: string, filename: string, scene: LevelScene): Promise<{ root: Mesh, animations: Array<AnimationGroup> }> {
+        const models = await LoadAssetContainerAsync(this.baseSourceURI + filename, scene);
+        let root = models.createRootMesh();
+        root.name = name;
+        models.addAllToScene();
+
+        const animations: AnimationGroup[] = [];
         models.animationGroups.forEach((ag) => {
             animations.push(ag);
         });

@@ -37,17 +37,11 @@ export class LevelScene extends Scene {
     // set up the level without gui, in the background
     public async setUpLevelAsync(levelToLoad: number): Promise<void> {
         // instanciate player
-        const { root: playerRoot, animations } = await GameEntity.loadCharacterAssets("player", "kerby.glb", this);
-        playerRoot.scaling = new Vector3(0.01, 0.01, 0.01)
-
-        const playerCollider = MeshBuilder.CreateBox("playerCollider", { width: 1, height: 2, depth: 1 }, this);
-        playerCollider.position = new Vector3(0, 20, 0);
-        playerCollider.rotation = new Vector3(0, Math.PI / 2, 0);
-        playerCollider.isVisible = false;
-        playerCollider.checkCollisions = true;
-
-        playerRoot.parent = playerCollider;
-        this.player = new Player(playerCollider, animations, this, this.input);
+        const { root: playerRoot, animations } = await GameEntity.loadEntityAssets("player", "kerby.glb", this);
+        playerRoot.scaling = new Vector3(0.01, 0.01, 0.01);
+        playerRoot.position = new Vector3(0, 20, 0);
+        playerRoot.rotation = new Vector3(0, Math.PI / 2, 0);
+        this.player = new Player(playerRoot, animations, this, this.input);
 
         // environment
         switch (levelToLoad) {
