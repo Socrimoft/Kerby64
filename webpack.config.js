@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const appDirectory = fs.realpathSync(process.cwd());
 module.exports = {
     entry: path.resolve(appDirectory, "src/game.ts"),
@@ -40,6 +41,17 @@ module.exports = {
         ],
     },
     plugins: [
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: 'public',
+                    to: '.',
+                    globOptions: {
+                        ignore: ['**/*.html'],
+                    },
+                },
+            ],
+        }),
         new HtmlWebpackPlugin({
             inject: true,
             template: path.resolve(appDirectory, "public/index.html"),
