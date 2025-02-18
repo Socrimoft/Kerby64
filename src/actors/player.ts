@@ -4,6 +4,7 @@ import { PlayerController } from "../components/playerController";
 import { PlayerCamera } from "../components/playerCamera";
 import { GameEntity } from "./gameEntity";
 import { Component } from "../components/component";
+import { Vector3 } from "@babylonjs/core";
 
 export class Player extends GameEntity {
     private entityController?: PlayerController;
@@ -13,11 +14,18 @@ export class Player extends GameEntity {
         super("kerby", scene, ...components)
     }
 
-    public activatePlayerComponents(input: InputManager): void {
-        this.entityController = new PlayerController(this.mesh, this.animations, input, this.scene);
-        this.cameraController = new PlayerCamera(this.mesh, this.scene);
-        this.components.push(this.entityController, this.cameraController);
+    public async instanciate(lightDirection: Vector3, position?: Vector3, rotation?: Vector3, input?: InputManager): Promise<void> {
+        await super.instanciate(lightDirection, position, rotation);
+        if (!this.mesh)
+            throw new Error("Error while instanciating the GameEntity " + this.name);
 
-        super.activateEntityComponents()
+        this.mesh.scaling = new Vector3(0.01, 0.01, 0.01);
+
+        if (input) {
+            this.entityController = new PlayerController(this, this.animations, input, this.scene);
+            this.addComponent(this.entityController);
+        }
+        this.cameraController = new PlayerCamera(this, this.scene);
+        this.addComponent(this.cameraController);
     }
 }

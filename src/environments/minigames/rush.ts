@@ -31,9 +31,9 @@ export class Rush extends Environment {
         for (let i = -2; i < 5; i++) {
             this.createGroundSegment(i * this.segmentWidth);
         }
-        this.koombas[0] = new Koomba(this.scene)
-        await this.koombas[0].loadEntityAssets(this.getLightDirection());
-        this.koombas[0].activateEntityComponents()
+        this.koombas[0] = new Koomba(this.scene);
+        await this.koombas[0].instanciate(this.getLightDirection(), new Vector3(10, 20, -2.5), new Vector3(0, -Math.PI / 2, 0));
+        this.koombas[0].activateEntityComponents();
     }
 
     setupLight(): void {
@@ -74,26 +74,21 @@ export class Rush extends Environment {
 
         this.pushGroundSegment(ground);
         this.lastSegmentX = x;
+
         if (this.koombas[0] && random < 1) {
-            const koombaCloneX = new Koomba(this.scene);
-            koombaCloneX.loadEntityAssets(this.getLightDirection(), {
-                mesh: this.koombas[0].mesh.clone("koomba" + x),
-                animations: this.koombas[0].animations,
-                newposX: x
-            }).then(() => {
-                this.koombas.push(koombaCloneX);
-                koombaCloneX.activateEntityComponents();
-            })
+            const koombaClone = this.koombas[0].clone("koomba" + x, new Vector3(x, 20, -2.5));
+            koombaClone.activateEntityComponents();
+            this.koombas.push(koombaClone);
         }
     }
 
     beforeRenderUpdate(): void {
-        while (this.lastSegmentX < this.player.mesh.position.x + 50) {
+        while (this.lastSegmentX < this.player.getPosition().x + 50) {
             this.createGroundSegment(this.lastSegmentX + this.segmentWidth);
         }
 
         this.setGroundSegments(this.getGroundSegments().filter(segment => {
-            if (segment.position.x + this.segmentWidth < this.player.mesh.position.x - 30) {
+            if (segment.position.x + this.segmentWidth < this.player.getPosition().x - 30) {
                 segment.dispose();
                 return false;
             }

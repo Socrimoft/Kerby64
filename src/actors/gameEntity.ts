@@ -1,41 +1,66 @@
-import { AnimationGroup, LoadAssetContainerAsync, Mesh, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, AnimationGroup, AssetContainer, LoadAssetContainerAsync, Mesh, PBRMaterial, ShaderMaterial, StandardMaterial, Vector3 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Component } from "../components/component";
 import { ToonMaterial } from "../materials/toonMaterial";
 
 export class GameEntity {
     public scene: LevelScene;
-    public mesh: Mesh;
     public name: string;
-    public animations: AnimationGroup[] = [];
+    private assets?: AssetContainer;
+    protected mesh?: Mesh;
+    public animations: Array<AnimationGroup> = [];
     public components: Array<Component> = [];
     public baseSourceURI = "./assets/models/";
 
     constructor(name: string, scene: LevelScene, ...components: Component[]) {
         this.scene = scene;
-        this.name = name
-        this.mesh = new Mesh(name, scene);
-        this.mesh.position = Vector3.Zero();
-        this.components.concat(components);
+        this.name = name;
+        this.components.push(...components);
     }
 
-    public async loadEntityAssets(lightDirection: Vector3): Promise<void> {
-        const models = await LoadAssetContainerAsync(this.baseSourceURI + this.name + ".glb", this.scene);
-        const root = (models.rootNodes.length == 1 && models.rootNodes[0] instanceof Mesh) ? models.rootNodes[0] : models.createRootMesh();
+    public async instanciate(lightDirection: Vector3, position?: Vector3, rotation?: Vector3): Promise<void> {
+        this.assets = await LoadAssetContainerAsync(this.baseSourceURI + this.name + ".glb", this.scene);
+        const root = (this.assets.rootNodes.length == 1 && this.assets.rootNodes[0] instanceof Mesh) ? this.assets.rootNodes[0] : this.assets.createRootMesh();
         root.name = this.name;
-        root.id = this.name;
-        const texture = new ToonMaterial(models.textures[0], lightDirection, models.animationGroups.length > 0, this.scene);
-        models.meshes.forEach((mesh) => {
-            mesh.material = texture;
+
+        this.assets.meshes.forEach((mesh) => {
+            if (this.assets && this.assets.textures[0])
+                mesh.material = new ToonMaterial(this.assets.textures[0], lightDirection, this.assets.animationGroups.length > 0, this.scene);
+            else if (this.assets && mesh.material && mesh.material instanceof StandardMaterial)
+                mesh.material = new ToonMaterial(mesh.material.diffuseColor, lightDirection, this.assets.animationGroups.length > 0, this.scene);
+            else if (this.assets && mesh.material && mesh.material instanceof PBRMaterial)
+                mesh.material = new ToonMaterial(mesh.material.albedoColor, lightDirection, this.assets.animationGroups.length > 0, this.scene);
         });
 
-        models.addAllToScene();
+        this.assets.addAllToScene();
 
-        models.animationGroups.forEach((ag) => {
-            this.animations.push(ag);
-        });
-        this.mesh.dispose();
+        this.assets.animationGroups.forEach(ag => this.animations.push(ag));
+
+        if (this.mesh) this.dispose();
         this.mesh = root;
+        this.mesh.position = position ? position : Vector3.Zero();
+        if (rotation) this.mesh.rotation = rotation;
+    }
+
+    public clone(name?: string, position?: Vector3, rotation?: Vector3, cloneComponents: boolean = false): GameEntity {
+        if (!this.assets)
+            throw new Error("Unable to clone a non-instantiated GameEntity");
+
+        const clonedEntity = cloneComponents ? new GameEntity(name ? name : this.name, this.scene, ...this.components) : new GameEntity(this.name, this.scene);
+
+        const entries = this.assets.instantiateModelsToScene(undefined, true, { doNotInstantiate: true });
+        clonedEntity.mesh = (entries.rootNodes[0] as Mesh);
+
+        entries.animationGroups.forEach(ag => clonedEntity.animations.push(ag));
+
+        if (position) clonedEntity.mesh.position = position;
+        if (rotation) clonedEntity.mesh.rotation = rotation;
+
+        return clonedEntity;
+    }
+
+    public dispose() {
+        if (this.mesh) this.mesh.dispose(true, true);
     }
 
     public addComponent(component: Component) {
@@ -49,7 +74,46 @@ export class GameEntity {
             });
         });
     }
-    public dispose() {
-        this.mesh.dispose(true, true);
+
+    public getPosition(): Vector3 {
+        return this.mesh ? this.mesh.position : Vector3.Zero();
+    }
+
+    public setPosition(position: Vector3): void {
+        if (this.mesh) this.mesh.position = position;
+    }
+
+    public getRotation(): Vector3 {
+        return this.mesh ? this.mesh.rotation : Vector3.Zero();
+    }
+
+    public setRotation(rotation: Vector3): void {
+        if (this.mesh) this.mesh.rotation = rotation;
+    }
+
+    public getForward(): Vector3 {
+        return this.mesh ? this.mesh.forward : Vector3.Zero();
+    }
+
+    public isSameMesh(otherMesh: AbstractMesh): boolean {
+        return this.mesh ? this.mesh == otherMesh : false;
+    }
+
+    public moveWithCollisions(displacement: Vector3): void {
+        if (this.mesh) this.mesh.moveWithCollisions(displacement);
+    }
+
+    public moveForwardWithCollisions(scale: number): void {
+        if (this.mesh) this.moveWithCollisions(this.mesh.forward.scale(scale));
+    }
+
+    public updateShaderLightDirection(direction: Vector3) {
+        if (!this.mesh) return;
+
+        this.mesh.getChildMeshes().forEach(mesh => {
+            if (mesh.material && mesh.material instanceof ShaderMaterial) {
+                mesh.material.setVector3("lightDir", direction);
+            }
+        });
     }
 }

@@ -41,7 +41,7 @@ export abstract class Environment {
     }
 
     protected pushEntityObject(entity: GameEntity, position: Vector3) {
-        entity.mesh.position = position;
+        entity.setPosition(position);
         entity.activateEntityComponents();
         this.entitiesObjects.push(entity);
 

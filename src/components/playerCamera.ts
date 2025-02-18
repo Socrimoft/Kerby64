@@ -1,14 +1,15 @@
 import { Mesh, Scene, TransformNode, UniversalCamera, Vector3 } from "@babylonjs/core";
 import { Component } from "./component";
+import { GameEntity } from "../actors/gameEntity";
 
 export class PlayerCamera extends UniversalCamera implements Component {
-    private mesh: Mesh;
+    private targetEntity: GameEntity;
     private camRoot: TransformNode;
     private camTilt: TransformNode;
 
-    constructor(mesh: Mesh, scene: Scene) {
-        super("playerCamera", new Vector3(0, 0, mesh.position.z - 20), scene);
-        this.mesh = mesh;
+    constructor(targetEntity: GameEntity, scene: Scene) {
+        super("playerCamera", new Vector3(0, 0, targetEntity.getPosition().z - 20), scene);
+        this.targetEntity = targetEntity;
 
         this.camRoot = new TransformNode("camRoot");
         this.camRoot.position = Vector3.Zero();
@@ -24,6 +25,6 @@ export class PlayerCamera extends UniversalCamera implements Component {
 
     public beforeRenderUpdate(): void {
         // update position
-        this.camRoot.position = Vector3.Lerp(this.camRoot.position, new Vector3(this.mesh.position.x + (this.mesh.forward.x * 5), this.mesh.position.y + 3, this.mesh.position.z), 0.1);
+        this.camRoot.position = Vector3.Lerp(this.camRoot.position, new Vector3(this.targetEntity.getPosition().x + (this.targetEntity.getForward().x * 5), this.targetEntity.getPosition().y + 3, this.targetEntity.getPosition().z), 0.1);
     }
 }

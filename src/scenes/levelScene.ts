@@ -47,12 +47,8 @@ export class LevelScene extends Scene {
         await this.environment.load();
 
         // instanciate player
-        await this.player.loadEntityAssets(this.environment.getLightDirection());
-        this.player.mesh.scaling = new Vector3(0.01, 0.01, 0.01);
-        this.player.mesh.position = new Vector3(0, 20, 0);
-        this.player.mesh.rotation = new Vector3(0, Math.PI / 2, 0);
-
-        this.player.activatePlayerComponents(this.input);
+        await this.player.instanciate(this.environment.getLightDirection(), new Vector3(0, 20, 0), new Vector3(0, Math.PI / 2, 0), this.input);
+        this.player.activateEntityComponents();
 
         this.registerBeforeRender(() => {
             if (this.environment)
