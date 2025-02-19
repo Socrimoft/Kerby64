@@ -1,4 +1,5 @@
-import { Color3, CubeTexture, DirectionalLight, HemisphericLight, MeshBuilder, Scene, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, DynamicTexture, HemisphericLight, MeshBuilder, Scene, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
@@ -25,6 +26,9 @@ export class Bird extends Environment {
     }
 
     async loadEnvironment(): Promise<void> {
+
+        this.createText3D(new Vector3(20, 25, 0));
+
         for (let i = -2; i < 5; i++) {
             this.createGroundSegment(i * this.segmentWidth);
         }
@@ -145,4 +149,24 @@ export class Bird extends Environment {
         }
     }
 
+    private createText3D(position: Vector3): void {
+        // Créer un plan pour afficher le texte
+        const textPlane = MeshBuilder.CreatePlane("textPlane", { width: 14, height: 6 }, this.scene);
+        textPlane.position = position;
+        textPlane.billboardMode = 0;
+
+        // Créer une texture dynamique pour le texte
+        const advancedTexture = AdvancedDynamicTexture.CreateForMesh(textPlane, 1024, 512);
+
+        // Création du texte
+        const textBlock = new TextBlock();
+        textBlock.text = "Run through\nthe pipes to score!";
+        textBlock.color = "white";
+        textBlock.fontSize = 120; // Taille du texte
+        textBlock.textHorizontalAlignment = TextBlock.HORIZONTAL_ALIGNMENT_CENTER;
+        textBlock.textVerticalAlignment = TextBlock.VERTICAL_ALIGNMENT_CENTER;
+
+        // Ajout du texte à la texture
+        advancedTexture.addControl(textBlock);
+    }
 }
