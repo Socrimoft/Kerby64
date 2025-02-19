@@ -7,8 +7,8 @@ export class PlayerCamera extends UniversalCamera implements Component {
     private camRoot: TransformNode;
     private camTilt: TransformNode;
 
-    constructor(targetEntity: GameEntity, scene: Scene) {
-        super("playerCamera", new Vector3(0, 0, targetEntity.getPosition().z - 20), scene);
+    constructor(targetEntity: GameEntity) {
+        super("playerCamera", new Vector3(0, 0, targetEntity.getPosition().z - 20), targetEntity.scene);
         this.targetEntity = targetEntity;
 
         this.camRoot = new TransformNode("camRoot");

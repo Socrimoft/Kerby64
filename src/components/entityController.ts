@@ -19,9 +19,9 @@ export abstract class EntityController implements Component {
     protected remainingJumps: number = 3;
     protected meshAnimations: Array<AnimationGroup> = [];
 
-    constructor(entity: GameEntity, scene: LevelScene) {
+    constructor(entity: GameEntity) {
         this.entity = entity;
-        this.scene = scene;
+        this.scene = entity.scene;
     }
 
     protected playAnimation(anim?: AnimationGroup): void {

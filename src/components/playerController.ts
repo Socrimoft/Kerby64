@@ -1,9 +1,8 @@
 import { AnimationGroup, Ray, Vector3 } from "@babylonjs/core";
-import { LevelScene } from "../scenes/levelScene";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Anim } from "./anim";
-import { GameEntity } from "../actors/gameEntity";
+import { Player } from "../actors/player";
 
 export class PlayerController extends EntityController implements Anim {
     private input: InputManager;
@@ -11,22 +10,21 @@ export class PlayerController extends EntityController implements Anim {
     public walkAnim: AnimationGroup;
     public runAnim: AnimationGroup;
 
-    constructor(entity: GameEntity, animations: AnimationGroup[], input: InputManager, scene: LevelScene) {
-        super(entity, scene)
-        this.input = input;
-
-        const idleAnim = animations.find(ag => ag.name.toLowerCase().includes("idle"));
-        const walkAnim = animations.find(ag => ag.name.toLowerCase().includes("walk"));
-        const runAnim = animations.find(ag => ag.name.toLowerCase().includes("run"));
+    constructor(player: Player, input: InputManager) {
+        super(player)
+        this.input = input
+        const idleAnim = player.animations.find(ag => ag.name.toLowerCase().includes("idle"));
+        const walkAnim = player.animations.find(ag => ag.name.toLowerCase().includes("walk"));
+        const runAnim = player.animations.find(ag => ag.name.toLowerCase().includes("run"));
 
         if (!idleAnim) {
-            throw new Error("Idle animation not found for " + this.entity.name);
+            throw new Error("Idle animation not found for " + player.name);
         }
         if (!walkAnim) {
-            throw new Error("Walk animation not found for " + this.entity.name);
+            throw new Error("Walk animation not found for " + player.name);
         }
         if (!runAnim) {
-            throw new Error("Run animation not found for " + this.entity.name);
+            throw new Error("Run animation not found for " + player.name);
         }
 
         this.idleAnim = idleAnim;

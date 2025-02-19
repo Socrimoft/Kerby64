@@ -15,12 +15,12 @@ export class Koomba extends GameEntity {
             throw new Error("Error while instanciating the GameEntity " + this.name);
 
         this.mesh.scaling = new Vector3(0.025, 0.025, 0.025);
-        this.addComponent(new KoombaController(this, this.animations, this.scene));
+        this.addComponent(new KoombaController(this));
     }
 
     public clone(name?: string, position?: Vector3, rotation?: Vector3, cloneComponents: boolean = false): GameEntity {
         const koomba = super.clone(name, position, rotation, cloneComponents);
-        koomba.addComponent(new KoombaController(koomba, koomba.animations, koomba.scene));
+        koomba.addComponent(new KoombaController(koomba));
         return koomba;
     }
 }

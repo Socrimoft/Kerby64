@@ -11,6 +11,8 @@ export class GameEntity {
     public animations: Array<AnimationGroup> = [];
     public components: Array<Component> = [];
     public baseSourceURI = "./assets/models/";
+    private boundfct?: () => void;
+    public isDisposed = false;
 
     constructor(name: string, scene: LevelScene, ...components: Component[]) {
         this.scene = scene;
@@ -60,7 +62,10 @@ export class GameEntity {
     }
 
     public dispose() {
-        if (this.mesh) this.mesh.dispose(true, true);
+        if (this.mesh) this.mesh.dispose();
+        if (this.boundfct)
+            this.scene.unregisterBeforeRender(this.boundfct)
+        this.isDisposed = true;
     }
 
     public addComponent(component: Component) {
@@ -68,11 +73,11 @@ export class GameEntity {
     }
 
     public activateEntityComponents(): void {
-        this.components.forEach((comp) => {
-            this.scene.registerBeforeRender(() => {
-                comp.beforeRenderUpdate();
-            });
-        });
+        this.boundfct = this.beforeRenderUpdate.bind(this)
+        this.scene.registerBeforeRender(this.boundfct);
+    }
+    private beforeRenderUpdate() {
+        this.components.forEach((comp) => { comp.beforeRenderUpdate() })
     }
 
     public getPosition(): Vector3 {

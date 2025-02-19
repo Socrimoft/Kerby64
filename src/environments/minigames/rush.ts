@@ -32,8 +32,7 @@ export class Rush extends Environment {
             this.createGroundSegment(i * this.segmentWidth);
         }
         this.koombas[0] = new Koomba(this.scene);
-        await this.koombas[0].instanciate(this.getLightDirection(), new Vector3(10, 20, -2.5), new Vector3(0, -Math.PI / 2, 0));
-        this.koombas[0].activateEntityComponents();
+        await this.koombas[0].instanciate(this.getLightDirection(), new Vector3(10, 0, -2.5), new Vector3(0, -Math.PI / 2, 0));
     }
 
     setupLight(): void {
@@ -79,6 +78,7 @@ export class Rush extends Environment {
             const koombaClone = this.koombas[0].clone("koomba" + x, new Vector3(x, 20, -2.5));
             koombaClone.activateEntityComponents();
             this.koombas.push(koombaClone);
+            this.koombas.filter((koomba) => koomba.isDisposed)
         }
     }
 
