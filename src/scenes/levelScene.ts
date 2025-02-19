@@ -5,7 +5,9 @@ import { Player } from "../actors/player";
 import { Environment } from "../environments/environment";
 import { GameEngine } from "../game";
 import { Bird } from "../environments/minigames/bird";
+import { Rush } from "../environments/minigames/rush";
 import { BirdController } from "../components/birdController";
+import { PlayerController } from "../components/playerController";
 
 export class LevelScene extends Scene {
     private player: Player;
@@ -44,7 +46,7 @@ export class LevelScene extends Scene {
         // environment
         switch (levelToLoad) {
             case 1:
-                this.environment = new Bird(this, this.player);
+                this.environment = new Rush(this, this.player);
                 break;
 
             case 2:
@@ -52,7 +54,7 @@ export class LevelScene extends Scene {
                 break;
 
             default:
-                this.environment = new Bird(this, this.player);
+                this.environment = new Rush(this, this.player);
                 break;
         }
         await this.environment.load();
@@ -64,7 +66,7 @@ export class LevelScene extends Scene {
         //shitty switch as player need environement and environement need player
         switch (levelToLoad) {
             case 1:
-                this.player.addComponent(new BirdController(this.player, this.input));
+                this.player.addComponent(new PlayerController(this.player, this.input));
                 break;
 
             case 2:
@@ -72,7 +74,7 @@ export class LevelScene extends Scene {
                 break;
 
             default:
-                this.player.addComponent(new BirdController(this.player, this.input));
+                this.player.addComponent(new PlayerController(this.player, this.input));
                 break;
         }
 

@@ -69,33 +69,17 @@ export class BirdController extends EntityController {
         else
             this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
 
-        //this.mesh.rotation = new Vector3(0, Math.PI / 2, 0);
-        //this.playAnimation(this.runAnim);
-        //this.mesh.moveWithCollisions(this.mesh.forward.scale(this.linearSpeed * deltaTime));
-
-        if (this.input.inputMap[this.input.rightKey]) {
-            this.entity.setRotation(new Vector3(0, Math.PI / 2, 0));
-            // this.updateShaderLightDirection(new Vector3(1, 1, 0));
-            this.playAnimation(this.runAnim);
-            this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
-        }
-        else if (this.input.inputMap[this.input.leftKey]) {
-            this.entity.setRotation(new Vector3(0, -Math.PI / 2, 0));
-            // this.updateShaderLightDirection(new Vector3(-1, 1, 0));
-            this.playAnimation(this.runAnim);
-            this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
-        }
-        else
-            this.playAnimation(this.idleAnim);
+        this.entity.setRotation(new Vector3(0, Math.PI / 2, 0));
+        this.playAnimation(this.runAnim);
+        this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
 
         // detect if grounded
         const ray = new Ray(new Vector3(this.entity.getPosition().x + 1, this.entity.getPosition().y, this.entity.getPosition().z), Vector3.Down(), 1);
         const hit = this.scene.pickWithRay(ray);
 
-        if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh) && this.entity.getPosition().x > 46) {
+        if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh) && this.entity.getPosition().x > 35) {
             Game.Instance.switchToGameOver();
         }
-
 
         //check for points
         if (this.entity.getPosition().x > this.lastPoX + 26) {

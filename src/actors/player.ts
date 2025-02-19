@@ -21,10 +21,6 @@ export class Player extends GameEntity {
 
         this.mesh.scaling = new Vector3(0.01, 0.01, 0.01);
 
-        if (input) {
-            this.entityController = new PlayerController(this, input);
-            this.addComponent(this.entityController);
-        }
         this.cameraController = new PlayerCamera(this);
 
         this.addComponent(this.cameraController);
