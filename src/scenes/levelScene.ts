@@ -3,8 +3,9 @@ import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { InputManager } from "../inputManager";
 import { Player } from "../actors/player";
 import { Environment } from "../environments/environment";
-import { Rush } from "../environments/minigames/rush";
 import { GameEngine } from "../game";
+import { Bird } from "../environments/minigames/bird";
+import { BirdController } from "../components/birdController";
 
 export class LevelScene extends Scene {
     private player: Player;
@@ -20,17 +21,22 @@ export class LevelScene extends Scene {
         this.input = new InputManager(this);
         this.player = new Player(this);
         this.clearColor = new Color4(0.8, 0.9, 1, 1);
-        this.scoreText = new TextBlock("score", "Score : 0");
+        this.scoreText = new TextBlock("score");
     }
 
     public async load() {
         //GUI
         const playerUI = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-        this.scoreText.color = "black";
+        this.scoreText.color = "white";
         this.scoreText.fontSize = 25;
         this.scoreText.top = "-45%";
         this.scoreText.left = "-45%";
         playerUI.addControl(this.scoreText);
+    }
+
+    public updateScore(value: number) {
+        this.score += value;
+        this.scoreText.text = "Score : " + this.score;
     }
 
     // set up the level without gui, in the background
@@ -38,10 +44,15 @@ export class LevelScene extends Scene {
         // environment
         switch (levelToLoad) {
             case 1:
-                this.environment = new Rush(this, this.player);
+                this.environment = new Bird(this, this.player);
                 break;
+
+            case 2:
+                this.environment = new Bird(this, this.player);
+                break;
+
             default:
-                this.environment = new Rush(this, this.player);
+                this.environment = new Bird(this, this.player);
                 break;
         }
         await this.environment.load();
@@ -49,6 +60,21 @@ export class LevelScene extends Scene {
         // instanciate player
         await this.player.instanciate(this.environment.getLight(), new Vector3(0, 20, 0), new Vector3(0, Math.PI / 2, 0), this.input);
         this.player.activateEntityComponents();
+
+        //shitty switch as player need environement and environement need player
+        switch (levelToLoad) {
+            case 1:
+                this.player.addComponent(new BirdController(this.player, this.input));
+                break;
+
+            case 2:
+                this.player.addComponent(new BirdController(this.player, this.input));
+                break;
+
+            default:
+                this.player.addComponent(new BirdController(this.player, this.input));
+                break;
+        }
 
         this.registerBeforeRender(() => {
             if (this.environment)

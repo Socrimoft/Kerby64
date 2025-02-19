@@ -26,6 +26,7 @@ export class Player extends GameEntity {
             this.addComponent(this.entityController);
         }
         this.cameraController = new PlayerCamera(this);
+
         this.addComponent(this.cameraController);
     }
 }

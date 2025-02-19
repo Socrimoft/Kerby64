@@ -5,6 +5,7 @@ import { Animation, Effect, Engine, WebGPUEngine } from "@babylonjs/core";
 import { MainMenuScene } from "./scenes/mainMenuScene";
 import { CutSceneScene } from "./scenes/cutSceneScene";
 import { LevelScene } from "./scenes/levelScene";
+import { GameOverScene } from "./scenes/gameOverScene";
 import toonVertexShader from "./shaders/toon/vertex.glsl";
 import toonFragmentShader from "./shaders/toon/fragment.glsl";
 
@@ -25,6 +26,7 @@ export class Game {
     private mainMenuScene!: MainMenuScene;
     private cutScene!: CutSceneScene;
     private levelScene!: LevelScene;
+    private gameOverScene!: GameOverScene;
 
     private state: State = State.MAINMENU;
     private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true }
@@ -64,6 +66,8 @@ export class Game {
                 return this.cutScene;
             case State.LEVEL:
                 return this.levelScene;
+            case State.GAMEOVER:
+                return this.gameOverScene;
             default:
                 return this.mainMenuScene;
         }
@@ -147,6 +151,15 @@ export class Game {
         this.state = State.LEVEL;
         this.engine.hideLoadingUI();
         this.levelScene.attachControl();
+    }
+
+    public async switchToGameOver() {
+        this.gameOverScene = new GameOverScene(this.engine);
+        this.gameOverScene.load();
+
+        await this.gameOverScene.whenReadyAsync();
+        this.state = State.GAMEOVER;
+        this.engine.hideLoadingUI();
     }
 }
 Game.Instance;
