@@ -32,11 +32,13 @@ export class Rush extends Environment {
             this.createGroundSegment(i * this.segmentWidth);
         }
         this.koombas[0] = new Koomba(this.scene);
-        await this.koombas[0].instanciate(this.getLightDirection(), new Vector3(10, 0, -2.5), new Vector3(0, -Math.PI / 2, 0));
+        await this.koombas[0].instanciate(this.getLight(), new Vector3(10, 0, -2.5), new Vector3(0, -Math.PI / 2, 0));
     }
 
     setupLight(): void {
         this.light = new DirectionalLight("dirLight", new Vector3(1, 1, 0), this.scene);
+        this.light.intensity = 0.8;
+        this.light.diffuse = new Color3(1, 0.95, 0.8);
     }
 
     getLightDirection(): Vector3 {
@@ -69,7 +71,7 @@ export class Rush extends Environment {
         ground.position = new Vector3(x + this.segmentWidth / 2, heightOffset - 0.5, 0);
         ground.checkCollisions = true;
 
-        ground.material = this.groundMaterial || (this.groundMaterial = new ToonMaterial(new Color3(0.8, 0.5, 0.25), this.getLightDirection(), false, this.scene));
+        ground.material = this.groundMaterial || (this.groundMaterial = new ToonMaterial(new Color3(0, 0.6, 0), this.getLight(), false, this.scene));
 
         this.pushGroundSegment(ground);
         this.lastSegmentX = x;

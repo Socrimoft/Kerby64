@@ -1,4 +1,4 @@
-import { AbstractMesh, AnimationGroup, AssetContainer, LoadAssetContainerAsync, Mesh, PBRMaterial, ShaderMaterial, StandardMaterial, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, AnimationGroup, AssetContainer, DirectionalLight, LoadAssetContainerAsync, Mesh, PBRMaterial, ShaderMaterial, StandardMaterial, Vector3 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Component } from "../components/component";
 import { ToonMaterial } from "../materials/toonMaterial";
@@ -20,18 +20,18 @@ export class GameEntity {
         this.components.push(...components);
     }
 
-    public async instanciate(lightDirection: Vector3, position?: Vector3, rotation?: Vector3): Promise<void> {
+    public async instanciate(light: DirectionalLight, position?: Vector3, rotation?: Vector3): Promise<void> {
         this.assets = await LoadAssetContainerAsync(this.baseSourceURI + this.name + ".glb", this.scene);
         const root = (this.assets.rootNodes.length == 1 && this.assets.rootNodes[0] instanceof Mesh) ? this.assets.rootNodes[0] : this.assets.createRootMesh();
         root.name = this.name;
 
         this.assets.meshes.forEach((mesh) => {
             if (this.assets && this.assets.textures[0])
-                mesh.material = new ToonMaterial(this.assets.textures[0], lightDirection, this.assets.animationGroups.length > 0, this.scene);
+                mesh.material = new ToonMaterial(this.assets.textures[0], light, this.assets.animationGroups.length > 0, this.scene);
             else if (this.assets && mesh.material && mesh.material instanceof StandardMaterial)
-                mesh.material = new ToonMaterial(mesh.material.diffuseColor, lightDirection, this.assets.animationGroups.length > 0, this.scene);
+                mesh.material = new ToonMaterial(mesh.material.diffuseColor, light, this.assets.animationGroups.length > 0, this.scene);
             else if (this.assets && mesh.material && mesh.material instanceof PBRMaterial)
-                mesh.material = new ToonMaterial(mesh.material.albedoColor, lightDirection, this.assets.animationGroups.length > 0, this.scene);
+                mesh.material = new ToonMaterial(mesh.material.albedoColor, light, this.assets.animationGroups.length > 0, this.scene);
         });
 
         this.assets.addAllToScene();
@@ -117,7 +117,7 @@ export class GameEntity {
 
         this.mesh.getChildMeshes().forEach(mesh => {
             if (mesh.material && mesh.material instanceof ShaderMaterial) {
-                mesh.material.setVector3("lightDir", direction);
+                mesh.material.setVector3("lightDirection", direction);
             }
         });
     }

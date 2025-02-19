@@ -1,7 +1,7 @@
-import { BaseTexture, Color3, DynamicTexture, Scene, ShaderMaterial, Vector3, Vector4 } from "@babylonjs/core";
+import { BaseTexture, Color3, DirectionalLight, DynamicTexture, Scene, ShaderMaterial, Vector3, Vector4 } from "@babylonjs/core";
 
 export class ToonMaterial extends ShaderMaterial {
-    constructor(textureOrColor: BaseTexture | Color3, lightDirection: Vector3, animated: boolean, scene: Scene) {
+    constructor(textureOrColor: BaseTexture | Color3, light: DirectionalLight, animated: boolean, scene: Scene) {
         const defines = animated ? ["BONES"] : [];
         super(
             "toonShader",
@@ -31,8 +31,10 @@ export class ToonMaterial extends ShaderMaterial {
         }
 
         this.setTexture("textureSampler", textureOrColor);
-        this.setVector3("lightDir", lightDirection);
-        this.setVector4("ambiantColor", new Vector4(0.4, 0.4, 0.4, 1.0));
+        this.setVector3("lightDirection", light.direction);
+        this.setFloat("lightIntensity", light.intensity);
+        this.setVector3("diffuseColor", new Vector3(light.diffuse.r, light.diffuse.g, light.diffuse.b));
+        this.setVector4("ambiantColor", new Vector4(0.5, 0.5, 0.5, 1.0));
         this.setVector4("specularColor", new Vector4(0.9, 0.9, 0.9, 1.0));
         this.setFloat("glossiness", 32);
         this.setVector4("rimColor", new Vector4(1, 1, 1, 1));

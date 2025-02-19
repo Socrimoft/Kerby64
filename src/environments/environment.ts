@@ -22,6 +22,12 @@ export abstract class Environment {
         this.skybox = CreateBox("skybox", { size: this.skyboxSize }, this.scene);
     }
 
+    public getLight(): DirectionalLight {
+        if (!this.light)
+            throw new Error("Cannot return non-instanciated light");
+        return this.light;
+    }
+
     protected getGroundSegments(): Array<Mesh> {
         return this.groundSegments;
     }

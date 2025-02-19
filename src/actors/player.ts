@@ -4,7 +4,7 @@ import { PlayerController } from "../components/playerController";
 import { PlayerCamera } from "../components/playerCamera";
 import { GameEntity } from "./gameEntity";
 import { Component } from "../components/component";
-import { Vector3 } from "@babylonjs/core";
+import { DirectionalLight, Vector3 } from "@babylonjs/core";
 
 export class Player extends GameEntity {
     private entityController?: PlayerController;
@@ -14,8 +14,8 @@ export class Player extends GameEntity {
         super("kerby", scene, ...components)
     }
 
-    public async instanciate(lightDirection: Vector3, position?: Vector3, rotation?: Vector3, input?: InputManager): Promise<void> {
-        await super.instanciate(lightDirection, position, rotation);
+    public async instanciate(light: DirectionalLight, position?: Vector3, rotation?: Vector3, input?: InputManager): Promise<void> {
+        await super.instanciate(light, position, rotation);
         if (!this.mesh)
             throw new Error("Error while instanciating the GameEntity " + this.name);
 
