@@ -40,6 +40,7 @@ export class GameEntity {
 
         if (this.mesh) this.dispose();
         this.mesh = root;
+        this.isDisposed = false;
         this.mesh.position = position ? position : Vector3.Zero();
         if (rotation) this.mesh.rotation = rotation;
     }

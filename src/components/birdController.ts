@@ -1,4 +1,4 @@
-import { AnimationGroup, Mesh, Ray, Vector3 } from "@babylonjs/core";
+import { AnimationGroup, Ray, Vector3 } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
 import { GameEntity } from "../actors/gameEntity";
@@ -78,7 +78,7 @@ export class BirdController extends EntityController {
         const hit = this.scene.pickWithRay(ray);
 
         if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh) && this.entity.getPosition().x > 35) {
-            Game.Instance.switchToGameOver();
+            Game.Instance.switchToGameOver(this.scene.score);
         }
 
         //check for points

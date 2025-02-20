@@ -1,4 +1,4 @@
-import { Color4, Engine, FreeCamera, Scene, Vector3 } from "@babylonjs/core";
+import { Color4, FreeCamera, Scene, Vector3 } from "@babylonjs/core";
 import { Control } from "@babylonjs/gui";
 import { Menu } from "../gui/menu";
 import { GameEngine } from "../game";
@@ -8,18 +8,24 @@ export class GameOverScene extends Scene {
         super(engine);
     }
 
-    public async load() {
+    public async load(score?: number) {
         this.clearColor = new Color4(0, 0, 0, 1);
         let camera = new FreeCamera("camera1", new Vector3(0, 0, 0), this);
         camera.setTarget(Vector3.Zero());
 
-        this.createGameOverMenu();
+        this.createGameOverMenu(score);
     }
 
-    private createGameOverMenu(): void {
+    private createGameOverMenu(score?: number): void {
         const guiMenu = new Menu("gameOverMenu", 720);
 
         guiMenu.addTextBlock("title", "Game Over", 50, "red", "-30%", Control.VERTICAL_ALIGNMENT_CENTER, Control.HORIZONTAL_ALIGNMENT_CENTER);
+        console.log(score)
+        if (score != undefined)
+            guiMenu.addTextBlock("score", "score: " + score, 10, "white", "-90%");
+        guiMenu.addSimpleButton("retry", "retry", "10%", "10%", undefined, "green", "-50%", undefined, 1, undefined, undefined, undefined, () => { window.location.reload() });
+
+        guiMenu.addSimpleButton("goback", "Title screen", "10%", "10%", undefined, "green", "-60%", undefined, 1, undefined, undefined, undefined, () => { window.location.href = window.location.origin + window.location.pathname });
     }
 }
 

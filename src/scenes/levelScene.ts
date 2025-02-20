@@ -3,11 +3,11 @@ import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { InputManager } from "../inputManager";
 import { Player } from "../actors/player";
 import { Environment } from "../environments/environment";
-import { Game, GameEngine } from "../game";
+import { GameEngine } from "../game";
 import { Bird } from "../environments/minigames/bird";
 import { Rush } from "../environments/minigames/rush";
 import { BirdController } from "../components/birdController";
-import { PlayerController } from "../components/playerController";
+import { RushController } from "../components/rushController";
 
 export class LevelScene extends Scene {
     private player: Player;
@@ -53,7 +53,7 @@ export class LevelScene extends Scene {
             levelToLoad = levels.indexOf((levelToLoad as string).toLowerCase()) + 1 || 1;
         }
         const environments = [Rush, Bird];
-        const controllers = [PlayerController, BirdController];
+        const controllers = [RushController, BirdController];
         this.environment = new (environments.at(levelToLoad - 1) || environments[0])(this, this.player);
         await this.environment.load();
         const level = levels.at(levelToLoad - 1) || levels[0];

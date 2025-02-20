@@ -160,9 +160,9 @@ export class Game {
         this.levelScene.attachControl();
     }
 
-    public async switchToGameOver() {
+    public async switchToGameOver(score?: number) {
         this.gameOverScene = new GameOverScene(this.engine);
-        this.gameOverScene.load();
+        this.gameOverScene.load(score);
 
         await this.gameOverScene.whenReadyAsync();
         this.state = State.GAMEOVER;

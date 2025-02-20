@@ -3,8 +3,9 @@ import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Anim } from "./anim";
 import { Player } from "../actors/player";
+import { Game } from "../game";
 
-export class PlayerController extends EntityController implements Anim {
+export class RushController extends EntityController implements Anim {
     private input: InputManager;
     public idleAnim: AnimationGroup;
     public walkAnim: AnimationGroup;
@@ -70,11 +71,15 @@ export class PlayerController extends EntityController implements Anim {
         else
             this.playAnimation(this.idleAnim);
 
-        // detect if grounded
+        // detect if grounded // detecte si t puni mdr pas mal ludo
         const ray = new Ray(new Vector3(this.entity.getPosition().x, this.entity.getPosition().y - 1, this.entity.getPosition().z), Vector3.Down(), 1);
         const hit = this.scene.pickWithRay(ray);
 
         if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh))
             this.remainingJumps = 3;
+        if (this.entity.getPosition().y < 0) {
+            this.entity.dispose();
+            Game.Instance.switchToGameOver();
+        }
     }
 }
