@@ -3,7 +3,7 @@ import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { InputManager } from "../inputManager";
 import { Player } from "../actors/player";
 import { Environment } from "../environments/environment";
-import { GameEngine } from "../game";
+import { Game, GameEngine } from "../game";
 import { Bird } from "../environments/minigames/bird";
 import { Rush } from "../environments/minigames/rush";
 import { BirdController } from "../components/birdController";
@@ -42,7 +42,7 @@ export class LevelScene extends Scene {
     }
     public updateNavigatorHistory(data?: { [key: string]: string }) {
         const params = new URLSearchParams(data)
-        window.history.pushState("", "", "?" + params.toString())
+        window.history.pushState(data, "", "?" + params.toString())
     }
 
     // set up the level without gui, in the background
@@ -57,7 +57,7 @@ export class LevelScene extends Scene {
         this.environment = new (environments.at(levelToLoad - 1) || environments[0])(this, this.player);
         await this.environment.load();
         const level = levels.at(levelToLoad - 1) || levels[0];
-        const seed = this.environment.getSeed().toString();
+        const seed = this.environment.seed.toString();
         this.updateNavigatorHistory({ level, seed })
 
         // instanciate player

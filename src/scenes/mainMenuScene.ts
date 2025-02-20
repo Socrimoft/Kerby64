@@ -92,7 +92,7 @@ export class MainMenuScene extends Scene {
         });
     }
 
-    private switchToCutScene(levelToLoad: number): void {
+    private switchToCutScene(levelToLoad: number | number): void {
         this.detachControl();
         Game.Instance.switchToCutScene(levelToLoad);
         this.dispose();

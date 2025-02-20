@@ -27,17 +27,15 @@ export class Game {
     private cutScene!: CutSceneScene;
     private levelScene!: LevelScene;
     private gameOverScene!: GameOverScene;
-    public urlParams: URLSearchParams
 
     private state: State = State.MAINMENU;
     private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true }
 
     constructor() {
-        this.urlParams = new URLSearchParams(window.location.search);
         this.canvas = this.createCanvas();
         this.engine = this.createEngine();
-        console.log(process.env.NODE_ENV);
         if (process.env.NODE_ENV === "development") {
+            console.log(process.env.NODE_ENV);
             this.engine.enableOfflineSupport = false;
             window.addEventListener("keydown", (ev) => {
                 if (ev.ctrlKey && ev.altKey && ev.key === "i") {
@@ -56,6 +54,9 @@ export class Game {
         Animation.AllowMatricesInterpolation = true;
 
         this.main();
+    }
+    public static get urlParams() {
+        return new URLSearchParams(window.location.search);
     }
 
     public static get Instance() {
@@ -107,7 +108,7 @@ export class Game {
     private async main(): Promise<void> {
         if (this.engine instanceof WebGPUEngine)
             await this.engine.initAsync();
-        let level = this.urlParams.get("level");
+        let level = Game.urlParams.get("level");
         if (level)
             await this.switchToCutScene(level);
         else

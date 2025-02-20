@@ -1,5 +1,5 @@
 export class Random {
-    public seed: number;
+    private seed: number;
     rand: () => number;
     random: () => number;
     constructor(seed: number) {
@@ -7,6 +7,9 @@ export class Random {
         this.rand = Random.sfc32(0x9E3779B9, 0x243F6A88, 0xB7E15162, this.seed);
         this.random = () => this.rand() / 4294967296;
         for (var i = 0; i < 15; i++) this.rand();
+    }
+    public get getSeed() {
+        return this.seed ^ 0xDEADBEEF; //apply xor op to reverse xor op
     }
     private static sfc32(a: number, b: number, c: number, d: number) {
         return function () {
