@@ -5,15 +5,19 @@ import { Anim } from "./anim";
 import { Player } from "../actors/player";
 import { Game } from "../game";
 
-export class RushController extends EntityController implements Anim {
+export class WorldController extends EntityController implements Anim {
     private input: InputManager;
     public idleAnim: AnimationGroup;
     public walkAnim: AnimationGroup;
     public runAnim: AnimationGroup;
+    protected remainingJumps = 0;//not used
+    protected linearSpeed = 20;//2blocks/s
 
     constructor(player: Player, input: InputManager) {
         super(player)
+
         this.input = input
+        this.input.isWorldPlaying = true;
         const idleAnim = player.animations.find(ag => ag.name.toLowerCase().includes("idle"));
         const walkAnim = player.animations.find(ag => ag.name.toLowerCase().includes("walk"));
         const runAnim = player.animations.find(ag => ag.name.toLowerCase().includes("run"));
@@ -38,10 +42,9 @@ export class RushController extends EntityController implements Anim {
     public beforeRenderUpdate(): void {
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
 
-        if (this.input.inputMap[this.input.jumpKey] && !this.isJumping && this.remainingJumps) {
+        if (this.input.inputMap[this.input.jumpKey] && !this.isJumping) {
             this.jumpStartTime = performance.now();
             this.isJumping = true;
-            this.remainingJumps--;
         }
 
         if (this.isJumping && this.jumpStartTime) {
@@ -57,9 +60,8 @@ export class RushController extends EntityController implements Anim {
             this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
 
         if (this.input.inputMap[this.input.rightKey]) {
-            this.entity.setRotation(new Vector3(0, Math.PI / 2, 0));
             // this.updateShaderLightDirection(new Vector3(1, 1, 0));
-            this.playAnimation(this.runAnim);
+            this.playAnimation(this.walkAnim);
             this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
         }
         else if (this.input.inputMap[this.input.leftKey]) {
@@ -79,6 +81,7 @@ export class RushController extends EntityController implements Anim {
             this.remainingJumps = 3;
         if (this.entity.getPosition().y < 0) {
             this.entity.dispose();
+            this.input.isWorldPlaying = false;
             Game.Instance.switchToGameOver();
         }
     }

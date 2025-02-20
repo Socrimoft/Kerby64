@@ -8,6 +8,8 @@ import { Bird } from "../environments/minigames/bird";
 import { Rush } from "../environments/minigames/rush";
 import { BirdController } from "../components/birdController";
 import { RushController } from "../components/rushController";
+import { World } from "../environments/minigames/world";
+import { WorldController } from "../components/worldController";
 
 export class LevelScene extends Scene {
     private player: Player;
@@ -48,12 +50,12 @@ export class LevelScene extends Scene {
     // set up the level without gui, in the background
     public async setUpLevelAsync(levelToLoad: number | string): Promise<void> {
         // environment
-        const levels = ["rush", "bird"];
+        const levels = ["rush", "bird", "world"];
         if (typeof levelToLoad === "string") {
             levelToLoad = levels.indexOf((levelToLoad as string).toLowerCase()) + 1 || 1;
         }
-        const environments = [Rush, Bird];
-        const controllers = [RushController, BirdController];
+        const environments = [Rush, Bird, World];
+        const controllers = [RushController, BirdController, WorldController];
         this.environment = new (environments.at(levelToLoad - 1) || environments[0])(this, this.player);
         await this.environment.load();
         const level = levels.at(levelToLoad - 1) || levels[0];
