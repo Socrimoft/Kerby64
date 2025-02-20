@@ -8,6 +8,7 @@ import { LevelScene } from "./scenes/levelScene";
 import { GameOverScene } from "./scenes/gameOverScene";
 import toonVertexShader from "./shaders/toon/vertex.glsl";
 import toonFragmentShader from "./shaders/toon/fragment.glsl";
+import { KerbyLoadingScreen } from "./loadingScreen";
 
 enum State {
     MAINMENU,
@@ -34,6 +35,7 @@ export class Game {
     constructor() {
         this.canvas = this.createCanvas();
         this.engine = this.createEngine();
+        this.engine.loadingScreen = new KerbyLoadingScreen("");
         if (process.env.NODE_ENV === "development") {
             console.log(process.env.NODE_ENV);
             this.engine.enableOfflineSupport = false;
