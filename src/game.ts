@@ -107,7 +107,7 @@ export class Game {
     private async main(): Promise<void> {
         if (this.engine instanceof WebGPUEngine)
             await this.engine.initAsync();
-        let level = Number(this.urlParams.get("level"));
+        let level = this.urlParams.get("level");
         if (level)
             await this.switchToCutScene(level);
         else
@@ -134,7 +134,7 @@ export class Game {
         this.state = State.MAINMENU;
     }
 
-    public async switchToCutScene(levelToLoad: number) {
+    public async switchToCutScene(levelToLoad: number | string) {
         this.engine.displayLoadingUI();
 
         this.cutScene = new CutSceneScene(this.engine);

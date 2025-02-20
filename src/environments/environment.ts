@@ -28,6 +28,10 @@ export abstract class Environment {
 
     }
 
+    public getSeed(): number {
+        return this.random.seed;
+    }
+
     public getLight(): DirectionalLight {
         if (!this.light)
             throw new Error("Cannot return non-instanciated light");

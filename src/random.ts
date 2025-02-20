@@ -1,5 +1,5 @@
 export class Random {
-    private seed: number;
+    public seed: number;
     rand: () => number;
     random: () => number;
     constructor(seed: number) {
