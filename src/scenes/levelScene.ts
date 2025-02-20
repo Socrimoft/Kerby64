@@ -44,43 +44,19 @@ export class LevelScene extends Scene {
     // set up the level without gui, in the background
     public async setUpLevelAsync(levelToLoad: number): Promise<void> {
         // environment
-        switch (levelToLoad) {
-            case 1:
-                this.environment = new Rush(this, this.player);
-                break;
-
-            case 2:
-                this.environment = new Bird(this, this.player);
-                break;
-
-            default:
-                this.environment = new Rush(this, this.player);
-                break;
-        }
+        const environments = [Rush, Bird];
+        const controllers = [PlayerController, BirdController]
+        this.environment = new (environments.at(levelToLoad - 1) || Rush)(this, this.player);
         await this.environment.load();
 
         // instanciate player
         await this.player.instanciate(this.environment.getLight(), new Vector3(0, 20, 0), new Vector3(0, Math.PI / 2, 0), this.input);
         this.player.activateEntityComponents();
 
-        //shitty switch as player need environement and environement need player
-        switch (levelToLoad) {
-            case 1:
-                this.player.addComponent(new PlayerController(this.player, this.input));
-                break;
-
-            case 2:
-                this.player.addComponent(new BirdController(this.player, this.input));
-                break;
-
-            default:
-                this.player.addComponent(new PlayerController(this.player, this.input));
-                break;
-        }
+        this.player.addComponent(new (controllers.at(levelToLoad - 1) || PlayerController)(this.player, this.input));
 
         this.registerBeforeRender(() => {
-            if (this.environment)
-                this.environment.beforeRenderUpdate();
+            this.environment?.beforeRenderUpdate();
         });
     }
 }

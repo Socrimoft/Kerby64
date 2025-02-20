@@ -9,7 +9,7 @@ export class Rush extends Environment {
     private segmentWidth: number = 10;
     private segmentHeight: number = 20;
     private lastSegmentX: number = -this.segmentWidth;
-    private koombas: Koomba[] = []
+    private koombas: Koomba[] = [];
     private groundMaterial?: ToonMaterial;
 
     constructor(scene: LevelScene, player: Player) {
@@ -51,7 +51,7 @@ export class Rush extends Environment {
     }
 
     private createGroundSegment(x: number): void {
-        const random = Math.random();
+        const random = this.random.random();
 
         if (random < 0.2) {
             this.lastSegmentX = x;
@@ -76,11 +76,11 @@ export class Rush extends Environment {
         this.pushGroundSegment(ground);
         this.lastSegmentX = x;
 
-        if (this.koombas[0] && random < 1) {
+        if (this.koombas[0] && random < 0.8) {
             const koombaClone = this.koombas[0].clone("koomba" + x, new Vector3(x, 20, -2.5));
             koombaClone.activateEntityComponents();
             this.koombas.push(koombaClone);
-            this.koombas.filter((koomba) => koomba.isDisposed)
+            this.koombas.filter((koomba) => koomba.isDisposed);
         }
     }
 
@@ -96,10 +96,5 @@ export class Rush extends Environment {
             }
             return true;
         }));
-        this.koombas.forEach((koomba, index) => {
-            if (index && koomba) {
-
-            }
-        })
     }
 }

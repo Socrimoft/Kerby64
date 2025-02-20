@@ -27,11 +27,13 @@ export class Game {
     private cutScene!: CutSceneScene;
     private levelScene!: LevelScene;
     private gameOverScene!: GameOverScene;
+    public urlParams: URLSearchParams
 
     private state: State = State.MAINMENU;
     private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true }
 
     constructor() {
+        this.urlParams = new URLSearchParams(window.location.search);
         this.canvas = this.createCanvas();
         this.engine = this.createEngine();
         console.log(process.env.NODE_ENV);
@@ -105,7 +107,11 @@ export class Game {
     private async main(): Promise<void> {
         if (this.engine instanceof WebGPUEngine)
             await this.engine.initAsync();
-        await this.switchToMainMenu();
+        let level = Number(this.urlParams.get("level"));
+        if (level)
+            await this.switchToCutScene(level);
+        else
+            await this.switchToMainMenu();
 
         this.engine.runRenderLoop(() => {
             this.CurrentScene.render();

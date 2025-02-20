@@ -2,6 +2,8 @@ import { CreateBox, DirectionalLight, Mesh, Vector3 } from "@babylonjs/core";
 import { Player } from "../actors/player";
 import { GameEntity } from "../actors/gameEntity";
 import { LevelScene } from "../scenes/levelScene";
+import { Random } from "../random";
+import { Game } from "../game";
 
 export abstract class Environment {
     protected scene: LevelScene;
@@ -15,11 +17,15 @@ export abstract class Environment {
     private groundSegments: Array<Mesh> = [];
     private staticObjects: Array<Mesh> = [];
     private entitiesObjects: Array<GameEntity> = [];
+    protected random: Random;
 
-    constructor(scene: LevelScene, player: Player) {
+    constructor(scene: LevelScene, player: Player, seed?: number) {
         this.scene = scene;
-        this.player = player
+        if (!seed) seed = Number(Game.Instance.urlParams.get("seed"));
+        this.random = new Random(seed || Math.random() * 4294967296);
+        this.player = player;
         this.skybox = CreateBox("skybox", { size: this.skyboxSize }, this.scene);
+
     }
 
     public getLight(): DirectionalLight {
