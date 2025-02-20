@@ -1,21 +1,31 @@
 <!DOCTYPE html>
 <html lang="fr">
-<style>
-    /* Si deplace dans le fichier CSS, ne marhe plus */
-    body:before {
-        content: "";
-        /* Contenu vide */
-        font-family: 'WorldOfSpell';
-        /* Force le chargement */
-        position: absolute;
-        opacity: 0;
-        /* Rend invisible */
-    }
-</style>
 
 <head>
     <meta charset="UTF-8">
     <title>Kerby54</title>
+    <script type="module" async>
+        if ('serviceWorker' in navigator && location.protocol === 'https:') {
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                console.log('Service Worker registered:', registration);
+            } catch (error) {
+                console.log('Service Worker registration failed:', error);
+            }
+        }
+    </script>
+    <!--<style>
+        /* Si deplace dans le fichier CSS, ne marhe plus */ /*pas compris a quoi ca sert*/
+        body:before {
+            content: "";
+            /* Contenu vide */
+            font-family: 'WorldOfSpell';
+            /* Force le chargement */
+            position: absolute;
+            opacity: 0;
+            /* Rend invisible */
+        }
+    </style>-->
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="index.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
