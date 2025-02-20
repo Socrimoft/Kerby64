@@ -4,7 +4,7 @@
   "description": "Kirby clone game",
   "main": "game.ts",
   "scripts": {
-    "build": "mkdir -p dist && rm -r dist && node updateprecacheversion.js $(git rev-parse --short HEAD) && webpack",
+    "build": "mkdir -p dist && rm -r dist && node updateprecacheversionsw.js $(git rev-parse --short HEAD) && webpack",
     "start": "webpack-dev-server --port 8080"
   },
   "author": "Socrimoft",
