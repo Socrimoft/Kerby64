@@ -1,4 +1,4 @@
-import { DirectionalLight, Vector3 } from "@babylonjs/core";
+import { DirectionalLight, Mesh, Vector3 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Component } from "../components/component";
 import { GameEntity } from "./gameEntity";
@@ -15,6 +15,7 @@ export class Koomba extends GameEntity {
             throw new Error("Error while instanciating the GameEntity " + this.name);
 
         this.mesh.scaling = new Vector3(0.025, 0.025, 0.025);
+        this.mesh.getChildren<Mesh>(undefined, true)[0].position = new Vector3(0, -26.038, 2.129); //remove the mesh's position bias
         this.addComponent(new KoombaController(this));
     }
 

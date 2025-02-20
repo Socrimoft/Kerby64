@@ -20,11 +20,12 @@ export class Rush extends Environment {
         this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
         const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
         skyboxMaterial.backFaceCulling = false;
-        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/skybox/", this.scene);
+        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/rush/skybox/", this.scene);
         skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
         skyboxMaterial.specularColor = new Color3(0, 0, 0);
         this.skybox.material = skyboxMaterial;
+        this.skybox.infiniteDistance = true;
     }
 
     async loadEnvironment(): Promise<void> {
@@ -77,7 +78,7 @@ export class Rush extends Environment {
         this.lastSegmentX = x;
 
         if (this.koombas[0] && random < 0.8) {
-            const koombaClone = this.koombas[0].clone("koomba" + x, new Vector3(x, 20, -2.5));
+            const koombaClone = this.koombas[0].clone("koomba" + x, new Vector3(x, 20, 0));
             koombaClone.activateEntityComponents();
             this.koombas.push(koombaClone);
             this.koombas.filter((koomba) => koomba.isDisposed);

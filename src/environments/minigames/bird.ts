@@ -18,11 +18,12 @@ export class Bird extends Environment {
         this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
         const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
         skyboxMaterial.backFaceCulling = false;
-        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/skybox/", this.scene);
+        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/bird/skybox/", this.scene);
         skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
         skyboxMaterial.specularColor = new Color3(0, 0, 0);
         this.skybox.material = skyboxMaterial;
+        this.skybox.infiniteDistance = true;
     }
 
     async loadEnvironment(): Promise<void> {
