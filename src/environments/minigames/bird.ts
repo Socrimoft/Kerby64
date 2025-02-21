@@ -77,12 +77,12 @@ export class Bird extends Environment {
         const topBlock = MeshBuilder.CreateCylinder("topBlock", {
             diameter: this.segmentWidth,
             height: (totalHeight - this.passageHeight) / 2,
-            tessellation: 20 // Nombre de segments pour lisser le cylindre
+            tessellation: 20
         }, this.scene);
         const topBlockBottom = MeshBuilder.CreateCylinder("topBlockBottom", {
             diameter: this.segmentWidth + 2,
             height: 3,
-            tessellation: 20 // Nombre de segments pour lisser le cylindre
+            tessellation: 20
         }, this.scene);
 
         topBlock.position = new Vector3(x, (totalHeight + this.passageHeight) / 4 + yOffset, 0);
@@ -102,17 +102,17 @@ export class Bird extends Environment {
         }, this.scene);
 
         bottomBlock.position = new Vector3(x, -(totalHeight + this.passageHeight) / 4 + yOffset, 0);
-        bottomBlockTop.position = new Vector3(x, - this.passageHeight / 2 - 1.5 + yOffset, 0);
+        bottomBlockTop.position = new Vector3(x, - this.passageHeight / 2 - 1.499 + yOffset, 0);
         bottomBlock.checkCollisions = true;
         bottomBlockTop.checkCollisions = true;
 
         const metal = new StandardMaterial("blockMat", this.scene);
-        metal.diffuseColor = new Color3(0.1, 0.5, 0.1); // Vert foncé
-        metal.specularColor = new Color3(0.3, 1, 0.3); // Reflet vert clair
-        metal.emissiveColor = new Color3(0, 0.2, 0); // Légère lueur verte
+        metal.diffuseColor = new Color3(0.1, 0.5, 0.1); // vert fonce
+        metal.specularColor = new Color3(0.3, 1, 0.3); // reflet vert
+        metal.emissiveColor = new Color3(0, 0.2, 0); // lueur vert
         metal.ambientColor = new Color3(0.1, 0.3, 0.1);
 
-        // Augmenter la brillance pour un effet métallique
+        //effet métallique
         metal.specularPower = 256;
 
         topBlock.material = metal;
@@ -128,6 +128,23 @@ export class Bird extends Environment {
         this.pushGroundSegment(bottomBlockTop);
 
         this.lastSegmentX = x;
+
+        const innerCylinder = MeshBuilder.CreateCylinder("innerCylinder", {
+            diameter: this.segmentWidth,
+            height: 1,
+            tessellation: 20
+        }, this.scene);
+
+        const topInnerCylinder = innerCylinder.clone();
+
+        innerCylinder.position = new Vector3(x, -this.passageHeight / 2 - 0.498 + yOffset, 0);
+        topInnerCylinder.position = new Vector3(x, this.passageHeight / 2 + 0.499 + yOffset, 0);
+
+        const blackMaterial = new StandardMaterial("blackMat", this.scene);
+        blackMaterial.diffuseColor = new Color3(0, 0, 0);
+        innerCylinder.material = blackMaterial;
+        topInnerCylinder.material = blackMaterial;
+
     }
 
 

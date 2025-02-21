@@ -75,7 +75,6 @@ export class MainMenuScene extends Scene {
 
             playLevelBtn.onPointerClickObservable.add(() => {
                 levelSelectMenu.ui.dispose();
-                console.log(i + 1);
                 this.switchToCutScene(i + 1);
             });
 

@@ -77,7 +77,7 @@ export class BirdController extends EntityController {
         const ray = new Ray(new Vector3(this.entity.getPosition().x + 1, this.entity.getPosition().y, this.entity.getPosition().z), Vector3.Down(), 1);
         const hit = this.scene.pickWithRay(ray);
 
-        if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh) && this.entity.getPosition().x > 35) {
+        if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh) && this.entity.getPosition().x > 40) {
             Game.Instance.switchToGameOver(this.scene.score);
         }
 
