@@ -1,4 +1,4 @@
-import { Color3, CubeTexture, DirectionalLight, DynamicTexture, HemisphericLight, MeshBuilder, Scene, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
@@ -30,7 +30,7 @@ export class Bird extends Environment {
 
         this.createText3D(new Vector3(20, 25, 0));
 
-        for (let i = -2; i < 5; i++) {
+        for (let i = -2; i < 5; i++) {//demander a ludo pk
             this.createGroundSegment(i * this.segmentWidth);
         }
         this.createPassage(this.lastSegmentX - 3 + this.segmentWidth + 15, 20);
@@ -38,7 +38,7 @@ export class Bird extends Environment {
     }
 
     setupLight(): void {
-        this.light = new DirectionalLight("dirLight", new Vector3(-1, -1, 1), this.scene);
+        this.light = new DirectionalLight("dirLight", new Vector3(1, -1, 1), this.scene);
     }
 
     getLightDirection(): Vector3 {
@@ -60,9 +60,12 @@ export class Bird extends Environment {
 
         ground.position = new Vector3(x + this.segmentWidth / 2 + 10, 0, 0);
         ground.checkCollisions = true;
+        ground.receiveShadows = true;
 
         const mat = new StandardMaterial("groundMat", this.scene);
-        mat.diffuseColor = new Color3(0.8, 0.5, 0.25);
+        mat.diffuseTexture = new Texture("./assets/textures/Ground048_1K-JPG_Color.jpg", this.scene);
+        //Color of dirt for no texture
+        //mat.diffuseColor = new Color3(0.5, 0.25, 0.1);
         ground.material = mat;
 
         this.pushGroundSegment(ground);
