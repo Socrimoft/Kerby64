@@ -74,10 +74,24 @@ export class BirdController extends EntityController {
         this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
 
         // detect if grounded
-        const ray = new Ray(new Vector3(this.entity.getPosition().x + 1, this.entity.getPosition().y, this.entity.getPosition().z), Vector3.Down(), 1);
-        const hit = this.scene.pickWithRay(ray);
+        const directions = [
+            Vector3.Left(),
+            Vector3.Right(),
+        ];
 
-        if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh) && this.entity.getPosition().x > 40) {
+        let hitDetected = false;
+
+        for (const direction of directions) {
+            const ray = new Ray(this.entity.getPosition(), direction, 1);
+            const hit = this.scene.pickWithRay(ray);
+
+            if (hit && hit.pickedMesh && hit.pickedMesh.name.includes("pipe")) {
+                hitDetected = true;
+                break;
+            }
+        }
+
+        if (hitDetected) {
             Game.Instance.switchToGameOver(this.scene.score);
         }
 

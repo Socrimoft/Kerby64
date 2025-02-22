@@ -77,12 +77,12 @@ export class Bird extends Environment {
         const totalHeight = this.segmentHeight * 4;
 
 
-        const topBlock = MeshBuilder.CreateCylinder("topBlock", {
+        const topBlock = MeshBuilder.CreateCylinder("pipe", {
             diameter: this.segmentWidth,
             height: (totalHeight - this.passageHeight) / 2,
             tessellation: 20
         }, this.scene);
-        const topBlockBottom = MeshBuilder.CreateCylinder("topBlockBottom", {
+        const topBlockBottom = MeshBuilder.CreateCylinder("pipe", {
             diameter: this.segmentWidth + 2,
             height: 3,
             tessellation: 20
@@ -93,12 +93,12 @@ export class Bird extends Environment {
         topBlock.checkCollisions = true;
         topBlockBottom.checkCollisions = true;
 
-        const bottomBlock = MeshBuilder.CreateCylinder("bottomBlock", {
+        const bottomBlock = MeshBuilder.CreateCylinder("pipe", {
             diameter: this.segmentWidth,
             height: (totalHeight - this.passageHeight) / 2,
             tessellation: 20
         }, this.scene);
-        const bottomBlockTop = MeshBuilder.CreateCylinder("bottomBlockTop", {
+        const bottomBlockTop = MeshBuilder.CreateCylinder("pipe", {
             diameter: this.segmentWidth + 2,
             height: 3,
             tessellation: 20
@@ -115,7 +115,7 @@ export class Bird extends Environment {
         metal.emissiveColor = new Color3(0, 0.2, 0); // lueur vert
         metal.ambientColor = new Color3(0.1, 0.3, 0.1);
 
-        //effet métallique
+        //effet metallique
         metal.specularPower = 256;
 
         topBlock.material = metal;
@@ -132,7 +132,7 @@ export class Bird extends Environment {
 
         this.lastSegmentX = x;
 
-        const innerCylinder = MeshBuilder.CreateCylinder("innerCylinder", {
+        const innerCylinder = MeshBuilder.CreateCylinder("pipe", {
             diameter: this.segmentWidth,
             height: 1,
             tessellation: 20
@@ -147,7 +147,6 @@ export class Bird extends Environment {
         blackMaterial.diffuseColor = new Color3(0, 0, 0);
         innerCylinder.material = blackMaterial;
         topInnerCylinder.material = blackMaterial;
-
     }
 
 
@@ -171,23 +170,19 @@ export class Bird extends Environment {
     }
 
     private createText3D(position: Vector3): void {
-        // Créer un plan pour afficher le texte
         const textPlane = MeshBuilder.CreatePlane("textPlane", { width: 14, height: 6 }, this.scene);
         textPlane.position = position;
         textPlane.billboardMode = 0;
 
-        // Créer une texture dynamique pour le texte
         const advancedTexture = AdvancedDynamicTexture.CreateForMesh(textPlane, 1024, 512);
 
-        // Création du texte
         const textBlock = new TextBlock();
         textBlock.text = "Run through\nthe pipes to score!";
         textBlock.color = "white";
-        textBlock.fontSize = 120; // Taille du texte
+        textBlock.fontSize = 120;
         textBlock.textHorizontalAlignment = TextBlock.HORIZONTAL_ALIGNMENT_CENTER;
         textBlock.textVerticalAlignment = TextBlock.VERTICAL_ALIGNMENT_CENTER;
 
-        // Ajout du texte à la texture
         advancedTexture.addControl(textBlock);
     }
 }
