@@ -37,7 +37,6 @@ export class Game {
         this.engine = this.createEngine();
         this.engine.loadingScreen = new KerbyLoadingScreen("");
         if (process.env.NODE_ENV === "development") {
-            console.log(process.env.NODE_ENV);
             this.engine.enableOfflineSupport = false;
             window.addEventListener("keydown", (ev) => {
                 if (ev.ctrlKey && ev.altKey && ev.key === "i") {
@@ -110,7 +109,7 @@ export class Game {
     private async main(): Promise<void> {
         if (this.engine instanceof WebGPUEngine)
             await this.engine.initAsync();
-        let level = Game.urlParams.get("level");
+        let level = Game.urlParams.get("game");
         if (level)
             await this.switchToCutScene(level);
         else
@@ -137,7 +136,7 @@ export class Game {
         this.state = State.MAINMENU;
     }
 
-    public async switchToCutScene(levelToLoad: number | string) {
+    public async switchToCutScene(levelToLoad: number | string, classicLevel?: number) {
         this.engine.displayLoadingUI();
 
         this.cutScene = new CutSceneScene(this.engine);
@@ -150,7 +149,7 @@ export class Game {
 
         // setting up during current scene
         this.levelScene = new LevelScene(this.engine);
-        await this.levelScene.setUpLevelAsync(levelToLoad);
+        await this.levelScene.setUpLevelAsync(levelToLoad, classicLevel);
     }
 
     public async switchToLevel() {

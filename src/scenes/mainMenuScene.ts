@@ -4,6 +4,8 @@ import { Game, GameEngine } from "../game";
 import { Menu } from "../gui/menu";
 
 export class MainMenuScene extends Scene {
+    private indexOfClassicMode: number = 3;
+
     constructor(engine: GameEngine) {
         super(engine);
     }
@@ -16,6 +18,20 @@ export class MainMenuScene extends Scene {
         this.createMainMenu();
     }
 
+    private theCallback(menu: Menu, i: number) {
+        menu.ui.dispose();
+        if (i == this.indexOfClassicMode) {
+            this.createLevelSelectionMenu("Choose a level to play", ["Level 1", "Level 2", "Level 3", "Level 4", "Level 5"], this.anotherCallBack.bind(this));
+            return;
+        }
+        this.switchToCutScene(i + 1);
+    }
+
+    private anotherCallBack(menu: Menu, i: number) {
+        menu.ui.dispose();
+        this.switchToCutScene(this.indexOfClassicMode + 1, i + 1);
+    }
+
     private createMainMenu(): void {
         const guiMenu = new Menu("menu", 720);
 
@@ -24,18 +40,18 @@ export class MainMenuScene extends Scene {
 
         guiMenu.addSimpleButton("start", "Start", "20%", "10%", "rgb(255,20,147)", "black", "0px", "0px", 10, 0, Control.VERTICAL_ALIGNMENT_BOTTOM, Control.HORIZONTAL_ALIGNMENT_CENTER, () => {
             guiMenu.ui.dispose();
-            this.createLevelSelectionMenu();
+            this.createLevelSelectionMenu("Choose a game to play", ["Kirby Rush", "Kirby Bird", "Kirby World", "Kirby Classic"], this.theCallback.bind(this));
         });
         guiMenu.addImageButton("github", "", "./assets/images/github.png", "40px", "40px", "40px", "40px", "black", "black", "10px", "10px", 10, 0, Control.VERTICAL_ALIGNMENT_TOP, Control.HORIZONTAL_ALIGNMENT_LEFT, () => {
             window.open("https://github.com/Socrimoft");
         });
     }
 
-    private createLevelSelectionMenu(): void {
+    private createLevelSelectionMenu(title: string, selection: string[], buttonCallBack: (menu: Menu, i: number) => void): void {
         const levelSelectMenu = new Menu("levelSelectMenu", 720);
-        levelSelectMenu.addTextBlock("title", "Choose a level to play", 35, "white", "-45%", Control.VERTICAL_ALIGNMENT_CENTER, Control.HORIZONTAL_ALIGNMENT_CENTER)
+        levelSelectMenu.addTextBlock("title", title, 35, "white", "-45%", Control.VERTICAL_ALIGNMENT_CENTER, Control.HORIZONTAL_ALIGNMENT_CENTER)
 
-        const levels = ["Kirby Rush", "Kirby Bird", "Kirby World", "Kirby Classic"];
+        const levels = selection;
 
         const levelsScrollViewer = new ScrollViewer();
         levelsScrollViewer.width = "500px";
@@ -73,10 +89,7 @@ export class MainMenuScene extends Scene {
             playLevelBtn.color = "black";
             playLevelBtn.background = "rgb(50, 205, 50)";
 
-            playLevelBtn.onPointerClickObservable.add(() => {
-                levelSelectMenu.ui.dispose();
-                this.switchToCutScene(i + 1);
-            });
+            playLevelBtn.onPointerClickObservable.add(() => { buttonCallBack(levelSelectMenu, i) });
 
             row.addControl(name, i);
             row.addControl(starsCount, i, 1);
@@ -91,9 +104,9 @@ export class MainMenuScene extends Scene {
         });
     }
 
-    private switchToCutScene(levelToLoad: number | number): void {
+    private switchToCutScene(levelToLoad: number | number, classicLevel?: number): void {
         this.detachControl();
-        Game.Instance.switchToCutScene(levelToLoad);
+        Game.Instance.switchToCutScene(levelToLoad, classicLevel);
         this.dispose();
     }
 }

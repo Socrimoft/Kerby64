@@ -10,6 +10,8 @@ import { BirdController } from "../components/birdController";
 import { RushController } from "../components/rushController";
 import { World } from "../environments/minigames/world";
 import { WorldController } from "../components/worldController";
+import { Classic } from "../environments/minigames/classic";
+import { ClassicController } from "../components/classicController";
 
 export class LevelScene extends Scene {
     private player: Player;
@@ -47,26 +49,27 @@ export class LevelScene extends Scene {
         window.history.pushState(data, "", "?" + params.toString())
     }
 
-    // set up the level without gui, in the background
-    public async setUpLevelAsync(levelToLoad: number | string): Promise<void> {
+    // set up the game without gui, in the background
+    public async setUpLevelAsync(gameToLoad: number | string, classicLevel?: number): Promise<void> {
         // environment
-        const levels = ["rush", "bird", "world"];
-        if (typeof levelToLoad === "string") {
-            levelToLoad = levels.indexOf((levelToLoad as string).toLowerCase()) + 1 || 1;
+        const games = ["rush", "bird", "world", "classic"];
+        if (typeof gameToLoad === "string") {
+            gameToLoad = games.indexOf((gameToLoad as string).toLowerCase()) + 1 || 1;
         }
-        const environments = [Rush, Bird, World];
-        const controllers = [RushController, BirdController, WorldController];
-        this.environment = new (environments.at(levelToLoad - 1) || environments[0])(this, this.player);
-        await this.environment.load();
-        const level = levels.at(levelToLoad - 1) || levels[0];
+        const environments = [Rush, Bird, World, Classic];
+        const controllers = [RushController, BirdController, WorldController, ClassicController];
+        this.environment = new (environments.at(gameToLoad - 1) || environments[0])(this, this.player);
+        const game = games.at(gameToLoad - 1) || games[0];
+        await this.environment.load(game === "classic" ? classicLevel : undefined);
         const seed = this.environment.seed.toString();
-        this.updateNavigatorHistory({ level, seed })
+        const level = classicLevel?.toString() as string;
+        this.updateNavigatorHistory(game === "classic" ? { game, seed, level } : { game, seed })
 
         // instanciate player
         await this.player.instanciate(this.environment.getLight(), new Vector3(0, 20, 0), new Vector3(0, Math.PI / 2, 0), this.input);
         this.player.activateEntityComponents();
 
-        this.player.addComponent(new (controllers.at(levelToLoad - 1) || controllers[0])(this.player, this.input));
+        this.player.addComponent(new (controllers.at(gameToLoad - 1) || controllers[0])(this.player, this.input));
 
         this.registerBeforeRender(() => {
             this.environment?.beforeRenderUpdate();

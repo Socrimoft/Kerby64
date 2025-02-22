@@ -63,14 +63,14 @@ export abstract class Environment {
 
     }
 
-    public async load(): Promise<void> {
+    public async load(classicLevel?: number): Promise<void> {
         this.setupSkybox();
         this.setupLight();
-        await this.loadEnvironment();
+        await this.loadEnvironment(classicLevel);
     }
 
     abstract setupSkybox(): void;
-    abstract loadEnvironment(): Promise<void>;
+    abstract loadEnvironment(classicLevel?: number): Promise<void>;
     abstract setupLight(): void;
     abstract getLightDirection(): Vector3;
     abstract setLightDirection(direction: Vector3): void;
