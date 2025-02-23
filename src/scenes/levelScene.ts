@@ -67,9 +67,9 @@ export class LevelScene extends Scene {
 
         // instanciate player
         await this.player.instanciate(this.environment.getLight(), new Vector3(0, 20, 0), new Vector3(0, Math.PI / 2, 0), this.input);
-        this.player.activateEntityComponents();
 
         this.player.addComponent(new (controllers.at(gameToLoad - 1) || controllers[0])(this.player, this.input));
+        this.player.activateEntityComponents();
 
         this.registerBeforeRender(() => {
             this.environment?.beforeRenderUpdate();

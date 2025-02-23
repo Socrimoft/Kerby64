@@ -30,7 +30,7 @@ export class Bird extends Environment {
 
         this.createText3D(new Vector3(20, 25, 0));
 
-        for (let i = -2; i < 5; i++) {//demander a ludo pk
+        for (let i = -2; i < 5; i++) {
             this.createGroundSegment(i * this.segmentWidth);
         }
         this.createPassage(this.lastSegmentX - 3 + this.segmentWidth + 15, 20);
@@ -63,7 +63,7 @@ export class Bird extends Environment {
         ground.receiveShadows = true;
 
         const mat = new StandardMaterial("groundMat", this.scene);
-        mat.diffuseTexture = new Texture("./assets/textures/Ground048_1K-JPG_Color.jpg", this.scene);
+        mat.diffuseTexture = new Texture("./assets/textures/DirtJPG.jpg", this.scene);
         //Color of dirt for no texture
         //mat.diffuseColor = new Color3(0.5, 0.25, 0.1);
         ground.material = mat;

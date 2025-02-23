@@ -1,4 +1,4 @@
-import { Vector3 } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
@@ -7,6 +7,7 @@ import { KirCity } from "./classicLevels/kirbyCity";
 import { KirBros } from "./classicLevels/kirBros";
 import { KirbyKawaii } from "./classicLevels/kirbyKawaii";
 import { KirDoom } from "./classicLevels/kirDoom";
+import { ClassicController } from "../../components/classicController";
 
 
 
@@ -23,24 +24,27 @@ export class Classic extends Environment {
 
 
     async loadEnvironment(classicLevel): Promise<void> {
-        this.skybox.dispose();
         const levels = [KirClassic, KirCity, KirBros, KirbyKawaii, KirDoom];
 
-        classicLevel = classicLevel && classicLevel >= 0 && classicLevel < levels.length ? classicLevel : 0;
+        classicLevel = classicLevel && classicLevel >= 0 && classicLevel < levels.length ? classicLevel - 1 : 0;
         this.level = new levels[classicLevel](this.scene, this.player);
         await this.level?.loadEnvironment();
+
+        this.setupSkybox();
+        this.setupLight();
     }
 
     setupLight(): void {
-        this.level?.setupLight();
+        this.light = new DirectionalLight("dirLight", new Vector3(1, -1, 1), this.scene);
     }
 
     getLightDirection(): Vector3 {
-        return this.level?.getLightDirection() || Vector3.Zero();
+        return this.light ? this.light.direction.normalize() : Vector3.Zero();
     }
 
     setLightDirection(direction: Vector3): void {
-        this.level?.setLightDirection(direction);
+        if (this.light)
+            this.light.direction = direction;
     }
 
     beforeRenderUpdate(): void {
