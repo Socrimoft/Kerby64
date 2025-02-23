@@ -1,9 +1,12 @@
-import { Color3, CubeTexture, DirectionalLight, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3, TransformNode } from "@babylonjs/core";
 import { Player } from "../../../actors/player";
 import { LevelScene } from "../../../scenes/levelScene";
 import { Environment } from "../../environment";
 
 export class KirClassic extends Environment {
+    private segmentWidth: number = 6;
+    private segmentHeight: number = 30;
+
     constructor(scene: LevelScene, player: Player) {
         super(scene, player);
     }
@@ -12,7 +15,7 @@ export class KirClassic extends Environment {
         this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
         const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
         skyboxMaterial.backFaceCulling = false;
-        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/bird/skybox/", this.scene);
+        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/classic/classic/skybox/", this.scene);
         skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
         skyboxMaterial.specularColor = new Color3(0, 0, 0);
@@ -34,10 +37,256 @@ export class KirClassic extends Environment {
     }
 
     async loadEnvironment() {
-        throw new Error("classic load Method not implemented.");
+        for (let i = -2; i < 250; i++) {
+
+            if (![40, 41].includes(i))
+                this.createGroundSegment(i * this.segmentWidth);
+        }
+
+        this.createFences(40);
+        //enemy normal
+        //enemy feu 
+        //enemy herrisson 
+        this.createFences(140);
+        this.createBlock(145, 5, 6);
+        //enemy blindé sur la box immobile
+        this.createLog(160);
+        //enemy feu sur la log pas immobile mais descendant pas
+        //enemy herrisson  sous la log
+        this.createLog(175);
+        //enemy feu sur la log pas immobile mais descendant pas
+        this.createFences(192);
+        this.createMysteryBox(200);
+        this.createLog(215);
+        //enemy blindé sur la box immobile
+        this.createLog(230);
+        //enemy feu sur la log pas immobile mais descendant pas
+        this.createWaterFences(40 * this.segmentWidth + 9.5, 2);
+        this.createBridge(40 * this.segmentWidth + 3, 2);
     }
 
     beforeRenderUpdate(): void {
-        throw new Error("update load Method not implemented.");
     }
+
+    private createGroundSegment(x: number): void {
+
+        const ground = MeshBuilder.CreateBox("groundSegment", {
+            width: this.segmentWidth,
+            depth: 20,
+            height: this.segmentHeight
+        }, this.scene);
+
+        ground.position = new Vector3(x + this.segmentWidth / 2 + 10, 0, 0);
+        ground.checkCollisions = true;
+        ground.receiveShadows = true;
+
+        const mat = new StandardMaterial("groundMat", this.scene);
+        mat.diffuseTexture = new Texture("./assets/textures/GrassJPG.jpg", this.scene);
+        //Color of dirt for no texture
+        //mat.diffuseColor = new Color3(0.5, 0.25, 0.1);
+        ground.material = mat;
+
+        this.pushGroundSegment(ground);
+        this.createPath(x);
+    }
+
+    private createFences(startX: number) {
+        this.createFence(startX, 15.5, 5);
+        this.createFence(startX, 15.5, -8);
+    }
+
+    private createFence(startX: number, startY: number, startZ: number) {
+        const fence = new TransformNode("fence", this.scene);
+
+        const plankMaterial = new StandardMaterial("plankMat", this.scene);
+        plankMaterial.diffuseColor = new Color3(1, 1, 1); // Blanc
+
+        // Création des poteaux
+        for (let i = 0; i < 4; i++) {
+            const post = MeshBuilder.CreateBox(`post${i}`, { width: 0.2, height: 1.2, depth: 0.2 }, this.scene);
+            post.position = new Vector3(startX + i * 2, startY, startZ);
+            post.material = plankMaterial;
+            post.parent = fence;
+        }
+
+        // Création des lattes horizontales
+        for (let j = -0.3; j <= 0.3; j += 0.6) {
+            const plank = MeshBuilder.CreateBox(`plank${j}`, { width: 8, height: 0.15, depth: 0.2 }, this.scene);
+            plank.position = new Vector3(startX + 3, startY + j, startZ);
+            plank.material = plankMaterial;
+            plank.parent = fence;
+        }
+
+        return fence;
+    }
+
+    private createPath(x: number): void {
+        const path = MeshBuilder.CreateBox("path", {
+            width: this.segmentWidth,
+            depth: 8,
+            height: 1,
+        }, this.scene);
+
+        path.position = new Vector3(x + this.segmentWidth / 2 + 10, 14.501, 0);
+        const pathMaterial = new StandardMaterial("groundMat", this.scene);
+        pathMaterial.diffuseTexture = new Texture("./assets/textures/DirtJPG.jpg", this.scene);
+
+        path.material = pathMaterial;
+    }
+
+    private createBlock(x: number, width: number, height: number): void {
+        const box = MeshBuilder.CreateBox("path", {
+            width: width,
+            depth: 6,
+            height: height,
+        }, this.scene);
+
+        box.checkCollisions = true;
+        box.receiveShadows = true;
+
+        box.position = new Vector3(x + this.segmentWidth / 2 + 10, 14.501, 0);
+        const boxMaterial = new StandardMaterial("box", this.scene);
+        boxMaterial.diffuseTexture = new Texture("./assets/textures/CarpetJPG.jpg", this.scene);
+
+        box.material = boxMaterial;
+    }
+
+    private createLog(x: number): void {
+        const log = MeshBuilder.CreateCylinder("log", {
+            diameter: 6.01,
+            height: 1,
+            tessellation: 8
+        }, this.scene);
+
+        const topCinlinder = MeshBuilder.CreateCylinder("topCinlinder", {
+            diameter: 6,
+            height: 1,
+            tessellation: 8
+        }, this.scene);
+
+        log.checkCollisions = true;
+        log.receiveShadows = true;
+
+        log.position = new Vector3(x + this.segmentWidth / 2 + 10, 20, 0);
+        const logMaterial = new StandardMaterial("box", this.scene);
+        logMaterial.diffuseTexture = new Texture("./assets/textures/BarkJPG.jpg", this.scene);
+
+        topCinlinder.position = new Vector3(x + this.segmentWidth / 2 + 10.005, 20.01, 0);
+        const topMaterial = new StandardMaterial("box", this.scene);
+        topMaterial.diffuseTexture = new Texture("./assets/textures/TreeEndJPG.jpg", this.scene);
+
+        log.material = logMaterial;
+        topCinlinder.material = topMaterial;
+    }
+
+    private createMysteryBox(x: number): void {
+        const box = MeshBuilder.CreateBox("path", {
+            width: 2,
+            depth: 2,
+            height: 2,
+        }, this.scene);
+
+        box.checkCollisions = true;
+        box.receiveShadows = true;
+
+        box.position = new Vector3(x + this.segmentWidth / 2 + 10, 20, 0);
+        const boxMaterial = new StandardMaterial("box", this.scene);
+        boxMaterial.diffuseTexture = new Texture("./assets/textures/Mistery.jpg", this.scene);
+
+        box.material = boxMaterial;
+    }
+
+    private createWaterFences(startX: number, length: number) {
+        this.createWaterFence(startX, 15.5, 5);
+        this.createWaterFence(startX, 15.5, -9);
+        this.createWaterFence(startX + length * this.segmentWidth + 1, 15.5, 5);
+        this.createWaterFence(startX + length * this.segmentWidth + 1, 15.5, -9);
+    }
+
+    private createWaterFence(startX: number, startY: number, startZ: number) {
+        const fence = new TransformNode("fence", this.scene);
+
+        const plankMaterial = new StandardMaterial("plankMat", this.scene);
+        plankMaterial.diffuseTexture = new Texture("./assets/textures/PlankJPG.jpg", this.scene);
+
+        // Création des poteaux
+        for (let i = 0; i < 3; i++) {
+            const post = MeshBuilder.CreateBox(`post${i}`, { width: 0.2, height: 1.2, depth: 0.2 }, this.scene);
+            post.position = new Vector3(startX, startY, startZ + i * 2);
+            post.material = plankMaterial;
+            post.parent = fence;
+        }
+
+        // Création des lattes horizontales
+        for (let j = -0.3; j <= 0.3; j += 0.6) {
+            const plank = MeshBuilder.CreateBox(`plank${j}`, { width: 0.2, height: 0.15, depth: 5 }, this.scene);
+            plank.position = new Vector3(startX, startY + j, startZ + 2);
+            plank.material = plankMaterial;
+            plank.parent = fence;
+        }
+
+        return fence;
+    }
+
+    private createBridge(x: number, length: number): void {
+        const floor = MeshBuilder.CreateBox("path", {
+            width: length * this.segmentWidth,
+            depth: 8,
+            height: 0.5,
+        }, this.scene);
+
+        floor.position = new Vector3(x + this.segmentWidth / 2 + 10, 15, 0);
+        const pathMaterial = new StandardMaterial("groundMat", this.scene);
+        pathMaterial.diffuseTexture = new Texture("./assets/textures/PlankJPG.jpg", this.scene);
+
+        floor.material = pathMaterial;
+        floor.checkCollisions = true;
+        floor.receiveShadows = true;
+
+        // Créer la rampe gauche (pour monter sur la plateforme)
+        const leftRamp = MeshBuilder.CreateBox("leftRamp", {
+            width: 4,
+            depth: 8,
+            height: 0.5,
+        }, this.scene);
+
+        leftRamp.position = new Vector3(x + 5.4, 14.25, 0);
+        leftRamp.rotation = new Vector3(0, 0, Math.PI / 8);
+        leftRamp.material = pathMaterial;
+        leftRamp.checkCollisions = true;
+        leftRamp.receiveShadows = true;
+
+        // Créer la rampe droite (pour descendre de la plateforme)
+        const rightRamp = MeshBuilder.CreateBox("rightRamp", {
+            width: 4,
+            depth: 8,
+            height: 0.5,
+        }, this.scene);
+
+        rightRamp.position = new Vector3(x + (length * this.segmentWidth) + 8.8, 14.3, 0);
+        rightRamp.rotation = new Vector3(0, 0, -Math.PI / 8);
+        rightRamp.material = pathMaterial;
+        rightRamp.checkCollisions = true;
+        rightRamp.receiveShadows = true;
+        this.createElongatedPyramid(length * this.segmentWidth, 1.5, new Vector3(x + this.segmentWidth / 2 + 10, 15.25, 3.5));
+        this.createElongatedPyramid(length * this.segmentWidth, 1.5, new Vector3(x + this.segmentWidth / 2 + 10, 15.25, -3.5));
+    }
+
+    private createElongatedPyramid(length: number, height: number, position: Vector3): void {
+        // Créer un prisme triangulaire en utilisant un cylindre avec 3 côtés
+        const prism = MeshBuilder.CreateCylinder("prism", {
+            height: length,
+            diameter: height,
+            tessellation: 3,
+        });
+
+        prism.position = position;
+        prism.rotation = new Vector3(0, 0, Math.PI / 2);
+        const prismMaterial = new StandardMaterial("plankMat", this.scene);
+        prismMaterial.diffuseTexture = new Texture("./assets/textures/PlankJPG.jpg", this.scene);
+        prism.material = prismMaterial;
+        prism.receiveShadows = true;
+    }
+
+
 }
