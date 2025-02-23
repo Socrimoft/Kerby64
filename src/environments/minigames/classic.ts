@@ -1,4 +1,4 @@
-import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
@@ -6,7 +6,7 @@ import { KirClassic } from "./classicLevels/kirbyClassic";
 import { KirCity } from "./classicLevels/kirbyCity";
 import { KirBros } from "./classicLevels/kirBros";
 import { KirbyKawaii } from "./classicLevels/kirbyKawaii";
-import { KirDoom } from "./classicLevels/kirdoom";
+import { KirDoom } from "./classicLevels/kirDoom";
 
 
 
