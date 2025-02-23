@@ -2,39 +2,48 @@ import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, T
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
+import { KirClassic } from "./classicLevels/kirbyClassic";
+import { KirCity } from "./classicLevels/kirbyCity";
+import { KirBros } from "./classicLevels/kirBros";
+import { KirbyKawaii } from "./classicLevels/kirbyKawaii";
+import { KirDoom } from "./classicLevels/kirdoom";
+
+
 
 export class Classic extends Environment {
+    private level?: Environment;
+
     constructor(scene: LevelScene, player: Player) {
         super(scene, player);
     }
 
     setupSkybox(): void {
-        this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
-        const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
-        skyboxMaterial.backFaceCulling = false;
-        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/bird/skybox/", this.scene);
-        skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-        skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
-        skyboxMaterial.specularColor = new Color3(0, 0, 0);
-        this.skybox.material = skyboxMaterial;
-        this.skybox.infiniteDistance = true;
+        this.level?.setupSkybox();
     }
 
 
-    async loadEnvironment(): Promise<void> { }
+    async loadEnvironment(classicLevel): Promise<void> {
+        this.skybox.dispose();
+        const levels = [KirClassic, KirCity, KirBros, KirbyKawaii, KirDoom];
+
+        classicLevel = classicLevel && classicLevel >= 0 && classicLevel < levels.length ? classicLevel : 0;
+        this.level = new levels[classicLevel](this.scene, this.player);
+        await this.level?.loadEnvironment();
+    }
 
     setupLight(): void {
-        this.light = new DirectionalLight("dirLight", new Vector3(1, -1, 1), this.scene);
+        this.level?.setupLight();
     }
 
     getLightDirection(): Vector3 {
-        return this.light ? this.light.direction.normalize() : Vector3.Zero();
+        return this.level?.getLightDirection() || Vector3.Zero();
     }
 
     setLightDirection(direction: Vector3): void {
-        if (this.light)
-            this.light.direction = direction;
+        this.level?.setLightDirection(direction);
     }
 
-    beforeRenderUpdate(): void { }
+    beforeRenderUpdate(): void {
+        this.level?.beforeRenderUpdate();
+    }
 }
