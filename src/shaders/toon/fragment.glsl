@@ -6,6 +6,7 @@ uniform float lightIntensity;
 uniform vec3 diffuseColor;
 uniform vec4 ambiantColor;
 uniform vec4 specularColor;
+uniform float specularPower;
 uniform float glossiness;
 uniform vec4 rimColor;
 uniform float rimAmount;
@@ -24,7 +25,7 @@ void main(void) {
     float NdotH = dot(vNormal, halfVector);
     float specularIntensity = pow(NdotH * lightIntensity, glossiness * glossiness);
     float specularIntensitySmooth = smoothstep(0.005, 0.01, specularIntensity);
-    vec4 specular = specularIntensitySmooth * specularColor;
+    vec4 specular = specularIntensitySmooth * specularColor * specularPower;
 
     // float rimDot = 1.0 - dot(viewDir, vNormal);
     // float rimIntensity = rimDot * pow(NdotL, rimThreshold);

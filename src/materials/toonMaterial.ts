@@ -36,9 +36,14 @@ export class ToonMaterial extends ShaderMaterial {
         this.setVector3("diffuseColor", new Vector3(light.diffuse.r, light.diffuse.g, light.diffuse.b));
         this.setVector4("ambiantColor", new Vector4(0.5, 0.5, 0.5, 1.0));
         this.setVector4("specularColor", new Vector4(0.9, 0.9, 0.9, 1.0));
+        this.setFloat("specularPower", 1);
         this.setFloat("glossiness", 32);
         this.setVector4("rimColor", new Vector4(1, 1, 1, 1));
         this.setFloat("rimAmount", 0.716);
         this.setFloat("rimThreshold", 0.1);
+    }
+
+    public setSpecularPower(power: number): void {
+        this.setFloat("specularPower", power);
     }
 }

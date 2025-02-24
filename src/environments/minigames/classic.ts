@@ -7,7 +7,6 @@ import { KirCity } from "./classicLevels/kirbyCity";
 import { KirBros } from "./classicLevels/kirBros";
 import { KirbyKawaii } from "./classicLevels/kirbyKawaii";
 import { KirDoom } from "./classicLevels/kirDoom";
-import { ClassicController } from "../../components/classicController";
 
 
 

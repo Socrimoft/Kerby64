@@ -1,7 +1,8 @@
-import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3, TransformNode } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3, TransformNode, Mesh } from "@babylonjs/core";
 import { Player } from "../../../actors/player";
 import { LevelScene } from "../../../scenes/levelScene";
 import { Environment } from "../../environment";
+import { ToonMaterial } from "../../../materials/toonMaterial";
 
 export class KirClassic extends Environment {
     private segmentWidth: number = 6;
@@ -24,7 +25,7 @@ export class KirClassic extends Environment {
     }
 
     setupLight(): void {
-        this.light = new DirectionalLight("dirLight", new Vector3(1, -1, 1), this.scene);
+        this.light = new DirectionalLight("dirLight", new Vector3(1, 1, 1), this.scene);
     }
 
     getLightDirection(): Vector3 {
@@ -37,11 +38,15 @@ export class KirClassic extends Environment {
     }
 
     async loadEnvironment() {
-        for (let i = -2; i < 250; i++) {
+        this.setupLight();
+        for (let i = -2; i < 88; i++) {
 
-            if (![40, 41].includes(i))
+            if (![40, 41, 58, 59].includes(i))
                 this.createGroundSegment(i * this.segmentWidth);
         }
+
+        this.createGroundSegment(58 * this.segmentWidth, this.segmentHeight - 2);
+        this.createGroundSegment(59 * this.segmentWidth, this.segmentHeight - 2);
 
         this.createFences(40);
         //enemy normal
@@ -63,31 +68,61 @@ export class KirClassic extends Environment {
         //enemy feu sur la log pas immobile mais descendant pas
         this.createWaterFences(40 * this.segmentWidth + 9.5, 2);
         this.createBridge(40 * this.segmentWidth + 3, 2);
+        //enemy sauteur sur le pont
+        //enemy herrisson apres pont
+        //enemy sauteur apres pont
+        this.createBlock(275, 6, 8);
+        this.createBlock(278.2, 6, 5.3).rotation = new Vector3(0, 0, -Math.PI / 4);
+        this.createBlock(281, 6, 4);
+        //enemy sauteur sur partie basse
+        //enemy blindé immobile
+        //diamand
+        //enemy blindé immobile
+        this.createWaterFences(58 * this.segmentWidth + 9.5, 2);
+        //enney normal
+        this.createBlock(380, 12, 6);
+        //enemy blindé immobile
+        //enney normal
+        this.createFences(405);
+        this.createBlock(420, 6, 10);
+        this.createMysteryBox(430);
+        this.createBlock(440, 6, 10);
+        this.createMysteryBox(450);
+        this.createBlock(460, 6, 10);
+        this.createFences(470);
+        //enney normal
+        //enemy sauteur
+        this.createFences(480);
+        this.createBlock(480, 4, 4);
+        this.createBlock(490, 6, 8);
+        this.createBlock(500, 4, 4);
+        this.createFences(500);
+        this.createWaterFences(530, 10);
+        // porte de fin
     }
 
     beforeRenderUpdate(): void {
     }
 
-    private createGroundSegment(x: number): void {
+    private createGroundSegment(x: number, height?: number): void {
 
         const ground = MeshBuilder.CreateBox("groundSegment", {
             width: this.segmentWidth,
             depth: 20,
-            height: this.segmentHeight
+            height: height ? height : this.segmentHeight,
         }, this.scene);
 
         ground.position = new Vector3(x + this.segmentWidth / 2 + 10, 0, 0);
         ground.checkCollisions = true;
         ground.receiveShadows = true;
 
-        const mat = new StandardMaterial("groundMat", this.scene);
-        mat.diffuseTexture = new Texture("./assets/textures/GrassJPG.jpg", this.scene);
+        const mat = new ToonMaterial(new Texture("./assets/textures/GrassJPG.jpg", this.scene), this.getLight(), false, this.scene);
         //Color of dirt for no texture
         //mat.diffuseColor = new Color3(0.5, 0.25, 0.1);
         ground.material = mat;
 
         this.pushGroundSegment(ground);
-        this.createPath(x);
+        this.createPath(x, height);
     }
 
     private createFences(startX: number) {
@@ -120,21 +155,20 @@ export class KirClassic extends Environment {
         return fence;
     }
 
-    private createPath(x: number): void {
+    private createPath(x: number, height?: number): void {
         const path = MeshBuilder.CreateBox("path", {
             width: this.segmentWidth,
             depth: 8,
             height: 1,
         }, this.scene);
 
-        path.position = new Vector3(x + this.segmentWidth / 2 + 10, 14.501, 0);
-        const pathMaterial = new StandardMaterial("groundMat", this.scene);
-        pathMaterial.diffuseTexture = new Texture("./assets/textures/DirtJPG.jpg", this.scene);
+        path.position = new Vector3(x + this.segmentWidth / 2 + 10, height ? height - 14.498 : 14.501, 0);
+        const pathMaterial = new ToonMaterial(new Texture("./assets/textures/DirtJPG.jpg", this.scene), this.getLight(), false, this.scene);
 
         path.material = pathMaterial;
     }
 
-    private createBlock(x: number, width: number, height: number): void {
+    private createBlock(x: number, width: number, height: number): Mesh {
         const box = MeshBuilder.CreateBox("path", {
             width: width,
             depth: 6,
@@ -145,21 +179,21 @@ export class KirClassic extends Environment {
         box.receiveShadows = true;
 
         box.position = new Vector3(x + this.segmentWidth / 2 + 10, 14.501, 0);
-        const boxMaterial = new StandardMaterial("box", this.scene);
-        boxMaterial.diffuseTexture = new Texture("./assets/textures/CarpetJPG.jpg", this.scene);
+        const boxMaterial = new ToonMaterial(new Texture("./assets/textures/CarpetJPG.jpg", this.scene), this.getLight(), false, this.scene);
 
         box.material = boxMaterial;
+        return box;
     }
 
     private createLog(x: number): void {
         const log = MeshBuilder.CreateCylinder("log", {
-            diameter: 6.01,
+            diameter: 6,
             height: 1,
             tessellation: 8
         }, this.scene);
 
         const topCinlinder = MeshBuilder.CreateCylinder("topCinlinder", {
-            diameter: 6,
+            diameter: 5.5,
             height: 1,
             tessellation: 8
         }, this.scene);
@@ -168,12 +202,10 @@ export class KirClassic extends Environment {
         log.receiveShadows = true;
 
         log.position = new Vector3(x + this.segmentWidth / 2 + 10, 20, 0);
-        const logMaterial = new StandardMaterial("box", this.scene);
-        logMaterial.diffuseTexture = new Texture("./assets/textures/BarkJPG.jpg", this.scene);
+        const logMaterial = new ToonMaterial(new Texture("./assets/textures/BarkJPG.jpg", this.scene), this.getLight(), false, this.scene);
 
         topCinlinder.position = new Vector3(x + this.segmentWidth / 2 + 10.005, 20.01, 0);
-        const topMaterial = new StandardMaterial("box", this.scene);
-        topMaterial.diffuseTexture = new Texture("./assets/textures/TreeEndJPG.jpg", this.scene);
+        const topMaterial = new ToonMaterial(new Texture("./assets/textures/TreeEndJPG.jpg", this.scene), this.getLight(), false, this.scene);
 
         log.material = logMaterial;
         topCinlinder.material = topMaterial;
@@ -190,8 +222,7 @@ export class KirClassic extends Environment {
         box.receiveShadows = true;
 
         box.position = new Vector3(x + this.segmentWidth / 2 + 10, 20, 0);
-        const boxMaterial = new StandardMaterial("box", this.scene);
-        boxMaterial.diffuseTexture = new Texture("./assets/textures/Mistery.jpg", this.scene);
+        const boxMaterial = new ToonMaterial(new Texture("./assets/textures/Mistery.jpg", this.scene), this.getLight(), false, this.scene);
 
         box.material = boxMaterial;
     }
@@ -206,8 +237,7 @@ export class KirClassic extends Environment {
     private createWaterFence(startX: number, startY: number, startZ: number) {
         const fence = new TransformNode("fence", this.scene);
 
-        const plankMaterial = new StandardMaterial("plankMat", this.scene);
-        plankMaterial.diffuseTexture = new Texture("./assets/textures/PlankJPG.jpg", this.scene);
+        const plankMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.getLight(), false, this.scene);
 
         // Création des poteaux
         for (let i = 0; i < 3; i++) {
@@ -236,8 +266,7 @@ export class KirClassic extends Environment {
         }, this.scene);
 
         floor.position = new Vector3(x + this.segmentWidth / 2 + 10, 15, 0);
-        const pathMaterial = new StandardMaterial("groundMat", this.scene);
-        pathMaterial.diffuseTexture = new Texture("./assets/textures/PlankJPG.jpg", this.scene);
+        const pathMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.getLight(), false, this.scene);
 
         floor.material = pathMaterial;
         floor.checkCollisions = true;
@@ -282,8 +311,7 @@ export class KirClassic extends Environment {
 
         prism.position = position;
         prism.rotation = new Vector3(0, 0, Math.PI / 2);
-        const prismMaterial = new StandardMaterial("plankMat", this.scene);
-        prismMaterial.diffuseTexture = new Texture("./assets/textures/PlankJPG.jpg", this.scene);
+        const prismMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.getLight(), false, this.scene);
         prism.material = prismMaterial;
         prism.receiveShadows = true;
     }

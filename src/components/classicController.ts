@@ -60,7 +60,7 @@ export class ClassicController extends EntityController implements Anim {
             this.entity.setRotation(new Vector3(0, Math.PI / 2, 0));
             // this.updateShaderLightDirection(new Vector3(1, 1, 0));
             this.playAnimation(this.runAnim);
-            this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime * 4);
+            this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
         }
         else if (this.input.inputMap[this.input.leftKey]) {
             this.entity.setRotation(new Vector3(0, -Math.PI / 2, 0));

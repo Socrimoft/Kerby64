@@ -3,6 +3,7 @@ import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
+import { ToonMaterial } from "../../materials/toonMaterial";
 
 export class Bird extends Environment {
     private segmentWidth: number = 6;
@@ -38,7 +39,7 @@ export class Bird extends Environment {
     }
 
     setupLight(): void {
-        this.light = new DirectionalLight("dirLight", new Vector3(1, -1, 1), this.scene);
+        this.light = new DirectionalLight("dirLight", new Vector3(1, 1, -1), this.scene);
     }
 
     getLightDirection(): Vector3 {
@@ -62,8 +63,7 @@ export class Bird extends Environment {
         ground.checkCollisions = true;
         ground.receiveShadows = true;
 
-        const mat = new StandardMaterial("groundMat", this.scene);
-        mat.diffuseTexture = new Texture("./assets/textures/DirtJPG.jpg", this.scene);
+        const mat = new ToonMaterial(new Texture("./assets/textures/DirtJPG.jpg", this.scene), this.getLight(), false, this.scene);
         //Color of dirt for no texture
         //mat.diffuseColor = new Color3(0.5, 0.25, 0.1);
         ground.material = mat;
@@ -109,14 +109,10 @@ export class Bird extends Environment {
         bottomBlock.checkCollisions = true;
         bottomBlockTop.checkCollisions = true;
 
-        const metal = new StandardMaterial("blockMat", this.scene);
-        metal.diffuseColor = new Color3(0.1, 0.5, 0.1); // vert fonce
-        metal.specularColor = new Color3(0.3, 1, 0.3); // reflet vert
-        metal.emissiveColor = new Color3(0, 0.2, 0); // lueur vert
-        metal.ambientColor = new Color3(0.1, 0.3, 0.1);
+        const metal = new ToonMaterial(new Color3(0.1, 0.5, 0.1), this.getLight(), false, this.scene);
 
         //effet metallique
-        metal.specularPower = 256;
+        metal.setSpecularPower(256);
 
         topBlock.material = metal;
         topBlockBottom.material = metal;
@@ -143,8 +139,7 @@ export class Bird extends Environment {
         innerCylinder.position = new Vector3(x, -this.passageHeight / 2 - 0.498 + yOffset, 0);
         topInnerCylinder.position = new Vector3(x, this.passageHeight / 2 + 0.499 + yOffset, 0);
 
-        const blackMaterial = new StandardMaterial("blackMat", this.scene);
-        blackMaterial.diffuseColor = new Color3(0, 0, 0);
+        const blackMaterial = new ToonMaterial(new Color3(0, 0, 0), this.getLight(), false, this.scene);
         innerCylinder.material = blackMaterial;
         topInnerCylinder.material = blackMaterial;
     }
