@@ -157,7 +157,7 @@ export class KirClassic extends Environment {
 
     private createPath(x: number, height?: number): void {
         const path = MeshBuilder.CreateBox("path", {
-            width: this.segmentWidth,
+            width: this.segmentWidth - 0.01,
             depth: 8,
             height: 1,
         }, this.scene);
