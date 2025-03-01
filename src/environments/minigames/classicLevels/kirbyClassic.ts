@@ -112,11 +112,11 @@ export class KirClassic extends Environment {
             height: height ? height : this.segmentHeight,
         }, this.scene);
 
-        ground.position = new Vector3(x + this.segmentWidth / 2 + 10, 0, 0);
+        ground.position = new Vector3(x + this.segmentWidth / 2 + 0.01 + 10, 0, 0);
         ground.checkCollisions = true;
         ground.receiveShadows = true;
 
-        const mat = new ToonMaterial(new Texture("./assets/textures/GrassJPG.jpg", this.scene), this.getLight(), false, this.scene);
+        const mat = new ToonMaterial(new Texture("./assets/textures/cartoon-grass.jpg", this.scene), this.getLight(), false, this.scene);
         //Color of dirt for no texture
         //mat.diffuseColor = new Color3(0.5, 0.25, 0.1);
         ground.material = mat;
@@ -157,13 +157,13 @@ export class KirClassic extends Environment {
 
     private createPath(x: number, height?: number): void {
         const path = MeshBuilder.CreateBox("path", {
-            width: this.segmentWidth - 0.01,
+            width: this.segmentWidth,
             depth: 8,
             height: 1,
         }, this.scene);
 
         path.position = new Vector3(x + this.segmentWidth / 2 + 10, height ? height - 14.498 : 14.501, 0);
-        const pathMaterial = new ToonMaterial(new Texture("./assets/textures/DirtJPG.jpg", this.scene), this.getLight(), false, this.scene);
+        const pathMaterial = new ToonMaterial(new Texture("./assets/textures/cartoon-dirt.jpg", this.scene), this.getLight(), false, this.scene);
 
         path.material = pathMaterial;
     }
@@ -202,7 +202,7 @@ export class KirClassic extends Environment {
         log.receiveShadows = true;
 
         log.position = new Vector3(x + this.segmentWidth / 2 + 10, 20, 0);
-        const logMaterial = new ToonMaterial(new Texture("./assets/textures/BarkJPG.jpg", this.scene), this.getLight(), false, this.scene);
+        const logMaterial = new ToonMaterial(new Texture("./assets/textures/cartoon-wood.jpg", this.scene), this.getLight(), false, this.scene);
 
         topCinlinder.position = new Vector3(x + this.segmentWidth / 2 + 10.005, 20.01, 0);
         const topMaterial = new ToonMaterial(new Texture("./assets/textures/TreeEndJPG.jpg", this.scene), this.getLight(), false, this.scene);

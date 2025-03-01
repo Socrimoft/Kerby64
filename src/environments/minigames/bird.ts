@@ -63,7 +63,7 @@ export class Bird extends Environment {
         ground.checkCollisions = true;
         ground.receiveShadows = true;
 
-        const mat = new ToonMaterial(new Texture("./assets/textures/DirtJPG.jpg", this.scene), this.getLight(), false, this.scene);
+        const mat = new ToonMaterial(new Texture("./assets/textures/cartoon-dirt.jpg", this.scene), this.getLight(), false, this.scene);
         //Color of dirt for no texture
         //mat.diffuseColor = new Color3(0.5, 0.25, 0.1);
         ground.material = mat;
