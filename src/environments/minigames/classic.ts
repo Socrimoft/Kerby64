@@ -34,7 +34,7 @@ export class Classic extends Environment {
     }
 
     setupLight(): void {
-        this.light = new DirectionalLight("dirLight", new Vector3(1, -1, 1), this.scene);
+        this.light = this.level?.setupLight() || new DirectionalLight("light", new Vector3(1, 1, -1), this.scene);
     }
 
     getLightDirection(): Vector3 {
