@@ -1,4 +1,4 @@
-import { Color3, CubeTexture, DirectionalLight, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { DirectionalLight, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
@@ -22,7 +22,7 @@ export class Classic extends Environment {
     }
 
 
-    async loadEnvironment(classicLevel): Promise<void> {
+    async loadEnvironment(classicLevel?: number): Promise<void> {
         const levels = [KirClassic, KirCity, KirBros, KirbyKawaii, KirDoom];
 
         classicLevel = classicLevel && classicLevel >= 0 && classicLevel < levels.length ? classicLevel - 1 : 0;

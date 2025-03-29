@@ -20,7 +20,7 @@ export class GameEntity {
         this.components.push(...components);
     }
 
-    public async instanciate(light: DirectionalLight, position?: Vector3, rotation?: Vector3): Promise<void> {
+    public async instanciate(light: DirectionalLight, position = Vector3.Zero(), rotation = Vector3.Zero()): Promise<void> {
         this.assets = await LoadAssetContainerAsync(this.baseSourceURI + this.name + ".glb", this.scene);
         const root = (this.assets.rootNodes.length == 1 && this.assets.rootNodes[0] instanceof Mesh) ? this.assets.rootNodes[0] : this.assets.createRootMesh();
         root.name = this.name;
@@ -41,8 +41,8 @@ export class GameEntity {
         if (this.mesh) this.dispose();
         this.mesh = root;
         this.isDisposed = false;
-        this.mesh.position = position ? position : Vector3.Zero();
-        if (rotation) this.mesh.rotation = rotation;
+        this.mesh.position = position;
+        this.mesh.rotation = rotation;
     }
 
     public clone(name?: string, position?: Vector3, rotation?: Vector3, cloneComponents: boolean = false): GameEntity {
@@ -81,19 +81,19 @@ export class GameEntity {
         this.components.forEach((comp) => { comp.beforeRenderUpdate() })
     }
 
-    public getPosition(): Vector3 {
+    public get position(): Vector3 {
         return this.mesh ? this.mesh.position : Vector3.Zero();
     }
 
-    public setPosition(position: Vector3): void {
+    public set position(position: Vector3) {
         if (this.mesh) this.mesh.position = position;
     }
 
-    public getRotation(): Vector3 {
+    public get rotation(): Vector3 {
         return this.mesh ? this.mesh.rotation : Vector3.Zero();
     }
 
-    public setRotation(rotation: Vector3): void {
+    public set rotation(rotation: Vector3) {
         if (this.mesh) this.mesh.rotation = rotation;
     }
 
@@ -111,6 +111,14 @@ export class GameEntity {
 
     public moveForwardWithCollisions(scale: number): void {
         if (this.mesh) this.moveWithCollisions(this.mesh.forward.scale(scale));
+    }
+
+    /** 
+     * this is probably not the good way to do what you want to do, considering you're using this.
+     * make a new method that do what you want instead of using this
+    */
+    public get meshRef() {
+        return this.mesh as Mesh;
     }
 
     public updateShaderLightDirection(direction: Vector3) {

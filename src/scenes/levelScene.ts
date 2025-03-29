@@ -12,6 +12,7 @@ import { World } from "../environments/minigames/world";
 import { WorldController } from "../components/worldController";
 import { Classic } from "../environments/minigames/classic";
 import { ClassicController } from "../components/classicController";
+import { Camera3DController } from "../components/camera3DController";
 
 export class LevelScene extends Scene {
     private player: Player;
@@ -53,9 +54,8 @@ export class LevelScene extends Scene {
     public async setUpLevelAsync(gameToLoad: number | string, classicLevel?: number): Promise<void> {
         // environment
         const games = ["rush", "bird", "world", "classic"];
-        if (typeof gameToLoad === "string") {
+        if (typeof gameToLoad === "string")
             gameToLoad = games.indexOf((gameToLoad as string).toLowerCase()) + 1 || 1;
-        }
         const environments = [Rush, Bird, World, Classic];
         const controllers = [RushController, BirdController, WorldController, ClassicController];
         this.environment = new (environments.at(gameToLoad - 1) || environments[0])(this, this.player);
@@ -66,8 +66,7 @@ export class LevelScene extends Scene {
         this.updateNavigatorHistory(game === "classic" ? { game, seed, level } : { game, seed })
 
         // instanciate player
-        await this.player.instanciate(this.environment.getLight(), new Vector3(0, 20, 0), new Vector3(0, Math.PI / 2, 0), this.input);
-
+        await this.player.instanciate(this.environment.getLight(), new Vector3(0, 20, 0), new Vector3(0, Math.PI / 2, 0), this.input, gameToLoad == 3 ? Camera3DController : undefined);
         this.player.addComponent(new (controllers.at(gameToLoad - 1) || controllers[0])(this.player, this.input));
         this.player.activateEntityComponents();
 

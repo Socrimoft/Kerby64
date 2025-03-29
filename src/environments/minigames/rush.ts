@@ -86,12 +86,12 @@ export class Rush extends Environment {
     }
 
     beforeRenderUpdate(): void {
-        while (this.lastSegmentX < this.player.getPosition().x + 50) {
+        while (this.lastSegmentX < this.player.position.x + 50) {
             this.createGroundSegment(this.lastSegmentX + this.segmentWidth);
         }
 
         this.setGroundSegments(this.getGroundSegments().filter(segment => {
-            if (segment.position.x + this.segmentWidth < this.player.getPosition().x - 30) {
+            if (segment.position.x + this.segmentWidth < this.player.position.x - 30) {
                 segment.dispose();
                 return false;
             }

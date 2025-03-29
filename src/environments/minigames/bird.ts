@@ -147,7 +147,7 @@ export class Bird extends Environment {
 
 
     beforeRenderUpdate(): void {
-        while (this.lastSegmentX < this.player.getPosition().x + 50) {
+        while (this.lastSegmentX < this.player.position.x + 50) {
             let random = this.random.random();
 
             if (random < 0.2) {

@@ -25,10 +25,10 @@ export class KoombaController extends EntityController implements Anim {
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
         this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
         this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
-        if (this.oldPosX == this.entity.getPosition().x)
-            this.entity.setRotation(new Vector3(0, -this.entity.getRotation().y, 0));
-        this.oldPosX = this.entity.getPosition().x;
-        if (this.entity.getPosition().y < 0)
+        if (this.oldPosX == this.entity.position.x)
+            this.entity.rotation = new Vector3(0, -this.entity.rotation.y, 0);
+        this.oldPosX = this.entity.position.x;
+        if (this.entity.position.y < 0)
             this.entity.dispose();
     }
 }

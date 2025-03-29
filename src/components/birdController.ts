@@ -69,7 +69,7 @@ export class BirdController extends EntityController {
         else
             this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
 
-        this.entity.setRotation(new Vector3(0, Math.PI / 2, 0));
+        this.entity.rotation = new Vector3(0, Math.PI / 2, 0);
         this.playAnimation(this.runAnim);
         this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
 
@@ -82,7 +82,7 @@ export class BirdController extends EntityController {
         let hitDetected = false;
 
         for (const direction of directions) {
-            const ray = new Ray(this.entity.getPosition(), direction, 1);
+            const ray = new Ray(this.entity.position, direction, 1);
             const hit = this.scene.pickWithRay(ray);
 
             if (hit && hit.pickedMesh && hit.pickedMesh.name.includes("pipe")) {
@@ -96,7 +96,7 @@ export class BirdController extends EntityController {
         }
 
         //check for points
-        if (this.entity.getPosition().x > this.lastPoX + 26) {
+        if (this.entity.position.x > this.lastPoX + 26) {
             this.lastPoX += 26;
             this.scene.updateScore(1);
         }

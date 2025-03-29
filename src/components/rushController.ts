@@ -57,13 +57,13 @@ export class RushController extends EntityController implements Anim {
             this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
 
         if (this.input.inputMap[this.input.rightKey]) {
-            this.entity.setRotation(new Vector3(0, Math.PI / 2, 0));
+            this.entity.rotation = new Vector3(0, Math.PI / 2, 0);
             // this.updateShaderLightDirection(new Vector3(1, 1, 0));
             this.playAnimation(this.runAnim);
             this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
         }
         else if (this.input.inputMap[this.input.leftKey]) {
-            this.entity.setRotation(new Vector3(0, -Math.PI / 2, 0));
+            this.entity.rotation = new Vector3(0, -Math.PI / 2, 0);
             // this.updateShaderLightDirection(new Vector3(-1, 1, 0));
             this.playAnimation(this.runAnim);
             this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
@@ -72,12 +72,12 @@ export class RushController extends EntityController implements Anim {
             this.playAnimation(this.idleAnim);
 
         // detect if grounded // detecte si t puni mdr pas mal ludo
-        const ray = new Ray(new Vector3(this.entity.getPosition().x, this.entity.getPosition().y - 1, this.entity.getPosition().z), Vector3.Down(), 1);
+        const ray = new Ray(new Vector3(this.entity.position.x, this.entity.position.y - 1, this.entity.position.z), Vector3.Down(), 1);
         const hit = this.scene.pickWithRay(ray);
 
         if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh))
             this.remainingJumps = 3;
-        if (this.entity.getPosition().y < 0) {
+        if (this.entity.position.y < 0) {
             this.entity.dispose();
             Game.Instance.switchToGameOver(this.scene.score)
         }

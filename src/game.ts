@@ -18,7 +18,7 @@ enum State {
 }
 export type GameEngine = Engine | WebGPUEngine
 
-const allowWebGPU = false;
+export const allowWebGPU = false;
 
 export class Game {
     private static instance: Game;
@@ -137,19 +137,22 @@ export class Game {
     }
 
     public async switchToCutScene(levelToLoad: number | string, classicLevel?: number) {
-        this.engine.displayLoadingUI();
+        const isWorld = levelToLoad == "world" || levelToLoad == 3
+        if (!isWorld) {
+            this.engine.displayLoadingUI();
 
-        this.cutScene = new CutSceneScene(this.engine);
-        this.cutScene.load();
+            this.cutScene = new CutSceneScene(this.engine);
+            this.cutScene.load(levelToLoad);
 
-        // finish setup
-        await this.cutScene.whenReadyAsync();
-        this.engine.hideLoadingUI();
-        this.state = State.CUTSCENE;
-
+            // finish setup
+            await this.cutScene.whenReadyAsync();
+            this.engine.hideLoadingUI();
+            this.state = State.CUTSCENE;
+        }
         // setting up during current scene
         this.levelScene = new LevelScene(this.engine);
         await this.levelScene.setUpLevelAsync(levelToLoad, classicLevel);
+        if (isWorld) await this.switchToLevel();
     }
 
     public async switchToLevel() {
