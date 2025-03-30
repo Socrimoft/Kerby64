@@ -3,6 +3,7 @@ import { BaseTexture, Color3, DirectionalLight, DynamicTexture, Scene, ShaderMat
 export class ToonMaterial extends ShaderMaterial {
     constructor(textureOrColor: BaseTexture | Color3, light: DirectionalLight, animated: boolean, scene: Scene) {
         const defines = animated ? ["BONES"] : [];
+        console.log("ToonMaterial", textureOrColor);
         super(
             "toonShader",
             scene,

@@ -1,4 +1,4 @@
-import { AnimationGroup, Nullable, Ray, Vector3 } from "@babylonjs/core";
+import { AnimationGroup, Color4, Nullable, Ray, Vector3, AbstractMesh } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Anim } from "./anim";
@@ -15,7 +15,8 @@ export class WorldController extends EntityController implements Anim {
     private blockPickRange = 4; // 
     private blockPicked: Nullable<Block> = null;
     protected remainingJumps = 0;   // not used
-    protected linearSpeed = 10;     // ?blocks/s
+    protected linearSpeed = 5;     // ?blocks/s
+    private oldHitMesh: Nullable<AbstractMesh> = null;
 
     constructor(player: Player, input: InputManager) {
         super(player)
@@ -41,6 +42,7 @@ export class WorldController extends EntityController implements Anim {
         this.meshAnimations.push(this.idleAnim, this.walkAnim, this.runAnim)
         this.playAnimation(this.idleAnim);
         input.isWorldPlaying = true;
+        player.meshRef.scaling = new Vector3(0.7, 0.7, 0.7);
     }
 
     private moveBeforeUpdate(deltaTime: number) {
@@ -94,6 +96,7 @@ export class WorldController extends EntityController implements Anim {
         const oldRotation = this.entity.rotation;
         let newRotationX = oldRotation.x + this.input.MouseMovement.y * this.mouseSensibilityY;
         let newRotationY = oldRotation.y + this.input.MouseMovement.x * this.mouseSensibilityX;
+
         // Clamp the rotation to avoid flipping
         const margin = 0.05;
         if (newRotationX > Math.PI / 2 - margin) newRotationX = Math.PI / 2 - margin;
@@ -101,19 +104,29 @@ export class WorldController extends EntityController implements Anim {
         if (newRotationY > 2 * Math.PI) newRotationY = 0;
         if (newRotationY < 0) newRotationY = 2 * Math.PI;
 
-        // Apply the rotation to the camera
-
-
         // Set the new rotation
         this.entity.rotation = new Vector3(newRotationX, newRotationY, oldRotation.z);
         this.input.MouseMovement.y = this.input.MouseMovement.x = 0;
 
 
-        const ray = new Ray(new Vector3(this.entity.position.x, this.entity.position.y - 1, this.entity.position.z), Vector3.Down(), 1);
+        const ray = new Ray(this.entity.position, this.entity.getForward(), 4);
         const hit = this.scene.pickWithRay(ray);
 
-        if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh))
-            return
+        if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh) && hit.pickedMesh !== this.oldHitMesh) {
+            console.log(hit.pickedMesh.name, this.oldHitMesh?.name);
+            hit.pickedMesh.edgesColor = new Color4(0.5, 0.5, 0.5, 1);
+            hit.pickedMesh.edgesWidth = 1;
+            hit.pickedMesh.enableEdgesRendering();
+            this.oldHitMesh = hit.pickedMesh;
+        }
+        if (hit && hit.pickedMesh && this.oldHitMesh && hit.pickedMesh !== this.oldHitMesh) {
+            this.oldHitMesh.disableEdgesRendering();
+            this.oldHitMesh = null;
+        }
+        if ((!hit || !hit.pickedMesh) && this.oldHitMesh) {
+            this.oldHitMesh.disableEdgesRendering();
+            this.oldHitMesh = null;
+        }
         if (this.input.inputMap[this.input.escapeKey]) {
             this.input.isWorldPlaying = !this.input.isWorldPlaying;
             this.input.inputMap[this.input.escapeKey] = false;

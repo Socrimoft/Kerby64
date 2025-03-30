@@ -1,7 +1,7 @@
-import { CubeTexture, DirectionalLight, InstancedMesh, Mesh, MeshBuilder, Nullable, Texture, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, InstancedMesh, Mesh, MeshBuilder, Nullable, StandardMaterial, Texture, TransformNode, Vector3 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Chunk } from "./chunk";
-import { ToonMaterial } from "../materials/toonMaterial";
+//import { ToonMaterial } from "../materials/toonMaterial";
 
 export type BlockType = keyof (typeof Block.notABlock & typeof Block.blockList);
 
@@ -17,7 +17,7 @@ export class Block {
         "stone": ["stone.png"],
         "glass": ["glass.png"],
         "obsidian": ["obsidian.png"],
-        "grass_block": ["grass_block_top.png", "dirt.png", "grass_block_side.png", "grass_block_side.png", "grass_block_side.png", "grass_block_side.png"],
+        "grass_block": ["grass_block_side.png", "grass_block_top.png", "grass_block_side.png", "grass_block_side.png", "dirt.png", "grass_block_side.png"],
         "sand": ["sand.png"],
         "gravel": ["gravel.png"],
         "clay": ["clay.png"],
@@ -27,19 +27,19 @@ export class Block {
         "stone_bricks": ["stone_bricks.png"],
         "bricks": ["bricks.png"],
         "glowstone": ["glowstone.png"],
-        "furnace": ["furnace_front.png", "furnace_side.png", "furnace_top.png", "furnace_side.png", "furnace_side.png", "furnace_side.png"],
-        "pumpkin": ["pumpkin_side.png", "pumpkin_side.png", "pumpkin_top.png", "pumpkin_side.png", "pumpkin_side.png", "pumpkin_side.png"],
-        "carved_pumpkin": ["carved_pumpkin.png", "pumpkin_side.png", "pumpkin_top.png", "pumpkin_side.png", "pumpkin_side.png", "pumpkin_side.png"],
+        "furnace": ["furnace_front.png", "furnace_top.png", "furnace_side.png", "furnace_side.png", "furnace_side.png", "furnace_side.png"],
+        "pumpkin": ["pumpkin_side.png", "pumpkin_top.png", "pumpkin_side.png", "pumpkin_side.png", "pumpkin_side.png", "pumpkin_side.png"],
+        "carved_pumpkin": ["carved_pumpkin.png", "pumpkin_top.png", "pumpkin_side.png", "pumpkin_side.png", "pumpkin_side.png", "pumpkin_side.png"],
     }
     static readonly wood = {
         "oak_leaves": ["oak_leaves.png"],
-        "oak_log": ["oak_log.png", "oak_log.png", "oak_log_top.png", "oak_log.png", "oak_log.png", "oak_log_top.png"],
+        "oak_log": ["oak_log.png", "oak_log_top.png", "oak_log.png", "oak_log.png", "oak_log_top.png", "oak_log.png"],
         "oak_planks": ["oak_planks.png"],
-        "tnt": ["tnt_side.png", "tnt_side.png", "tnt_top.png", "tnt_side.png", "tnt_side.png", "tnt_bottom.png"],
-        "bookshelf": ["bookshelf.png", "bookshelf.png", "oak_planks.png", "bookshelf.png", "bookshelf.png", "oak_planks.png"],
+        "tnt": ["tnt_side.png", "tnt_top.png", "tnt_side.png", "tnt_side.png", "tnt_bottom.png", "tnt_side.png"],
+        "bookshelf": ["bookshelf.png", "oak_planks.png", "bookshelf.png", "bookshelf.png", "oak_planks.png", "bookshelf.png"],
         "coal_block": ["coal_block.png"],
-        "hay_block": ["hay_block_side.png", "hay_block_side.png", "hay_block_top.png", "hay_block_side.png", "hay_block_side.png", "hay_block_side.png"],
-        "crafting_table": ["crafting_table_front.png", "crafting_table_side.png", "crafting_table_top.png", "crafting_table_side.png", "crafting_table_side.png"]
+        "hay_block": ["hay_block_side.png", "hay_block_top.png", "hay_block_side.png", "hay_block_side.png", "hay_block_top.png", "hay_block_side.png"],
+        "crafting_table": ["crafting_table_front.png", "crafting_table_top.png", "crafting_table_side.png", "crafting_table_side.png", "oak_planks.png", "crafting_table_side.png"]
     }
     static readonly ore = {
         "diamond_ore": ["diamond_ore.png"],
@@ -61,7 +61,7 @@ export class Block {
     }
     static readonly other = {
         "bedrock": ["bedrock.png"],
-        "jukebox": ["jukebox_side.png", "jukebox_side.png", "jukebox_top.png", "jukebox_side.png", "jukebox_side.png", "jukebox_side.png"],
+        "jukebox": ["jukebox_side.png", "jukebox_top.png", "jukebox_side.png", "jukebox_side.png", "jukebox_side.png", "jukebox_side.png"],
         "debug": ["debug.png"],
         "debug2": ["debug2.png"],
     }
@@ -119,7 +119,7 @@ export class Block {
         carved_pumpkin: null
     };
 
-    static runtimeMaterialBuffer: { [key in BlockType]: Nullable<ToonMaterial> } = {
+    static runtimeMaterialBuffer: { [key in BlockType]: Nullable<StandardMaterial> } = {
         furnace: null,
         sugar_cane: null,
         short_grass: null,
@@ -173,13 +173,17 @@ export class Block {
             Block.runtimeMeshBuffer[key] = MeshBuilder.CreateBox(key, { size: Block.size }, Block.scene);
             (Block.runtimeMeshBuffer[key] as Mesh).material = this.makeCubeMaterial(key as keyof typeof Block.blockList);
         }
+        Block.runtimeMeshBuffer[key]!.setEnabled(false);
         return Block.runtimeMeshBuffer[key];
     }
 
     static Make2DMesh(key: keyof typeof this.notABlock): Mesh {
         if (!this.runtimeMaterialBuffer[key]) {
-            const texture = new Texture(this.rootURI + this.notABlock[key][0], Block.scene);
-            this.runtimeMaterialBuffer[key] = new ToonMaterial(texture, this.light, false, Block.scene);
+            const texture = new Texture(this.rootURI + this.notABlock[key][0], Block.scene, undefined, undefined, Texture.NEAREST_NEAREST);
+            //this.runtimeMaterialBuffer[key] = new ToonMaterial(texture, this.light, false, Block.scene);
+            const standardMaterial = new StandardMaterial(key + "Material", Block.scene);
+            standardMaterial.diffuseTexture = texture;
+            this.runtimeMaterialBuffer[key] = standardMaterial;
         }
 
         // make 2 planes
@@ -197,7 +201,8 @@ export class Block {
         const root = new Mesh(key, Block.scene);
         face2.parent = root;
         face1.parent = root;
-
+        root.setEnabled(false);
+        root.checkCollisions = false;
         return root;
     }
 
@@ -259,11 +264,21 @@ export class Block {
                 default:
                     throw new Error(`Block ${key} not found`);
             };
-            const texture = new CubeTexture(key + "Texture", Block.scene, undefined, undefined, filelist.map(file => Block.rootURI + file));
-            texture.name = key + "Texture";
+            const texture = new CubeTexture(key + "Texture", Block.scene, undefined, undefined, filelist.map(file => Block.rootURI + file), () => {
+                texture.displayName = texture.name = key + "Texture";
+                texture.updateSamplingMode(Texture.NEAREST_NEAREST_MIPNEAREST);
+                texture.coordinatesMode = Texture.SKYBOX_MODE;
+            });
+
             //console.log(texture, texture.name, texture.url);
-            this.runtimeMaterialBuffer[key] = new ToonMaterial(texture, this.light, false, Block.scene);
-            this.runtimeMaterialBuffer[key].name = key + "Material";
+            this.runtimeMaterialBuffer[key] = new StandardMaterial(key + "Material", Block.scene);
+            this.runtimeMaterialBuffer[key].specularColor = new Color3(0, 0, 0);
+            this.runtimeMaterialBuffer[key].diffuseTexture = texture;
+            //this.runtimeMaterialBuffer[key].diffuseTexture.hasAlpha = true;
+            //this.runtimeMaterialBuffer[key].useAlphaFromDiffuseTexture = true;
+            //this.runtimeMaterialBuffer[key].useSpecularOverAlpha = true;
+            //this.runtimeMaterialBuffer[key].alphaCutOff = 0.4;
+            this.runtimeMaterialBuffer[key].reflectionTexture = texture;
         }
         //console.log(this.runtimeMaterialBuffer[key]);
         return this.runtimeMaterialBuffer[key];
@@ -279,6 +294,7 @@ export class Block {
             incomingMesh.position = this.mesh.position;
             this.mesh.dispose();
             this.mesh = incomingMesh;
+            this.mesh.setEnabled(true);
             this.mesh.parent = this.chunk;
         }
         else {

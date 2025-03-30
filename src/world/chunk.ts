@@ -22,15 +22,31 @@ export class Chunk extends TransformNode {
     static async debugChunk(scene: LevelScene): Promise<Chunk> {
         if (!Chunk._debugChunk) {
             Chunk._debugChunk = new Chunk(new Vector2(0, 0), scene);
-            const blockTypeList = Object.keys(Block.blockList) as BlockType[];
+            const blockTypeList = Object.keys(Block.blockList) as (keyof typeof Block.blockList)[];
+            const notBlockTypeList = Object.keys(Block.notABlock) as (keyof typeof Block.notABlock)[];
             let currentBlockTypeIndex = 0;
-            // Chunk._debugChunk.blocks[0][0][0] = new Block(new Vector3(0, 0, 0), Chunk._debugChunk, blockTypeList[currentBlockTypeIndex]);
-            for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
-                for (let y = 0; y < Chunk.chunkSize.y; y = y + 3) {
+            let currentNotBlockTypeIndex = 0;
+            /*for (let x = 0; x < Chunk.chunkSize.x; x++) {
+                for (let z = 0; z < Chunk.chunkSize.z; z++) {
+                    Chunk._debugChunk.blocks[x][0][z] = new Block(new Vector3(x, 0, z), Chunk._debugChunk, blockTypeList[currentBlockTypeIndex]);
+                }
+            }*/
+            for (let x = 0; x < Chunk.chunkSize.x; x++) {
+                for (let z = 0; z < Chunk.chunkSize.z; z++) {
+                    Chunk._debugChunk.blocks[x][0][z] = new Block(new Vector3(x, 0, z), Chunk._debugChunk, blockTypeList[0])
+                }
+            }
+
+            for (let y = 3; y < Chunk.chunkSize.y; y = y + 3) {
+                for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
                     for (let z = 0; z < Chunk.chunkSize.z; z = z + 3) {
-                        Chunk._debugChunk.blocks[x][y][z] = new Block(new Vector3(x, y, z), Chunk._debugChunk, blockTypeList[currentBlockTypeIndex]);;
-                        currentBlockTypeIndex++;
-                        if (currentBlockTypeIndex >= blockTypeList.length) currentBlockTypeIndex = 0;
+                        if (currentBlockTypeIndex < blockTypeList.length) {
+                            Chunk._debugChunk.blocks[x][y][z] = new Block(new Vector3(x, y, z), Chunk._debugChunk, blockTypeList[currentBlockTypeIndex]);
+                            currentBlockTypeIndex++;
+                        } else if (currentNotBlockTypeIndex < notBlockTypeList.length) {
+                            Chunk._debugChunk.blocks[x][y][z] = new Block(new Vector3(x, y, z), Chunk._debugChunk, notBlockTypeList[currentNotBlockTypeIndex]);
+                            currentNotBlockTypeIndex++;
+                        }
                     }
                 }
             }

@@ -88,9 +88,11 @@ export class World extends Environment {
         }
     }
     setupSkybox(): void {
-        this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
+        this.skybox.position = new Vector3(0, 0, 0);
         const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
         skyboxMaterial.backFaceCulling = false;
+        const r = CubeTexture.CreateFromImages(["sun.png", "moon.png", "_.png", "_.png", "_.png", "_.png"], this.scene);
+
         skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/world/skybox/", this.scene, ["sun.png", "_.png", "_.png", "moon.png", "_.png", "_.png"]);
         skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
@@ -151,6 +153,9 @@ export class World extends Environment {
         }
         this.updateSkyColor();
         this.skybox.rotation.z = this.tick / 24000 * 2 * Math.PI;
+        // light direction according to the sun position
+        const sunDirection = new Vector3(Math.sin(this.tick / 24000 * 2 * Math.PI), Math.cos(this.tick / 24000 * 2 * Math.PI), 0);
+        this.setLightDirection(sunDirection);
     }
 
     public async load(classicLevel?: number): Promise<void> {
