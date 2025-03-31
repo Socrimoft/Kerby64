@@ -1,38 +1,33 @@
-import { AnimationGroup, Ray, Vector3 } from "@babylonjs/core";
+import { Ray, Vector3 } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
-import { Anim } from "./anim";
 import { Player } from "../actors/player";
 import { Game } from "../game";
 
-export class RushController extends EntityController implements Anim {
+export class RushController extends EntityController {
     private input: InputManager;
-    public idleAnim: AnimationGroup;
-    public walkAnim: AnimationGroup;
-    public runAnim: AnimationGroup;
+
+    private Animation = {
+        Idle: "Idle",
+        Run: "Run",
+        Jump: "Jump",
+        Inhale: "Inhale",
+        MouthFull: "MouthFull",
+        SpitOut: "SpitOut",
+        Inflate: "Inflate",
+        FlyIdle: "Fly_Idle",
+        Fly: "Fly",
+        Deflate: "Deflate",
+        Fall: "Fall"
+    } as const;
 
     constructor(player: Player, input: InputManager) {
         super(player)
         this.input = input
-        const idleAnim = player.animations.find(ag => ag.name.toLowerCase().includes("idle"));
-        const walkAnim = player.animations.find(ag => ag.name.toLowerCase().includes("walk"));
-        const runAnim = player.animations.find(ag => ag.name.toLowerCase().includes("run"));
 
-        if (!idleAnim) {
-            throw new Error("Idle animation not found for " + player.name);
-        }
-        if (!walkAnim) {
-            throw new Error("Walk animation not found for " + player.name);
-        }
-        if (!runAnim) {
-            throw new Error("Run animation not found for " + player.name);
-        }
-
-        this.idleAnim = idleAnim;
-        this.walkAnim = walkAnim;
-        this.runAnim = runAnim;
-        this.meshAnimations.push(this.idleAnim, this.walkAnim, this.runAnim)
-        this.playAnimation(this.idleAnim);
+        this.entity.registerAnimations((Object.values(this.Animation) as string[]));
+        this.entity.stopAllAnims();
+        this.playAnimation(this.Animation.Idle);
     }
 
     public beforeRenderUpdate(): void {
@@ -59,17 +54,17 @@ export class RushController extends EntityController implements Anim {
         if (this.input.inputMap[this.input.rightKey]) {
             this.entity.setRotation(new Vector3(0, Math.PI / 2, 0));
             // this.updateShaderLightDirection(new Vector3(1, 1, 0));
-            this.playAnimation(this.runAnim);
+            this.playAnimation(this.Animation.Run);
             this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
         }
         else if (this.input.inputMap[this.input.leftKey]) {
             this.entity.setRotation(new Vector3(0, -Math.PI / 2, 0));
             // this.updateShaderLightDirection(new Vector3(-1, 1, 0));
-            this.playAnimation(this.runAnim);
+            this.playAnimation(this.Animation.Run);
             this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
         }
         else
-            this.playAnimation(this.idleAnim);
+            this.playAnimation(this.Animation.Fly);
 
         // detect if grounded // detecte si t puni mdr pas mal ludo
         const ray = new Ray(new Vector3(this.entity.getPosition().x, this.entity.getPosition().y - 1, this.entity.getPosition().z), Vector3.Down(), 1);

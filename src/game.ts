@@ -30,7 +30,7 @@ export class Game {
     private gameOverScene!: GameOverScene;
 
     private state: State = State.MAINMENU;
-    private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true }
+    private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true, useWebGL2: true }
 
     constructor() {
         this.canvas = this.createCanvas();

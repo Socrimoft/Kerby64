@@ -18,35 +18,25 @@ export class BirdController extends EntityController {
     protected jumpStartTime: number = 0;
     protected isJumping: boolean = false;
 
-    protected idleAnim: AnimationGroup;
-    protected walkAnim: AnimationGroup;
-    protected runAnim: AnimationGroup;
+    private runAnim: string = "Run";
+    private jumpAnim: string = "Jump";
+    private inflateAnim: string = "Inflate";
+    private flyIdleAnim: string = "Fly_Idle";
+    private flyAnim: string = "Fly";
+
+    private Animation = {
+        Run: "Run",
+        Jump: "Jump",
+        Inflate: "Inflate",
+        FlyIdle: "Fly_Idle",
+        Fly: "Fly",
+    } as const;
 
     constructor(entity: GameEntity, input: InputManager) {
         super(entity);
         this.input = input;
 
-        const idleAnim = entity.animations.find(ag => ag.name.toLowerCase().includes("idle"));
-        const walkAnim = entity.animations.find(ag => ag.name.toLowerCase().includes("walk"));
-        const runAnim = entity.animations.find(ag => ag.name.toLowerCase().includes("run"));
-
-        if (!idleAnim) {
-            throw new Error("Idle animation not found for " + this.entity.name);
-        }
-        if (!walkAnim) {
-            throw new Error("Walk animation not found for " + this.entity.name);
-        }
-        if (!runAnim) {
-            throw new Error("Run animation not found for " + this.entity.name);
-        }
-
-        this.idleAnim = idleAnim;
-        this.walkAnim = walkAnim;
-        this.runAnim = runAnim;
-        this.meshAnimations.push(this.idleAnim);
-        this.meshAnimations.push(this.walkAnim);
-        this.meshAnimations.push(this.runAnim);
-        this.playAnimation(this.idleAnim);
+        this.entity.registerAnimations((Object.values(this.Animation) as string[]));
     }
 
     public beforeRenderUpdate(): void {

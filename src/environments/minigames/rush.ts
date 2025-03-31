@@ -72,7 +72,7 @@ export class Rush extends Environment {
         ground.position = new Vector3(x + this.segmentWidth / 2, heightOffset - 0.5, 0);
         ground.checkCollisions = true;
 
-        ground.material = this.groundMaterial || (this.groundMaterial = new ToonMaterial(new Color3(0, 0.6, 0), this.getLight(), false, this.scene));
+        ground.material = this.groundMaterial || (this.groundMaterial = new ToonMaterial(new Color3(0, 0.6, 0), this.getLight(), ground, this.scene));
 
         this.pushGroundSegment(ground);
         this.lastSegmentX = x;

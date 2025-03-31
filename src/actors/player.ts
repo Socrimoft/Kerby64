@@ -26,7 +26,7 @@ export class Player extends GameEntity {
         if (!this.mesh)
             throw new Error("Error while instanciating the GameEntity " + this.name);
 
-        this.mesh.scaling = new Vector3(0.01, 0.01, 0.01);
+        this.mesh.scaling = new Vector3(2.5, 2.5, 2.5);
 
         this.cameraController = new PlayerCamera(this);
 
