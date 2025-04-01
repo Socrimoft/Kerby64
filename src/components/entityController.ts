@@ -1,4 +1,3 @@
-import { AnimationGroup } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Component } from "./component";
 import { GameEntity } from "../actors/gameEntity";
@@ -17,22 +16,18 @@ export abstract class EntityController implements Component {
     protected jumpStartTime: number = 0;
     protected isJumping: boolean = false;
     protected remainingJumps: number = 3;
-    protected meshAnimations: Array<AnimationGroup> = [];
 
     constructor(entity: GameEntity) {
         this.entity = entity;
         this.scene = entity.scene;
     }
 
-    protected playAnimation(anim?: AnimationGroup): void {
-        if (anim && !anim.isPlaying) {
-            this.meshAnimations.forEach(ag => ag.stop());
-            anim.play(true);
+    protected playAnimation(name: string, loop: boolean = true): void {
+        const anim = this.entity.getAnimByName(name);
+        if (!anim.isPlaying) {
+            this.entity.stopAllAnims();
+            anim.play(loop);
         }
-    }
-
-    protected playAnimationByName(name: string): void {
-        this.playAnimation(this.meshAnimations.find((anim) => anim.name.toLowerCase().includes(name)))
     }
 
     abstract beforeRenderUpdate(): void;

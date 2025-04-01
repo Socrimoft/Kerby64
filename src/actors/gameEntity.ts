@@ -8,7 +8,7 @@ export class GameEntity {
     public name: string;
     private assets?: AssetContainer;
     protected mesh?: Mesh;
-    public animations: Array<AnimationGroup> = [];
+    private animations: Record<string, AnimationGroup> = {};
     public components: Array<Component> = [];
     public baseSourceURI = "./assets/models/";
     private boundfct?: () => void;
@@ -27,16 +27,14 @@ export class GameEntity {
 
         this.assets.meshes.forEach((mesh) => {
             if (this.assets && this.assets.textures[0])
-                mesh.material = new ToonMaterial(this.assets.textures[0], light, this.assets.animationGroups.length > 0, this.scene);
+                mesh.material = new ToonMaterial(this.assets.textures[0], light, mesh, this.scene);
             else if (this.assets && mesh.material && mesh.material instanceof StandardMaterial)
-                mesh.material = new ToonMaterial(mesh.material.diffuseColor, light, this.assets.animationGroups.length > 0, this.scene);
+                mesh.material = new ToonMaterial(mesh.material.diffuseColor, light, mesh, this.scene);
             else if (this.assets && mesh.material && mesh.material instanceof PBRMaterial)
-                mesh.material = new ToonMaterial(mesh.material.albedoColor, light, this.assets.animationGroups.length > 0, this.scene);
+                mesh.material = new ToonMaterial(mesh.material.albedoColor, light, mesh, this.scene);
         });
 
         this.assets.addAllToScene();
-
-        this.assets.animationGroups.forEach(ag => this.animations.push(ag));
 
         if (this.mesh) this.dispose();
         this.mesh = root;
@@ -52,9 +50,8 @@ export class GameEntity {
         const clonedEntity = cloneComponents ? new GameEntity(name ? name : this.name, this.scene, ...this.components) : new GameEntity(this.name, this.scene);
 
         const entries = this.assets.instantiateModelsToScene(undefined, true, { doNotInstantiate: true });
+        clonedEntity.assets = this.assets;
         clonedEntity.mesh = (entries.rootNodes[0] as Mesh);
-
-        entries.animationGroups.forEach(ag => clonedEntity.animations.push(ag));
 
         if (position) clonedEntity.mesh.position = position;
         if (rotation) clonedEntity.mesh.rotation = rotation;
@@ -67,6 +64,30 @@ export class GameEntity {
         if (this.boundfct)
             this.scene.unregisterBeforeRender(this.boundfct)
         this.isDisposed = true;
+    }
+
+    public registerAnimations(names: string[]): void {
+        if (!this.assets)
+            throw new Error("Unable to register animations of a non-instantiated GameEntity");
+
+        for (const name of names) {
+            const anim = this.assets.animationGroups.find(ag => name === ag.name);
+
+            if (!anim)
+                throw new Error(name + " animation not found");
+
+            this.animations[name] = anim;
+        }
+    }
+
+    public getAnimByName(name: string) {
+        if (!this.animations[name])
+            throw new Error("Cannot return the unregistered animation: " + name);
+        return this.animations[name];
+    }
+
+    public stopAllAnims(): void {
+        Object.values(this.animations).forEach(ag => ag.stop());
     }
 
     public addComponent(component: Component) {

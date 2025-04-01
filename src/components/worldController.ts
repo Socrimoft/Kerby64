@@ -1,15 +1,11 @@
 import { AnimationGroup, Color4, Nullable, Ray, Vector3, AbstractMesh } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
-import { Anim } from "./anim";
 import { Player } from "../actors/player";
 import { Block } from "../world/block";
 
-export class WorldController extends EntityController implements Anim {
+export class WorldController extends EntityController {
     private input: InputManager;
-    public idleAnim: AnimationGroup;
-    public walkAnim: AnimationGroup;
-    public runAnim: AnimationGroup;
     private mouseSensibilityX = 0.001;
     private mouseSensibilityY = 0.001;
     private blockPickRange = 4; // 
@@ -18,29 +14,28 @@ export class WorldController extends EntityController implements Anim {
     protected linearSpeed = 5;     // ?blocks/s
     private oldHitMesh: Nullable<AbstractMesh> = null;
 
+    private Animation = {
+        Idle: "Idle",
+        Run: "Run",
+        Jump: "Jump",
+        Inhale: "Inhale",
+        MouthFull: "MouthFull",
+        SpitOut: "SpitOut",
+        Inflate: "Inflate",
+        FlyIdle: "Fly_Idle",
+        Fly: "Fly",
+        Deflate: "Deflate",
+        Fall: "Fall"
+    } as const;
+
     constructor(player: Player, input: InputManager) {
         super(player)
 
         this.input = input;
-        const idleAnim = player.animations.find(ag => ag.name.toLowerCase().includes("idle"));
-        const walkAnim = player.animations.find(ag => ag.name.toLowerCase().includes("walk"));
-        const runAnim = player.animations.find(ag => ag.name.toLowerCase().includes("run"));
+        this.entity.registerAnimations((Object.values(this.Animation) as string[]));
+        this.entity.stopAllAnims();
+        this.playAnimation(this.Animation.Idle);
 
-        if (!idleAnim) {
-            throw new Error("Idle animation not found for " + player.name);
-        }
-        if (!walkAnim) {
-            throw new Error("Walk animation not found for " + player.name);
-        }
-        if (!runAnim) {
-            throw new Error("Run animation not found for " + player.name);
-        }
-
-        this.idleAnim = idleAnim;
-        this.walkAnim = walkAnim;
-        this.runAnim = runAnim;
-        this.meshAnimations.push(this.idleAnim, this.walkAnim, this.runAnim)
-        this.playAnimation(this.idleAnim);
         input.isWorldPlaying = true;
         player.meshRef.scaling = new Vector3(0.7, 0.7, 0.7);
     }
@@ -53,7 +48,7 @@ export class WorldController extends EntityController implements Anim {
 
         if (movUpDown) {
             // this.updateShaderLightDirection(new Vector3(1, 1, 0));
-            this.playAnimation(isRunning ? this.runAnim : this.walkAnim);
+            this.playAnimation(this.Animation.Run);
             // console.log(displacement * movUpDown);
             //displacement along the X axis
             const x = this.entity.getForward().dot(Vector3.Right());
@@ -61,12 +56,12 @@ export class WorldController extends EntityController implements Anim {
             this.entity.moveWithCollisions(new Vector3(x, 0, z).normalize().scale(displacement * movUpDown));
         }
         if (movLeftRight) {
-            this.playAnimation(isRunning ? this.runAnim : this.walkAnim);
+            this.playAnimation(this.Animation.Run);
             const t = movLeftRight == 1 ? Vector3.Up() : Vector3.Down();
             this.entity.moveWithCollisions(this.entity.getForward().cross(t).normalize().scale(displacement));
         }
         if (!movUpDown && !movLeftRight)
-            this.playAnimation(this.idleAnim);
+            this.playAnimation(this.Animation.Idle);
     }
 
     public beforeRenderUpdate(): void {

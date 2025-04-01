@@ -1,9 +1,7 @@
-import { BaseTexture, Color3, DirectionalLight, DynamicTexture, Scene, ShaderMaterial, Vector3, Vector4 } from "@babylonjs/core";
+import { AbstractMesh, BaseTexture, Color3, DirectionalLight, DynamicTexture, MorphTarget, Scene, ShaderLanguage, ShaderMaterial, Vector3, Vector4 } from "@babylonjs/core";
 
 export class ToonMaterial extends ShaderMaterial {
-    constructor(textureOrColor: BaseTexture | Color3, light: DirectionalLight, animated: boolean, scene: Scene) {
-        const defines = animated ? ["BONES"] : [];
-        console.log("ToonMaterial", textureOrColor);
+    constructor(textureOrColor: BaseTexture | Color3, light: DirectionalLight, mesh: AbstractMesh, scene: Scene) {
         super(
             "toonShader",
             scene,
@@ -13,9 +11,8 @@ export class ToonMaterial extends ShaderMaterial {
             },
             {
                 attributes: ["position", "normal", "uv"],
-                uniforms: ["world", "viewProjection", "worldViewProjection"],
-                samplers: ["textureSampler"],
-                defines: defines
+                uniformBuffers: ["Scene", "Mesh"],
+                shaderLanguage: ShaderLanguage.WGSL
             }
         );
 
@@ -31,20 +28,15 @@ export class ToonMaterial extends ShaderMaterial {
             textureOrColor = dynamicTexture;
         }
 
-        this.setTexture("textureSampler", textureOrColor);
+        this.setTexture("texture", textureOrColor);
         this.setVector3("lightDirection", light.direction);
         this.setFloat("lightIntensity", light.intensity);
         this.setVector3("diffuseColor", new Vector3(light.diffuse.r, light.diffuse.g, light.diffuse.b));
         this.setVector4("ambiantColor", new Vector4(0.5, 0.5, 0.5, 1.0));
         this.setVector4("specularColor", new Vector4(0.9, 0.9, 0.9, 1.0));
-        this.setFloat("specularPower", 1);
         this.setFloat("glossiness", 32);
         this.setVector4("rimColor", new Vector4(1, 1, 1, 1));
         this.setFloat("rimAmount", 0.716);
         this.setFloat("rimThreshold", 0.1);
-    }
-
-    public setSpecularPower(power: number): void {
-        this.setFloat("specularPower", power);
     }
 }

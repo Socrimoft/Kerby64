@@ -1,24 +1,20 @@
 import { AnimationGroup, Vector3 } from "@babylonjs/core";
-import { Anim } from "./anim";
 import { EntityController } from "./entityController";
 import { GameEntity } from "../actors/gameEntity";
 
-export class KoombaController extends EntityController implements Anim {
+export class KoombaController extends EntityController {
     protected linearSpeed = 1;
     private oldPosX?: number;
-    idleAnim = undefined;
-    walkAnim: AnimationGroup;
-    runAnim = undefined;
+
+    private Animation = {
+        Walk: "Take 001"
+    } as const;
 
     constructor(entity: GameEntity) {
         super(entity);
-        const walkAnim = entity.animations.find(ag => ag.name.toLowerCase().includes("take 001"));
-        if (!walkAnim) {
-            throw new Error("Walk animation not found for " + entity.name);
-        }
-        this.walkAnim = walkAnim;
-        this.meshAnimations.push(this.walkAnim);
-        this.playAnimation(this.walkAnim);
+
+        this.entity.registerAnimations((Object.values(this.Animation) as string[]));
+        this.playAnimation(this.Animation.Walk);
     }
 
     beforeRenderUpdate(): void {

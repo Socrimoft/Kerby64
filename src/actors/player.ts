@@ -30,7 +30,7 @@ export class Player extends GameEntity {
             throw new Error("Error while instanciating the GameEntity " + this.name);
         if (!input)
             throw new Error("no InputManager for GameEntity" + this.name);
-        this.mesh.scaling = new Vector3(0.01, 0.01, 0.01);
+        this.mesh.scaling = new Vector3(2.5, 2.5, 2.5);
 
         this.cameraController = new cameraclass(this, input);
 
