@@ -1,13 +1,13 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Animation, Effect, Engine, WebGPUEngine } from "@babylonjs/core";
+import { Animation, Engine, ShaderLanguage, ShaderStore, WebGPUEngine } from "@babylonjs/core";
 import { MainMenuScene } from "./scenes/mainMenuScene";
 import { CutSceneScene } from "./scenes/cutSceneScene";
 import { LevelScene } from "./scenes/levelScene";
 import { GameOverScene } from "./scenes/gameOverScene";
-import toonVertexShader from "./shaders/toon/vertex.glsl";
-import toonFragmentShader from "./shaders/toon/fragment.glsl";
+import toonVertexShader from "./shaders/toon/vertex.wgsl";
+import toonFragmentShader from "./shaders/toon/fragment.wgsl";
 import { KerbyLoadingScreen } from "./loadingScreen";
 
 enum State {
@@ -18,7 +18,7 @@ enum State {
 }
 export type GameEngine = Engine | WebGPUEngine
 
-const allowWebGPU = false;
+const allowWebGPU = true;
 
 export class Game {
     private static instance: Game;
@@ -30,7 +30,7 @@ export class Game {
     private gameOverScene!: GameOverScene;
 
     private state: State = State.MAINMENU;
-    private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true, useWebGL2: true }
+    private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true }
 
     constructor() {
         this.canvas = this.createCanvas();
@@ -50,9 +50,9 @@ export class Game {
         }
 
         // load shaders
-        Effect.ShadersStore["toonVertexShader"] = toonVertexShader;
-        Effect.ShadersStore["toonFragmentShader"] = toonFragmentShader;
-        Animation.AllowMatricesInterpolation = true;
+        ShaderStore.ShadersStoreWGSL["toonVertexShader"] = toonVertexShader;
+        ShaderStore.ShadersStoreWGSL["toonFragmentShader"] = toonFragmentShader;
+        // Animation.AllowMatricesInterpolation = true;
 
         this.main();
     }

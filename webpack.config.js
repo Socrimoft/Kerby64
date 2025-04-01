@@ -30,13 +30,8 @@ module.exports = {
                 exclude: /node_modules/,
             },
             {
-                test: /\.(glsl|vert|frag)$/,
-                use: [
-                    {
-                        loader: 'glsl-shader-loader',
-                        options: {}
-                    }
-                ]
+                test: /\.wgsl$/,
+                use: 'raw-loader',
             }
         ],
     },

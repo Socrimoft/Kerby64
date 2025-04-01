@@ -112,7 +112,7 @@ export class Bird extends Environment {
         const metal = new ToonMaterial(new Color3(0.1, 0.5, 0.1), this.getLight(), topBlock, this.scene);
 
         //effet metallique
-        metal.setSpecularPower(256);
+        // metal.setSpecularPower(256);
 
         topBlock.material = metal;
         topBlockBottom.material = metal;

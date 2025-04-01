@@ -1,4 +1,4 @@
-import { Ray, Vector3 } from "@babylonjs/core";
+import { Engine, Ray, Vector3 } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Player } from "../actors/player";
@@ -64,7 +64,7 @@ export class RushController extends EntityController {
             this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
         }
         else
-            this.playAnimation(this.Animation.Fly);
+            this.playAnimation(this.Animation.Idle);
 
         // detect if grounded // detecte si t puni mdr pas mal ludo
         const ray = new Ray(new Vector3(this.entity.getPosition().x, this.entity.getPosition().y - 1, this.entity.getPosition().z), Vector3.Down(), 1);
