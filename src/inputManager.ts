@@ -47,7 +47,7 @@ export class InputManager extends MouseManager {
         // Request pointer lock for the canvas
         this.canvas.addEventListener("click", () => {
             if (this.isWorldPlaying)
-                this.canvas.requestPointerLock().catch(() => null);
+                (this.canvas.requestPointerLock() || Promise.resolve()).catch(() => null);
         });
 
         document.addEventListener("pointerlockchange", () => {

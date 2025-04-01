@@ -1,20 +1,14 @@
-import { AnimationGroup, Vector3 } from "@babylonjs/core";
+import { Vector3 } from "@babylonjs/core";
 import { EntityController } from "./entityController";
-import { GameEntity } from "../actors/gameEntity";
+import { Koomba } from "../actors/koomba";
 
 export class KoombaController extends EntityController {
     protected linearSpeed = 1;
     private oldPosX?: number;
 
-    private Animation = {
-        Walk: "Take 001"
-    } as const;
-
-    constructor(entity: GameEntity) {
+    constructor(entity: Koomba) {
         super(entity);
-
-        this.entity.registerAnimations((Object.values(this.Animation) as string[]));
-        this.playAnimation(this.Animation.Walk);
+        this.playAnimation(Koomba.Animation.Walk);
     }
 
     beforeRenderUpdate(): void {

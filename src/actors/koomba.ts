@@ -5,6 +5,10 @@ import { GameEntity } from "./gameEntity";
 import { KoombaController } from "../components/koombaController";
 
 export class Koomba extends GameEntity {
+    static Animation = {
+        Walk: "Take 001"
+    } as const;
+
     constructor(scene: LevelScene, ...components: Component[]) {
         super("koomba", scene, ...components)
     }
@@ -17,6 +21,7 @@ export class Koomba extends GameEntity {
         this.mesh.scaling = new Vector3(0.025, 0.025, 0.025);
         this.mesh.getChildren<Mesh>(undefined, true)[0].position = new Vector3(0, -26.038, 2.129); //remove the mesh's position bias
         this.addComponent(new KoombaController(this));
+        this.registerAnimations((Object.values(Koomba.Animation) as string[]));
     }
 
     public clone(name?: string, position?: Vector3, rotation?: Vector3, cloneComponents: boolean = false): GameEntity {

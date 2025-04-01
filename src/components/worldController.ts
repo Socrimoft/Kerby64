@@ -1,4 +1,4 @@
-import { AnimationGroup, Color4, Nullable, Ray, Vector3, AbstractMesh } from "@babylonjs/core";
+import { Color4, Nullable, Ray, Vector3, AbstractMesh } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Player } from "../actors/player";
@@ -10,31 +10,15 @@ export class WorldController extends EntityController {
     private mouseSensibilityY = 0.001;
     private blockPickRange = 4; // 
     private blockPicked: Nullable<Block> = null;
-    protected remainingJumps = 0;   // not used
     protected linearSpeed = 5;     // ?blocks/s
     private oldHitMesh: Nullable<AbstractMesh> = null;
-
-    private Animation = {
-        Idle: "Idle",
-        Run: "Run",
-        Jump: "Jump",
-        Inhale: "Inhale",
-        MouthFull: "MouthFull",
-        SpitOut: "SpitOut",
-        Inflate: "Inflate",
-        FlyIdle: "Fly_Idle",
-        Fly: "Fly",
-        Deflate: "Deflate",
-        Fall: "Fall"
-    } as const;
 
     constructor(player: Player, input: InputManager) {
         super(player)
 
         this.input = input;
-        this.entity.registerAnimations((Object.values(this.Animation) as string[]));
         this.entity.stopAllAnims();
-        this.playAnimation(this.Animation.Idle);
+        this.playAnimation(Player.Animation.Idle);
 
         input.isWorldPlaying = true;
         player.meshRef.scaling = new Vector3(0.7, 0.7, 0.7);
@@ -47,21 +31,20 @@ export class WorldController extends EntityController {
         const displacement = this.linearSpeed * deltaTime * (1 + +isRunning);
 
         if (movUpDown) {
-            // this.updateShaderLightDirection(new Vector3(1, 1, 0));
-            this.playAnimation(this.Animation.Run);
-            // console.log(displacement * movUpDown);
-            //displacement along the X axis
+            this.playAnimation(Player.Animation.Run);
             const x = this.entity.getForward().dot(Vector3.Right());
             const z = this.entity.getForward().dot(Vector3.Forward());
-            this.entity.moveWithCollisions(new Vector3(x, 0, z).normalize().scale(displacement * movUpDown));
+            const scale = movLeftRight ? displacement * movUpDown * 0.7 : displacement * movUpDown;
+            this.entity.moveWithCollisions(new Vector3(x, 0, z).normalize().scale(scale));
         }
         if (movLeftRight) {
-            this.playAnimation(this.Animation.Run);
+            this.playAnimation(Player.Animation.Run);
             const t = movLeftRight == 1 ? Vector3.Up() : Vector3.Down();
-            this.entity.moveWithCollisions(this.entity.getForward().cross(t).normalize().scale(displacement));
+            const scale = movUpDown ? displacement * 0.7 : displacement;
+            this.entity.moveWithCollisions(this.entity.getForward().cross(t).normalize().scale(scale));
         }
         if (!movUpDown && !movLeftRight)
-            this.playAnimation(this.Animation.Idle);
+            this.playAnimation(Player.Animation.Idle);
     }
 
     public beforeRenderUpdate(): void {
@@ -104,16 +87,9 @@ export class WorldController extends EntityController {
         this.input.MouseMovement.y = this.input.MouseMovement.x = 0;
 
 
-        const ray = new Ray(this.entity.position, this.entity.getForward(), 4);
+        const ray = new Ray(this.entity.position, this.entity.getForward(), this.blockPickRange);
         const hit = this.scene.pickWithRay(ray);
 
-        if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh) && hit.pickedMesh !== this.oldHitMesh) {
-            console.log(hit.pickedMesh.name, this.oldHitMesh?.name);
-            hit.pickedMesh.edgesColor = new Color4(0.5, 0.5, 0.5, 1);
-            hit.pickedMesh.edgesWidth = 1;
-            hit.pickedMesh.enableEdgesRendering();
-            this.oldHitMesh = hit.pickedMesh;
-        }
         if (hit && hit.pickedMesh && this.oldHitMesh && hit.pickedMesh !== this.oldHitMesh) {
             this.oldHitMesh.disableEdgesRendering();
             this.oldHitMesh = null;
@@ -122,12 +98,20 @@ export class WorldController extends EntityController {
             this.oldHitMesh.disableEdgesRendering();
             this.oldHitMesh = null;
         }
+        if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh) && hit.pickedMesh !== this.oldHitMesh) {
+            console.log(hit.pickedMesh.name, this.oldHitMesh?.name);
+            hit.pickedMesh.edgesColor = new Color4(0.5, 0.5, 0.5, 1);
+            hit.pickedMesh.edgesWidth = 1;
+            hit.pickedMesh.enableEdgesRendering();
+            this.oldHitMesh = hit.pickedMesh;
+        }
         if (this.input.inputMap[this.input.escapeKey]) {
             this.input.isWorldPlaying = !this.input.isWorldPlaying;
             this.input.inputMap[this.input.escapeKey] = false;
             // TODO: add a pause menu
             //this.input.isWorldPlaying ? this.scene.getEngine().runRenderLoop(() => this.scene.render()) : this.scene.getEngine().stopRenderLoop();
         }
+        // TODO: proper game over condition
         /*if (this.entity.getPosition().y < 0) {
             this.entity.dispose();
             this.input.isWorldPlaying = false;

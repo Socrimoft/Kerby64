@@ -91,8 +91,6 @@ export class World extends Environment {
         this.skybox.position = new Vector3(0, 0, 0);
         const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
         skyboxMaterial.backFaceCulling = false;
-        const r = CubeTexture.CreateFromImages(["sun.png", "moon.png", "_.png", "_.png", "_.png", "_.png"], this.scene);
-
         skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/world/skybox/", this.scene, ["sun.png", "_.png", "_.png", "moon.png", "_.png", "_.png"]);
         skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
@@ -128,11 +126,20 @@ export class World extends Environment {
     }
 
     setupLight(): void {
+        // sun light
         this.light = new DirectionalLight("dirLight", new Vector3(0, -1, 0), this.scene);
         Block.light = this.light;
         this.light.intensity = 1;
         this.light.shadowEnabled = true;
         this.light.diffuse = new Color3(1, 0.95, 0.8);
+
+        // moon light
+        const moonLight = new DirectionalLight("moonLight", new Vector3(0, 1, 0), this.scene);
+        moonLight.intensity = 0.5;
+        moonLight.diffuse = new Color3(0.8, 0.8, 1);
+        moonLight.shadowEnabled = true;
+        moonLight.diffuse = new Color3(0.8, 0.8, 1);
+
     }
 
     getLightDirection(): Vector3 {
@@ -154,7 +161,8 @@ export class World extends Environment {
         this.updateSkyColor();
         this.skybox.rotation.z = this.tick / 24000 * 2 * Math.PI;
         // light direction according to the sun position
-        const sunDirection = new Vector3(Math.sin(this.tick / 24000 * 2 * Math.PI), Math.cos(this.tick / 24000 * 2 * Math.PI), 0);
+        const sunDirection = new Vector3(Math.sin(this.skybox.rotation.z), Math.cos(this.skybox.rotation.z), 0);
+        (this.scene.lights[1] as DirectionalLight).direction = new Vector3(Math.sin(this.skybox.rotation.z + Math.PI), Math.cos(this.skybox.rotation.z + Math.PI), 0);
         this.setLightDirection(sunDirection);
     }
 

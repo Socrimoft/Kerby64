@@ -1,4 +1,4 @@
-import { Color4, FreeCamera, MeshBuilder, Scene, SimplexPerlin3DBlock, StandardMaterial, Texture, UniversalCamera, Vector3 } from "@babylonjs/core";
+import { Color4, DynamicTexture, FreeCamera, MeshBuilder, Scene, SimplexPerlin3DBlock, StandardMaterial, Texture, UniversalCamera, Vector3 } from "@babylonjs/core";
 import { Button, Control, Grid, ScrollViewer, StackPanel, TextBlock, Image, InputText } from "@babylonjs/gui";
 import { Game, GameEngine } from "../game";
 import { Menu } from "../gui/menu";
@@ -6,9 +6,12 @@ import { Menu } from "../gui/menu";
 export class MainMenuScene extends Scene {
     private indexOfClassicMode: number = 3;
     private indexOfWorldMode = 2;
+    private canvas: HTMLCanvasElement;
 
     constructor(engine: GameEngine) {
         super(engine);
+        this.canvas = engine.getRenderingCanvas() || null as any;
+
     }
 
     public async load() {
@@ -127,20 +130,22 @@ export class MainMenuScene extends Scene {
     private async createWorldMenu() {
         const worldfont = "WorldOfSpell";
         const gui = new Menu("world_setting", 1920);
-        let isSingleplayer = true;
+        let isWorldNormal = true;
         //const backgroundTexture = AdvancedDynamicTexture.CreateFullscreenUI("backgroundTexture", false, this, AdvancedDynamicTexture.TRILINEAR_SAMPLINGMODE);
-        const camera = new UniversalCamera("world_setting_cam", Vector3.Up());
-        let width = window.screen.width, height = window.screen.height;
-        const backgroundPlane = MeshBuilder.CreateTiledPlane("backgroundPlane", { width: width, height: height, tileSize: 16 }, this);
-        window.addEventListener('resize', (ev) => {
-            //backgroundPlane = window.screen.width;
-            //backgroundPlane._height = window.screen.height
-        })
+
         const backgroundMaterial = new StandardMaterial("backgroundMaterial", this);
-        backgroundMaterial.diffuseTexture = new Texture("./assets/images/world/blocks/dirt.png", this);
+
+        const backgroundTexture = new DynamicTexture("backgroundTexture", this.canvas, this, undefined, Texture.NEAREST_SAMPLINGMODE);
+        const backgroundContext = backgroundTexture.getContext();
+
+        // tile a texture 16 times horizontally and 9 vertically
+        backgroundTexture.uScale = 16;
+        backgroundTexture.vScale = 9;
+        // backgroundTexture.update(true);
+
+        backgroundMaterial.diffuseTexture = backgroundTexture;
         //backgroundMaterial.diffuseTexture.uScale = 4; // Tiling the texture 4 times horizontally
         //backgroundMaterial.diffuseTexture. = 4; // Tiling the texture 4 times vertically
-        backgroundPlane.material = backgroundMaterial;
 
 
         const rows = new Grid("rows");
@@ -164,22 +169,22 @@ export class MainMenuScene extends Scene {
         modeColumn.addColumnDefinition(0.5);
 
         rows.addControl(modeColumn, 1);
-        const singleplayerBtn = new Button("singleplayer");
-        modeColumn.addControl(singleplayerBtn, 0, 0);
-        singleplayerBtn.addControl(new TextBlock("solo", "solo"));
-        console.log(singleplayerBtn.textBlock);
-        singleplayerBtn.thickness = 0;
-        singleplayerBtn.disabledColor = "white";
-        singleplayerBtn.focusedColor = "white";
-        singleplayerBtn.isEnabled = false;
+        const WorldNormalBtn = new Button("WorldNormal");
+        modeColumn.addControl(WorldNormalBtn, 0, 0);
+        WorldNormalBtn.addControl(new TextBlock("solo", "solo"));
+        console.log(WorldNormalBtn.textBlock);
+        WorldNormalBtn.thickness = 0;
+        WorldNormalBtn.disabledColor = "white";
+        WorldNormalBtn.focusedColor = "white";
+        WorldNormalBtn.isEnabled = false;
 
-        const multiplayerBtn = new Button("multiplayer");
-        modeColumn.addControl(multiplayerBtn, 0, 1);
+        const WorldFlatBtn = new Button("WorldFlat");
+        modeColumn.addControl(WorldFlatBtn, 0, 1);
 
-        let logIsSingleplayer = () => console.log(isSingleplayer);
-        // SingleplayerBtn.isEnabled is set to false when singleplayer is selected
-        singleplayerBtn.pointerUpAnimation = () => { isSingleplayer = multiplayerBtn.isEnabled = !(singleplayerBtn.isEnabled = false); logIsSingleplayer() }
-        multiplayerBtn.pointerUpAnimation = () => { singleplayerBtn.isEnabled = !(isSingleplayer = multiplayerBtn.isEnabled = false); logIsSingleplayer() }
+        let logIsWorldNormal = () => console.log(isWorldNormal ? "normal" : "flat");
+        // WorldNormalBtn.isEnabled is set to false when WorldNormal is selected
+        WorldNormalBtn.pointerUpAnimation = () => { isWorldNormal = WorldFlatBtn.isEnabled = !(WorldNormalBtn.isEnabled = false); logIsWorldNormal() }
+        WorldFlatBtn.pointerUpAnimation = () => { WorldNormalBtn.isEnabled = !(isWorldNormal = WorldFlatBtn.isEnabled = false); logIsWorldNormal() }
         //let advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, this);
         //let loadedGUI = await advancedTexture.parseFromURLAsync("./assets/gui/world_setting.json");
 

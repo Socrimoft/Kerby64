@@ -1,4 +1,4 @@
-import { Color3, CubeTexture, DirectionalLight, InstancedMesh, Mesh, MeshBuilder, Nullable, StandardMaterial, Texture, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, DirectionalLight, DynamicTexture, InstancedMesh, Mesh, MeshBuilder, Nullable, StandardMaterial, Texture, TransformNode, Vector3, Vector4 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Chunk } from "./chunk";
 //import { ToonMaterial } from "../materials/toonMaterial";
@@ -27,7 +27,7 @@ export class Block {
         "stone_bricks": ["stone_bricks.png"],
         "bricks": ["bricks.png"],
         "glowstone": ["glowstone.png"],
-        "furnace": ["furnace_front.png", "furnace_top.png", "furnace_side.png", "furnace_side.png", "furnace_side.png", "furnace_side.png"],
+        "furnace": ["furnace_front.png", "furnace_top.png", "furnace_side.png", "furnace_side.png", "furnace_top.png", "furnace_side.png"],
         "pumpkin": ["pumpkin_side.png", "pumpkin_top.png", "pumpkin_side.png", "pumpkin_side.png", "pumpkin_side.png", "pumpkin_side.png"],
         "carved_pumpkin": ["carved_pumpkin.png", "pumpkin_top.png", "pumpkin_side.png", "pumpkin_side.png", "pumpkin_side.png", "pumpkin_side.png"],
     }
@@ -56,7 +56,7 @@ export class Block {
         "long_grass": ["tall_grass_bottom.png"],
         "red_mushroom": ["red_mushroom.png"],
         "poppy": ["poppy.png"],
-        "oak_sappling": ["oak_sappling.png"],
+        "oak_sappling": ["oak_sapling.png"],
         "dandelion": ["dandelion.png"],
     }
     static readonly other = {
@@ -170,7 +170,16 @@ export class Block {
             if (key in Block.notABlock)
                 return this.Make2DMesh(key as keyof typeof this.notABlock);
 
-            Block.runtimeMeshBuffer[key] = MeshBuilder.CreateBox(key, { size: Block.size }, Block.scene);
+            Block.runtimeMeshBuffer[key] = MeshBuilder.CreateBox(key, {
+                size: Block.size, faceUV: [
+                    new Vector4(0 / 3, 1 / 2, 1 / 3, 0), // Front face
+                    new Vector4(1 / 3, 1 / 2, 2 / 3, 0), // Back face
+                    new Vector4(2 / 3, 1 / 2, 1, 0),     // Left face
+                    new Vector4(0 / 3, 1, 1 / 3, 1 / 2), // Right face
+                    new Vector4(1 / 3, 1, 2 / 3, 1 / 2), // Top face
+                    new Vector4(2 / 3, 1, 1, 1 / 2)      // Bottom face
+                ]
+            }, Block.scene);
             (Block.runtimeMeshBuffer[key] as Mesh).material = this.makeCubeMaterial(key as keyof typeof Block.blockList);
         }
         Block.runtimeMeshBuffer[key]!.setEnabled(false);
@@ -258,27 +267,36 @@ export class Block {
                 case ("tnt"):
                 case ("carved_pumpkin"):
                 case ("furnace"):
-                    // blocks with 6 different faces
+                    // blocks with 6 different faces (DynamicTexture)
                     filelist = faces;
                     break;
                 default:
                     throw new Error(`Block ${key} not found`);
             };
-            const texture = new CubeTexture(key + "Texture", Block.scene, undefined, undefined, filelist.map(file => Block.rootURI + file), () => {
-                texture.displayName = texture.name = key + "Texture";
-                texture.updateSamplingMode(Texture.NEAREST_NEAREST_MIPNEAREST);
-                texture.coordinatesMode = Texture.SKYBOX_MODE;
-            });
+            const texture = new DynamicTexture(key + "Texture", { width: 48, height: 32 }, Block.scene, true, Texture.NEAREST_SAMPLINGMODE);
+            const context = (texture as DynamicTexture).getContext();
 
-            //console.log(texture, texture.name, texture.url);
+            // Draw each image onto the canvas
+            let imagesLoaded = 0;
+            filelist.map(file => Block.rootURI + file).forEach((imgUrl, index) => {
+                let image = new Image();
+                image.src = imgUrl;
+                image.onload = () => {
+                    context.drawImage(image, (index % 3) * 16, index < 3 ? 0 : 16, 16, 16); // Adjust placement on canvas
+                    imagesLoaded++;
+                    // Update the texture only after all images are loaded and drawn
+                    if (imagesLoaded === filelist.length)
+                        (texture as DynamicTexture).update(undefined, undefined, true);
+                };
+            });
+            //texture.displayName = key + "Texture";
+            texture.hasAlpha = true;
             this.runtimeMaterialBuffer[key] = new StandardMaterial(key + "Material", Block.scene);
             this.runtimeMaterialBuffer[key].specularColor = new Color3(0, 0, 0);
             this.runtimeMaterialBuffer[key].diffuseTexture = texture;
-            //this.runtimeMaterialBuffer[key].diffuseTexture.hasAlpha = true;
-            //this.runtimeMaterialBuffer[key].useAlphaFromDiffuseTexture = true;
-            //this.runtimeMaterialBuffer[key].useSpecularOverAlpha = true;
+            this.runtimeMaterialBuffer[key].useAlphaFromDiffuseTexture = true;
+            this.runtimeMaterialBuffer[key].useSpecularOverAlpha = true;
             //this.runtimeMaterialBuffer[key].alphaCutOff = 0.4;
-            this.runtimeMaterialBuffer[key].reflectionTexture = texture;
         }
         //console.log(this.runtimeMaterialBuffer[key]);
         return this.runtimeMaterialBuffer[key];

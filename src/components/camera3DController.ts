@@ -13,25 +13,22 @@ enum CameraMode {
 export class Camera3DController implements Component {
     private tpsCamera: UniversalCamera;
     private fpsCamera: UniversalCamera;
-    private kerbyHands: Mesh;
+    private kerby: Mesh;
     public currentCamera: CameraMode = 0;
     private scene: LevelScene;
-    tpsCameraCollider: Mesh;
+    private tpsCameraCollider: Mesh;
 
     constructor(private targetEntity: Player, private input: InputManager) {
         this.scene = this.targetEntity.scene;
-        const kerbyHand = this.targetEntity.meshRef.getChildMeshes(false, (node) => node.name === "Object_15")[0];
-        if (!(kerbyHand instanceof Mesh)) throw new Error("Kerby head not found");
-        this.kerbyHands = kerbyHand;
+        this.kerby = this.targetEntity.meshRef;;
         this.tpsCamera = new UniversalCamera("tpsCamera", Vector3.Zero(), this.targetEntity.scene);
         this.tpsCameraCollider = new Mesh("tpsCameraCollider", this.scene);
         this.tpsCameraCollider.checkCollisions = true;
         this.tpsCamera.parent = this.tpsCameraCollider;
         this.fpsCamera = new UniversalCamera("fpsCamera", this.targetEntity.position, this.targetEntity.scene);
         this.scene.activeCamera = this.fpsCamera;
-        this.fpsCamera.minZ = 0;
-        this.tpsCamera.minZ = 0;
-        this.changeActiveCamera(0);
+        this.fpsCamera.minZ = this.tpsCamera.minZ = 0;
+        this.changeActiveCamera(0); // set default camera to FPS
     }
 
     public get activeCamera() {
@@ -45,7 +42,7 @@ export class Camera3DController implements Component {
     }
     private changeActiveCamera(forceCameraMode?: CameraMode) {
         this.currentCamera = forceCameraMode ?? (this.currentCamera + 1) % 3;
-        if (this.kerbyHands.material) this.kerbyHands.material.backFaceCulling = true;
+        this.kerby.setEnabled(!!this.currentCamera);
         this.scene.activeCamera = this.activeCamera;
 
     }

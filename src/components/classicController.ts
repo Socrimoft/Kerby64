@@ -1,4 +1,4 @@
-import { AnimationGroup, Ray, Vector3 } from "@babylonjs/core";
+import { Ray, Vector3 } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Player } from "../actors/player";

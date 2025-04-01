@@ -14,6 +14,20 @@ export class Player extends GameEntity {
     private entityController?: EntityController;
     private cameraController?: CameraController;
 
+    static Animation = {
+        Idle: "Idle",
+        Run: "Run",
+        Jump: "Jump",
+        Inhale: "Inhale",
+        MouthFull: "MouthFull",
+        SpitOut: "SpitOut",
+        Inflate: "Inflate",
+        FlyIdle: "Fly_Idle",
+        Fly: "Fly",
+        Deflate: "Deflate",
+        Fall: "Fall"
+    } as const;
+
     constructor(scene: LevelScene, ...components: Component[]) {
         super("kerby", scene, ...components)
         components.forEach((comp) => {
@@ -35,5 +49,7 @@ export class Player extends GameEntity {
         this.cameraController = new cameraclass(this, input);
 
         this.addComponent(this.cameraController);
+
+        this.registerAnimations((Object.values(Player.Animation) as string[]));
     }
 }

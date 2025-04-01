@@ -1,8 +1,8 @@
-import { AnimationGroup, Ray, Vector3 } from "@babylonjs/core";
+import { Ray, Vector3 } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
-import { GameEntity } from "../actors/gameEntity";
 import { Game } from "../game";
+import { Player } from "../actors/player";
 
 export class BirdController extends EntityController {
     private input: InputManager;
@@ -18,25 +18,9 @@ export class BirdController extends EntityController {
     protected jumpStartTime: number = 0;
     protected isJumping: boolean = false;
 
-    private runAnim: string = "Run";
-    private jumpAnim: string = "Jump";
-    private inflateAnim: string = "Inflate";
-    private flyIdleAnim: string = "Fly_Idle";
-    private flyAnim: string = "Fly";
-
-    private Animation = {
-        Run: "Run",
-        Jump: "Jump",
-        Inflate: "Inflate",
-        FlyIdle: "Fly_Idle",
-        Fly: "Fly",
-    } as const;
-
-    constructor(entity: GameEntity, input: InputManager) {
+    constructor(entity: Player, input: InputManager) {
         super(entity);
         this.input = input;
-
-        this.entity.registerAnimations((Object.values(this.Animation) as string[]));
     }
 
     public beforeRenderUpdate(): void {
@@ -60,7 +44,7 @@ export class BirdController extends EntityController {
             this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
 
         this.entity.rotation = new Vector3(0, Math.PI / 2, 0);
-        this.playAnimation(this.runAnim);
+        this.playAnimation(Player.Animation.Run);
         this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
 
         // detect if grounded
