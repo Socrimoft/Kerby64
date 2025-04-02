@@ -33,8 +33,7 @@ export class ToonMaterial extends ShaderMaterial {
             }
         );
         this.transparencyMode = Material.MATERIAL_ALPHABLEND;
-        this.backFaceCulling = false;
-        this.separateCullingPass = true;
+        this.needDepthPrePass = true;
 
         this.directionalLights = scene.lights.filter(light => light instanceof DirectionalLight);
 

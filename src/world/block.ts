@@ -321,7 +321,6 @@ export class Block {
             texture.hasAlpha = true;
             this.runtimeMaterialBuffer[key] = new ToonMaterial(key + "Material", texture, Block.scene);
             //this.runtimeMaterialBuffer[key].specularColor = new Color3(0, 0, 0);
-            this.runtimeMaterialBuffer[key].needDepthPrePass = true;
         }
         return this.runtimeMaterialBuffer[key];
     }
