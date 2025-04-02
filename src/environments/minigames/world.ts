@@ -108,7 +108,7 @@ export class World extends Environment {
         const testGround = MeshBuilder.CreateBox("test", { size: 1, width: 1, height: 1 });
         testGround.position = new Vector3(0, 10, 0);
         const grassTexture = new NoiseProceduralTexture("grassTexture", 16, this.scene);
-        const grassMaterial = new ToonMaterial(grassTexture, this.getLight(), testGround, this.scene);
+        const grassMaterial = new ToonMaterial(grassTexture, this.scene);
         testGround.checkCollisions = true;
         testGround.material = grassMaterial;
     }

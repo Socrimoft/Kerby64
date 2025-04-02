@@ -117,7 +117,7 @@ export class KirClassic extends Environment {
         ground.checkCollisions = true;
         ground.receiveShadows = true;
 
-        const mat = new ToonMaterial(new Texture("./assets/textures/cartoon-grass.jpg", this.scene), this.getLight(), ground, this.scene);
+        const mat = new ToonMaterial(new Texture("./assets/textures/cartoon-grass.jpg", this.scene), this.scene);
         //Color of dirt for no texture
         //mat.diffuseColor = new Color3(0.5, 0.25, 0.1);
         ground.material = mat;
@@ -164,7 +164,7 @@ export class KirClassic extends Environment {
         }, this.scene);
 
         path.position = new Vector3(x + this.segmentWidth / 2 + 10, height ? height - 14.498 : 14.501, 0);
-        const pathMaterial = new ToonMaterial(new Texture("./assets/textures/cartoon-dirt.jpg", this.scene), this.getLight(), path, this.scene);
+        const pathMaterial = new ToonMaterial(new Texture("./assets/textures/cartoon-dirt.jpg", this.scene), this.scene);
 
         path.material = pathMaterial;
     }
@@ -180,7 +180,7 @@ export class KirClassic extends Environment {
         box.receiveShadows = true;
 
         box.position = new Vector3(x + this.segmentWidth / 2 + 10, 14.501, 0);
-        const boxMaterial = new ToonMaterial(new Texture("./assets/textures/CarpetJPG.jpg", this.scene), this.getLight(), box, this.scene);
+        const boxMaterial = new ToonMaterial(new Texture("./assets/textures/CarpetJPG.jpg", this.scene), this.scene);
 
         box.material = boxMaterial;
         return box;
@@ -203,10 +203,10 @@ export class KirClassic extends Environment {
         log.receiveShadows = true;
 
         log.position = new Vector3(x + this.segmentWidth / 2 + 10, 20, 0);
-        const logMaterial = new ToonMaterial(new Texture("./assets/textures/cartoon-wood.jpg", this.scene), this.getLight(), topCinlinder, this.scene);
+        const logMaterial = new ToonMaterial(new Texture("./assets/textures/cartoon-wood.jpg", this.scene), this.scene);
 
         topCinlinder.position = new Vector3(x + this.segmentWidth / 2 + 10.005, 20.01, 0);
-        const topMaterial = new ToonMaterial(new Texture("./assets/textures/TreeEndJPG.jpg", this.scene), this.getLight(), topCinlinder, this.scene);
+        const topMaterial = new ToonMaterial(new Texture("./assets/textures/TreeEndJPG.jpg", this.scene), this.scene);
 
         log.material = logMaterial;
         topCinlinder.material = topMaterial;
@@ -223,7 +223,7 @@ export class KirClassic extends Environment {
         box.receiveShadows = true;
 
         box.position = new Vector3(x + this.segmentWidth / 2 + 10, 20, 0);
-        const boxMaterial = new ToonMaterial(new Texture("./assets/textures/Mistery.jpg", this.scene), this.getLight(), box, this.scene);
+        const boxMaterial = new ToonMaterial(new Texture("./assets/textures/Mistery.jpg", this.scene), this.scene);
 
         box.material = boxMaterial;
     }
@@ -242,7 +242,7 @@ export class KirClassic extends Environment {
         for (let i = 0; i < 3; i++) {
             const post = MeshBuilder.CreateBox(`post${i}`, { width: 0.2, height: 1.2, depth: 0.2 }, this.scene);
             post.position = new Vector3(startX, startY, startZ + i * 2);
-            const plankMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.getLight(), post, this.scene);
+            const plankMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.scene);
             post.material = plankMaterial;
             post.parent = fence;
         }
@@ -251,7 +251,7 @@ export class KirClassic extends Environment {
         for (let j = -0.3; j <= 0.3; j += 0.6) {
             const plank = MeshBuilder.CreateBox(`plank${j}`, { width: 0.2, height: 0.15, depth: 5 }, this.scene);
             plank.position = new Vector3(startX, startY + j, startZ + 2);
-            const plankMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.getLight(), plank, this.scene);
+            const plankMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.scene);
             plank.material = plankMaterial;
             plank.parent = fence;
         }
@@ -267,7 +267,7 @@ export class KirClassic extends Environment {
         }, this.scene);
 
         floor.position = new Vector3(x + this.segmentWidth / 2 + 10, 15, 0);
-        const pathMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.getLight(), floor, this.scene);
+        const pathMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.scene);
 
         floor.material = pathMaterial;
         floor.checkCollisions = true;
@@ -312,7 +312,7 @@ export class KirClassic extends Environment {
 
         prism.position = position;
         prism.rotation = new Vector3(0, 0, Math.PI / 2);
-        const prismMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.getLight(), prism, this.scene);
+        const prismMaterial = new ToonMaterial(new Texture("./assets/textures/PlankJPG.jpg", this.scene), this.scene);
         prism.material = prismMaterial;
         prism.receiveShadows = true;
     }

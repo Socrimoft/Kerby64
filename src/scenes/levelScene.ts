@@ -66,7 +66,7 @@ export class LevelScene extends Scene {
         this.updateNavigatorHistory(game === "classic" ? { game, seed, level } : { game, seed })
 
         // instanciate player
-        await this.player.instanciate(this.environment.getLight(), new Vector3(0, 20, 0), new Vector3(0, Math.PI / 2, 0), this.input, gameToLoad == 3 ? Camera3DController : undefined);
+        await this.player.instanciate(new Vector3(0, 20, 0), new Vector3(0, Math.PI / 2, 0), this.input, gameToLoad == 3 ? Camera3DController : undefined);
         this.player.addComponent(new (controllers.at(gameToLoad - 1) || controllers[0])(this.player, this.input));
         this.player.activateEntityComponents();
 

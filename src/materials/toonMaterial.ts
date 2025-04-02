@@ -1,7 +1,25 @@
-import { AbstractMesh, BaseTexture, Color3, DirectionalLight, DynamicTexture, MorphTarget, Scene, ShaderLanguage, ShaderMaterial, Vector3, Vector4 } from "@babylonjs/core";
+import { BaseTexture, Color3, DirectionalLight, DynamicTexture, Scene, ShaderLanguage, ShaderMaterial, StorageBuffer, Vector4, WebGPUEngine } from "@babylonjs/core";
+
+enum LightOffsets {
+    DIFFUSE_R = 0,
+    DIFFUSE_G = 1,
+    DIFFUSE_B = 2,
+    INTENSITY = 3,
+    DIRECTION_X = 4,
+    DIRECTION_Y = 5,
+    DIRECTION_Z = 6,
+}
+const FLOATS_PER_LIGHT = 7;
+
+const MIN_BUFFER_SIZE = 32;
 
 export class ToonMaterial extends ShaderMaterial {
-    constructor(textureOrColor: BaseTexture | Color3, light: DirectionalLight, mesh: AbstractMesh, scene: Scene) {
+    private scene: Scene;
+    private directionalLights: Array<DirectionalLight>;
+    private prevLightData: Float32Array;
+    public lightsBuffer: StorageBuffer;
+
+    constructor(textureOrColor: BaseTexture | Color3, scene: Scene) {
         super(
             "toonShader",
             scene,
@@ -16,6 +34,16 @@ export class ToonMaterial extends ShaderMaterial {
             }
         );
 
+        this.scene = scene;
+        this.directionalLights = this.scene.lights.filter(light => light instanceof DirectionalLight);
+
+        console.log(this.directionalLights[0].diffuse);
+        console.log(this.directionalLights[0].intensity);
+        console.log(this.directionalLights[0].direction);
+
+        const bufferSize = this.directionalLights.length * FLOATS_PER_LIGHT * 4;
+        this.lightsBuffer = new StorageBuffer(this.scene.getEngine() as WebGPUEngine, bufferSize < MIN_BUFFER_SIZE ? MIN_BUFFER_SIZE : bufferSize);
+
         if (textureOrColor instanceof Color3) {
             const size = 512;
             const dynamicTexture = new DynamicTexture("dynamicTexture", size, scene);
@@ -28,15 +56,60 @@ export class ToonMaterial extends ShaderMaterial {
             textureOrColor = dynamicTexture;
         }
 
+        this.prevLightData = this.computeLightData();
+        this.updateLightsBuffer(this.prevLightData);
+
+        this.setStorageBuffer("lights", this.lightsBuffer);
         this.setTexture("texture", textureOrColor);
-        this.setVector3("lightDirection", light.direction);
-        this.setFloat("lightIntensity", light.intensity);
-        this.setVector3("diffuseColor", new Vector3(light.diffuse.r, light.diffuse.g, light.diffuse.b));
         this.setVector4("ambiantColor", new Vector4(0.5, 0.5, 0.5, 1.0));
         this.setVector4("specularColor", new Vector4(0.9, 0.9, 0.9, 1.0));
         this.setFloat("glossiness", 32);
         this.setVector4("rimColor", new Vector4(1, 1, 1, 1));
         this.setFloat("rimAmount", 0.716);
         this.setFloat("rimThreshold", 0.1);
+
+        scene.onBeforeRenderObservable.add(() => {
+            const currentData = this.computeLightData();
+            if (!this.compareLightData(this.prevLightData, currentData)) {
+                this.updateLightsBuffer(currentData);
+                this.prevLightData = currentData;
+            }
+        });
+    }
+
+    private computeLightData(): Float32Array {
+        const data = new Float32Array(this.directionalLights.length * FLOATS_PER_LIGHT);
+        this.directionalLights.forEach((light, index) => {
+            const offset = index * FLOATS_PER_LIGHT;
+
+
+            // diffuse (12 bytes)
+            data[offset + LightOffsets.DIFFUSE_R] = light.diffuse.r;
+            data[offset + LightOffsets.DIFFUSE_G] = light.diffuse.g;
+            data[offset + LightOffsets.DIFFUSE_B] = light.diffuse.b;
+
+            // intensity (4 bytes)
+            data[offset + LightOffsets.INTENSITY] = light.intensity;
+
+            // direction (12 bytes)
+            data[offset + LightOffsets.DIRECTION_X] = light.direction.x;
+            data[offset + LightOffsets.DIRECTION_Y] = light.direction.y;
+            data[offset + LightOffsets.DIRECTION_Z] = light.direction.z;
+        });
+        return data;
+    }
+
+    private compareLightData(l1: Float32Array, l2: Float32Array): boolean {
+        if (l1.length !== l2.length) return false;
+        for (let i = 0; i < l1.length; i++)
+            if (l1[i] !== l2[i]) return false;
+        return true;
+    }
+
+    public updateLightsBuffer(data: Float32Array) {
+        const buffer = new ArrayBuffer(data.byteLength);
+        const view = new DataView(buffer);
+        data.forEach((val, i) => view.setFloat32(i * 4, val, true));
+        this.lightsBuffer.update(view);
     }
 }

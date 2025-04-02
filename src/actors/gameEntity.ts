@@ -8,7 +8,7 @@ export class GameEntity {
     public name: string;
     private assets?: AssetContainer;
     protected mesh?: Mesh;
-    private animations: Record<string, AnimationGroup> = {};
+    public animations: Record<string, AnimationGroup> = {};
     public components: Array<Component> = [];
     public baseSourceURI = "./assets/models/";
     private boundfct?: () => void;
@@ -20,18 +20,18 @@ export class GameEntity {
         this.components.push(...components);
     }
 
-    public async instanciate(light: DirectionalLight, position = Vector3.Zero(), rotation = Vector3.Zero()): Promise<void> {
+    public async instanciate(position = Vector3.Zero(), rotation = Vector3.Zero()): Promise<void> {
         this.assets = await LoadAssetContainerAsync(this.baseSourceURI + this.name + ".glb", this.scene);
         const root = (this.assets.rootNodes.length == 1 && this.assets.rootNodes[0] instanceof Mesh) ? this.assets.rootNodes[0] : this.assets.createRootMesh();
         root.name = this.name;
 
         this.assets.meshes.forEach((mesh) => {
             if (this.assets && this.assets.textures[0])
-                mesh.material = new ToonMaterial(this.assets.textures[0], light, mesh, this.scene);
+                mesh.material = new ToonMaterial(this.assets.textures[0], this.scene);
             else if (this.assets && mesh.material && mesh.material instanceof StandardMaterial)
-                mesh.material = new ToonMaterial(mesh.material.diffuseColor, light, mesh, this.scene);
+                mesh.material = new ToonMaterial(mesh.material.diffuseColor, this.scene);
             else if (this.assets && mesh.material && mesh.material instanceof PBRMaterial)
-                mesh.material = new ToonMaterial(mesh.material.albedoColor, light, mesh, this.scene);
+                mesh.material = new ToonMaterial(mesh.material.albedoColor, this.scene);
         });
 
         this.assets.addAllToScene();

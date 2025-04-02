@@ -37,9 +37,9 @@ export class Player extends GameEntity {
         });
     }
 
-    public async instanciate(light: DirectionalLight, position: Vector3, rotation: Vector3, input?: InputManager,
+    public async instanciate(position: Vector3, rotation: Vector3, input?: InputManager,
         cameraclass: new (player: Player, input: InputManager) => CameraController = Camera2DController): Promise<void> {
-        await super.instanciate(light, position, rotation);
+        await super.instanciate(position, rotation);
         if (!this.mesh)
             throw new Error("Error while instanciating the GameEntity " + this.name);
         if (!input)
