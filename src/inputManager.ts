@@ -53,7 +53,7 @@ export class InputManager extends MouseManager {
         document.addEventListener("pointerlockchange", () => {
             this.isPointerLocked = document.pointerLockElement === this.canvas;
             //(this.isPointerLocked ? this.attachControl : this.detachControl)();
-            console.log(`input : ${this.isPointerLocked} ${this.isWorldPlaying}`);
+            //console.log(`input : ${this.isPointerLocked} ${this.isWorldPlaying}`);
         });
         scene.onPointerObservable.add((pointerInfo) => {
             if (!this.isPointerLocked) return;

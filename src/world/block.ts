@@ -1,6 +1,7 @@
-import { Color3, DirectionalLight, DynamicTexture, InstancedMesh, Mesh, MeshBuilder, Nullable, StandardMaterial, Texture, TransformNode, Vector3, Vector4 } from "@babylonjs/core";
+import { Color3, Color4, DirectionalLight, DynamicTexture, InstancedMesh, Mesh, MeshBuilder, Nullable, StandardMaterial, Texture, TransformNode, Vector3, Vector4, VertexBuffer } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Chunk } from "./chunk";
+import { ToonMaterial } from "../materials/toonMaterial";
 //import { ToonMaterial } from "../materials/toonMaterial";
 
 export type BlockType = keyof (typeof Block.notABlock & typeof Block.blockList);
@@ -119,7 +120,7 @@ export class Block {
         carved_pumpkin: null
     };
 
-    static runtimeMaterialBuffer: { [key in BlockType]: Nullable<StandardMaterial> } = {
+    static runtimeMaterialBuffer: { [key in BlockType]: Nullable<ToonMaterial> } = {
         furnace: null,
         sugar_cane: null,
         short_grass: null,
@@ -164,22 +165,47 @@ export class Block {
         pumpkin: null,
         carved_pumpkin: null
     };
+    static readonly faceUV = [ // TODO: un-mirror the faces
+        new Vector4(1, 0, 2 / 3, 1 / 2),        // Left face
+        new Vector4(1, 1 / 2, 2 / 3, 1),        // Right face
+        new Vector4(1 / 3, 0, 0, 1 / 2),        // Front face
+        new Vector4(1 / 3, 1 / 2, 0, 1),        // Back face
+        new Vector4(2 / 3, 1 / 2, 1 / 3, 1),    // Bottom face
+        new Vector4(2 / 3, 0, 1 / 3, 1 / 2),    // Top face
+    ]
 
     static makeMesh(key: BlockType): Mesh {
         if (!Block.runtimeMeshBuffer[key]) {
             if (key in Block.notABlock)
                 return this.Make2DMesh(key as keyof typeof this.notABlock);
 
-            Block.runtimeMeshBuffer[key] = MeshBuilder.CreateBox(key, {
-                size: Block.size, faceUV: [
-                    new Vector4(0 / 3, 1 / 2, 1 / 3, 0), // Front face
-                    new Vector4(1 / 3, 1 / 2, 2 / 3, 0), // Back face
-                    new Vector4(2 / 3, 1 / 2, 1, 0),     // Left face
-                    new Vector4(0 / 3, 1, 1 / 3, 1 / 2), // Right face
-                    new Vector4(1 / 3, 1, 2 / 3, 1 / 2), // Top face
-                    new Vector4(2 / 3, 1, 1, 1 / 2)      // Bottom face
+            let faceColors: Color4[] | undefined = undefined;
+            // add color to greyed faces
+            if (key == "oak_leaves") {
+                faceColors = [
+                    new Color4(0, 0.48, 0, 1), // Left face
+                    new Color4(0, 0.48, 0, 1), // Right face
+                    new Color4(0, 0.48, 0, 1), // Front face
+                    new Color4(0, 0.48, 0, 1), // Back face
+                    new Color4(0, 0.48, 0, 1), // Bottom face
+                    new Color4(0, 0.48, 0, 1), // Top face
                 ]
+            }
+            if (key == "grass_block") {
+                faceColors = [
+                    new Color4(1, 1, 1, 1), // Left face
+                    new Color4(1, 1, 1, 1), // Right face
+                    new Color4(1, 1, 1, 1), // Front face
+                    new Color4(1, 1, 1, 1), // Back face
+                    new Color4(0.48, 0.74, 0.42, 1), // Top face
+                    new Color4(1, 1, 1, 1), // Bottom face
+                ]
+            }
+            Block.runtimeMeshBuffer[key] = MeshBuilder.CreateBox(key, {
+                size: Block.size, faceUV: Block.faceUV, faceColors, wrap: true
             }, Block.scene);
+            Block.runtimeMeshBuffer[key]!.checkCollisions = true;
+            // apply facecolor Color4(0, 0.48, 0, 1) to the top face of "grass_block"
             (Block.runtimeMeshBuffer[key] as Mesh).material = this.makeCubeMaterial(key as keyof typeof Block.blockList);
         }
         Block.runtimeMeshBuffer[key]!.setEnabled(false);
@@ -190,9 +216,7 @@ export class Block {
         if (!this.runtimeMaterialBuffer[key]) {
             const texture = new Texture(this.rootURI + this.notABlock[key][0], Block.scene, undefined, undefined, Texture.NEAREST_NEAREST);
             //this.runtimeMaterialBuffer[key] = new ToonMaterial(texture, this.light, false, Block.scene);
-            const standardMaterial = new StandardMaterial(key + "Material", Block.scene);
-            standardMaterial.diffuseTexture = texture;
-            this.runtimeMaterialBuffer[key] = standardMaterial;
+            this.runtimeMaterialBuffer[key] = new ToonMaterial(key + "Material", texture, Block.scene);
         }
 
         // make 2 planes
@@ -291,14 +315,10 @@ export class Block {
             });
             //texture.displayName = key + "Texture";
             texture.hasAlpha = true;
-            this.runtimeMaterialBuffer[key] = new StandardMaterial(key + "Material", Block.scene);
-            this.runtimeMaterialBuffer[key].specularColor = new Color3(0, 0, 0);
-            this.runtimeMaterialBuffer[key].diffuseTexture = texture;
-            this.runtimeMaterialBuffer[key].useAlphaFromDiffuseTexture = true;
-            this.runtimeMaterialBuffer[key].useSpecularOverAlpha = true;
-            //this.runtimeMaterialBuffer[key].alphaCutOff = 0.4;
+            this.runtimeMaterialBuffer[key] = new ToonMaterial(key + "Material", texture, Block.scene);
+            //this.runtimeMaterialBuffer[key].specularColor = new Color3(0, 0, 0);
+            this.runtimeMaterialBuffer[key].needDepthPrePass = true;
         }
-        //console.log(this.runtimeMaterialBuffer[key]);
         return this.runtimeMaterialBuffer[key];
     }
     constructor(position: Vector3, protected chunk: Chunk, public type?: BlockType) {

@@ -99,7 +99,7 @@ export class WorldController extends EntityController {
             this.oldHitMesh = null;
         }
         if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh) && hit.pickedMesh !== this.oldHitMesh) {
-            console.log(hit.pickedMesh.name, this.oldHitMesh?.name);
+            //console.log(hit.pickedMesh.name, this.oldHitMesh?.name);
             hit.pickedMesh.edgesColor = new Color4(0.5, 0.5, 0.5, 1);
             hit.pickedMesh.edgesWidth = 1;
             hit.pickedMesh.enableEdgesRendering();

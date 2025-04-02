@@ -63,7 +63,7 @@ export class Bird extends Environment {
         ground.checkCollisions = true;
         ground.receiveShadows = true;
 
-        const mat = new ToonMaterial(new Texture("./assets/textures/cartoon-dirt.jpg", this.scene), this.scene);
+        const mat = new ToonMaterial("groundSegmentMaterial", new Texture("./assets/textures/cartoon-dirt.jpg", this.scene), this.scene);
         //Color of dirt for no texture
         //mat.diffuseColor = new Color3(0.5, 0.25, 0.1);
         ground.material = mat;
@@ -109,7 +109,7 @@ export class Bird extends Environment {
         bottomBlock.checkCollisions = true;
         bottomBlockTop.checkCollisions = true;
 
-        const metal = new ToonMaterial(new Color3(0.1, 0.5, 0.1), this.scene);
+        const metal = new ToonMaterial("metalMaterial", new Color3(0.1, 0.5, 0.1), this.scene);
 
         //effet metallique
         // metal.setSpecularPower(256);
@@ -139,7 +139,7 @@ export class Bird extends Environment {
         innerCylinder.position = new Vector3(x, -this.passageHeight / 2 - 0.498 + yOffset, 0);
         topInnerCylinder.position = new Vector3(x, this.passageHeight / 2 + 0.499 + yOffset, 0);
 
-        const blackMaterial = new ToonMaterial(new Color3(0, 0, 0), this.scene);
+        const blackMaterial = new ToonMaterial("blackMaterial", new Color3(0, 0, 0), this.scene);
         innerCylinder.material = blackMaterial;
         topInnerCylinder.material = blackMaterial;
     }

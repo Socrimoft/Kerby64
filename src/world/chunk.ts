@@ -43,10 +43,10 @@ export class Chunk extends TransformNode {
                         if (currentBlockTypeIndex < blockTypeList.length) {
                             Chunk._debugChunk.blocks[x][y][z] = new Block(new Vector3(x, y, z), Chunk._debugChunk, blockTypeList[currentBlockTypeIndex]);
                             currentBlockTypeIndex++;
-                        } else if (currentNotBlockTypeIndex < notBlockTypeList.length) {
+                        } /*else if (currentNotBlockTypeIndex < notBlockTypeList.length) {
                             Chunk._debugChunk.blocks[x][y][z] = new Block(new Vector3(x, y, z), Chunk._debugChunk, notBlockTypeList[currentNotBlockTypeIndex]);
                             currentNotBlockTypeIndex++;
-                        }
+                        }*/
                     }
                 }
             }

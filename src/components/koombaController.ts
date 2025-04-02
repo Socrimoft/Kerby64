@@ -8,6 +8,7 @@ export class KoombaController extends EntityController {
 
     constructor(entity: Koomba) {
         super(entity);
+        this.entity.stopAllAnims();
         this.playAnimation(Koomba.Animation.Walk);
     }
 

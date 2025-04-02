@@ -27,11 +27,11 @@ export class GameEntity {
 
         this.assets.meshes.forEach((mesh) => {
             if (this.assets && this.assets.textures[0])
-                mesh.material = new ToonMaterial(this.assets.textures[0], this.scene);
+                mesh.material = new ToonMaterial(this.name + "Material", this.assets.textures[0], this.scene);
             else if (this.assets && mesh.material && mesh.material instanceof StandardMaterial)
-                mesh.material = new ToonMaterial(mesh.material.diffuseColor, this.scene);
+                mesh.material = new ToonMaterial(this.name + "Material", mesh.material.diffuseColor, this.scene);
             else if (this.assets && mesh.material && mesh.material instanceof PBRMaterial)
-                mesh.material = new ToonMaterial(mesh.material.albedoColor, this.scene);
+                mesh.material = new ToonMaterial(this.name + "Material", mesh.material.albedoColor, this.scene);
         });
 
         this.assets.addAllToScene();

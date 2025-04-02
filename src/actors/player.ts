@@ -3,7 +3,7 @@ import { LevelScene } from "../scenes/levelScene";
 import { Camera2DController } from "../components/camera2DController";
 import { GameEntity } from "./gameEntity";
 import { Component } from "../components/component";
-import { DirectionalLight, Vector3 } from "@babylonjs/core";
+import { Vector3 } from "@babylonjs/core";
 import { EntityController } from "../components/entityController";
 import { RushController } from "../components/rushController";
 import { BirdController } from "../components/birdController";

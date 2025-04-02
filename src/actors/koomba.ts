@@ -1,4 +1,4 @@
-import { DirectionalLight, Mesh, Vector3 } from "@babylonjs/core";
+import { Mesh, Vector3 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Component } from "../components/component";
 import { GameEntity } from "./gameEntity";
@@ -24,7 +24,7 @@ export class Koomba extends GameEntity {
         this.addComponent(new KoombaController(this));
     }
 
-    public clone(name?: string, position?: Vector3, rotation?: Vector3, cloneComponents: boolean = false): GameEntity {
+    public clone(name?: string, position?: Vector3, rotation?: Vector3, cloneComponents: boolean = false): Koomba {
         const koomba = super.clone(name, position, rotation, cloneComponents);
         koomba.registerAnimations((Object.values(Koomba.Animation) as string[]));
         koomba.addComponent(new KoombaController(koomba));

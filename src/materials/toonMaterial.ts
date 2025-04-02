@@ -14,14 +14,13 @@ const FLOATS_PER_LIGHT = 7;
 const MIN_BUFFER_SIZE = 32;
 
 export class ToonMaterial extends ShaderMaterial {
-    private scene: Scene;
     private directionalLights: Array<DirectionalLight>;
     private prevLightData: Float32Array;
     public lightsBuffer: StorageBuffer;
 
-    constructor(textureOrColor: BaseTexture | Color3, scene: Scene) {
+    constructor(name: string, textureOrColor: BaseTexture | Color3, scene: Scene) {
         super(
-            "toonShader",
+            name,
             scene,
             {
                 vertex: "toon",
@@ -33,16 +32,14 @@ export class ToonMaterial extends ShaderMaterial {
                 shaderLanguage: ShaderLanguage.WGSL
             }
         );
-
-        this.scene = scene;
-        this.directionalLights = this.scene.lights.filter(light => light instanceof DirectionalLight);
+        this.directionalLights = scene.lights.filter(light => light instanceof DirectionalLight);
 
         console.log(this.directionalLights[0].diffuse);
         console.log(this.directionalLights[0].intensity);
         console.log(this.directionalLights[0].direction);
 
         const bufferSize = this.directionalLights.length * FLOATS_PER_LIGHT * 4;
-        this.lightsBuffer = new StorageBuffer(this.scene.getEngine() as WebGPUEngine, bufferSize < MIN_BUFFER_SIZE ? MIN_BUFFER_SIZE : bufferSize);
+        this.lightsBuffer = new StorageBuffer(scene.getEngine() as WebGPUEngine, bufferSize < MIN_BUFFER_SIZE ? MIN_BUFFER_SIZE : bufferSize);
 
         if (textureOrColor instanceof Color3) {
             const size = 512;

@@ -105,16 +105,16 @@ export class World extends Environment {
         // TODO: add a terrain generator
         // TODO: make it procedural
         // TODO: add some perlin noise(s)
-        const testGround = MeshBuilder.CreateBox("test", { size: 1, width: 1, height: 1 });
+        /*const testGround = MeshBuilder.CreateBox("test", { size: 1, width: 1, height: 1 });
         testGround.position = new Vector3(0, 10, 0);
         const grassTexture = new NoiseProceduralTexture("grassTexture", 16, this.scene);
         const grassMaterial = new ToonMaterial(grassTexture, this.scene);
         testGround.checkCollisions = true;
-        testGround.material = grassMaterial;
+        testGround.material = grassMaterial;*/
     }
 
     async loadEnvironment(): Promise<void> {
-        console.log(this.seed);
+        //console.log(this.seed);
         if (!this.seed) {
             await this.loadDebugEnvironment();
             return;
@@ -133,13 +133,23 @@ export class World extends Environment {
         this.light.shadowEnabled = true;
         this.light.diffuse = new Color3(1, 0.95, 0.8);
 
+        /*
         // moon light
         const moonLight = new DirectionalLight("moonLight", new Vector3(0, 1, 0), this.scene);
         moonLight.intensity = 0.5;
         moonLight.diffuse = new Color3(0.8, 0.8, 1);
         moonLight.shadowEnabled = true;
-        moonLight.diffuse = new Color3(0.8, 0.8, 1);
+        moonLight.diffuse = new Color3(0.8, 0.8, 1);*/
 
+        /*
+        let light: DirectionalLight;
+        [Vector3.Right(), Vector3.Left(), Vector3.Up(), Vector3.Down(), Vector3.Forward(), Vector3.Backward()].forEach((dir, i) => {
+            light = new DirectionalLight("light" + i, dir, this.scene);
+            light.intensity = 0.1;
+            light.diffuse = new Color3(1, 1, 1);
+            light.shadowEnabled = false;
+            light.diffuse = new Color3(1, 1, 1);
+        });*/
     }
 
     getLightDirection(): Vector3 {
@@ -162,7 +172,7 @@ export class World extends Environment {
         this.skybox.rotation.z = this.tick / 24000 * 2 * Math.PI;
         // light direction according to the sun position
         const sunDirection = new Vector3(Math.sin(this.skybox.rotation.z), Math.cos(this.skybox.rotation.z), 0);
-        (this.scene.lights[1] as DirectionalLight).direction = new Vector3(Math.sin(this.skybox.rotation.z + Math.PI), Math.cos(this.skybox.rotation.z + Math.PI), 0);
+        //(this.scene.lights[1] as DirectionalLight).direction = new Vector3(Math.sin(this.skybox.rotation.z + Math.PI), Math.cos(this.skybox.rotation.z + Math.PI), 0);
         this.setLightDirection(sunDirection);
     }
 
