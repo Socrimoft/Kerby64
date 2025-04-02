@@ -206,7 +206,11 @@ export class Block {
             }, Block.scene);
             Block.runtimeMeshBuffer[key]!.checkCollisions = true;
             // apply facecolor Color4(0, 0.48, 0, 1) to the top face of "grass_block"
-            (Block.runtimeMeshBuffer[key] as Mesh).material = this.makeCubeMaterial(key as keyof typeof Block.blockList);
+            const toonMaterial = this.makeCubeMaterial(key as keyof typeof Block.blockList);
+            if (faceColors != undefined)
+                toonMaterial.useVertexColors();
+            (Block.runtimeMeshBuffer[key] as Mesh).material = toonMaterial;
+            
         }
         Block.runtimeMeshBuffer[key]!.setEnabled(false);
         return Block.runtimeMeshBuffer[key];

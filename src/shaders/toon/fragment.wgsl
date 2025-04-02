@@ -21,10 +21,11 @@ var textureSampler: sampler;
 varying vPositionW: vec3<f32>;
 varying vNormalW: vec3<f32>;
 varying vUV: vec2<f32>;
+varying vColor: vec<f32>;
 
 @fragment
 fn main(input: FragmentInputs) -> FragmentOutputs {
-    var finalColor = textureSample(texture, textureSampler, fragmentInputs.vUV);
+    var finalColor = textureSample(texture, textureSampler, fragmentInputs.vUV) * fragmentInputs.vColor;
 
     for (var i: u32 = 0; i < arrayLength(&lights); i++) {
         let NdotL = dot(lights[i].direction, normalize(fragmentInputs.vNormalW));
@@ -37,13 +38,12 @@ fn main(input: FragmentInputs) -> FragmentOutputs {
         let specularIntensitySmooth = smoothstep(0.005, 0.01, specularIntensity);
         let specular = specularIntensitySmooth * uniforms.specularColor;
 
+        // let rimDot = 1.0 - dot(viewDir, fragmentInputs.vNormalW);
+        // let rimIntensity = smoothstep(uniforms.rimAmount - 0.01, uniforms.rimAmount + 0.01, rimDot);
+        // let rim = uniforms.rimColor * rimIntensity;
+
         finalColor *= (uniforms.ambiantColor + light + specular);
     }
-
-    // float rimDot = 1.0 - dot(viewDir, vNormalW);
-    // float rimIntensity = rimDot * pow(NdotL, rimThreshold);
-    // rimIntensity = smoothstep(rimAmount - 0.01, rimAmount + 0.01, rimIntensity);
-    // vec4 rim = rimIntensity * rimColor;
 
     fragmentOutputs.color = finalColor;
 }

@@ -1,4 +1,4 @@
-import { BaseTexture, Color3, DirectionalLight, DynamicTexture, Scene, ShaderLanguage, ShaderMaterial, StorageBuffer, Vector4, WebGPUEngine } from "@babylonjs/core";
+import { BaseTexture, Color3, DirectionalLight, DynamicTexture, Material, Scene, ShaderLanguage, ShaderMaterial, StorageBuffer, Vector4, WebGPUEngine } from "@babylonjs/core";
 
 enum LightOffsets {
     DIFFUSE_R = 0,
@@ -29,14 +29,14 @@ export class ToonMaterial extends ShaderMaterial {
             {
                 attributes: ["position", "normal", "uv"],
                 uniformBuffers: ["Scene", "Mesh"],
-                shaderLanguage: ShaderLanguage.WGSL
+                shaderLanguage: ShaderLanguage.WGSL,
             }
         );
-        this.directionalLights = scene.lights.filter(light => light instanceof DirectionalLight);
+        this.transparencyMode = Material.MATERIAL_ALPHABLEND;
+        this.backFaceCulling = false;
+        this.separateCullingPass = true;
 
-        console.log(this.directionalLights[0].diffuse);
-        console.log(this.directionalLights[0].intensity);
-        console.log(this.directionalLights[0].direction);
+        this.directionalLights = scene.lights.filter(light => light instanceof DirectionalLight);
 
         const bufferSize = this.directionalLights.length * FLOATS_PER_LIGHT * 4;
         this.lightsBuffer = new StorageBuffer(scene.getEngine() as WebGPUEngine, bufferSize < MIN_BUFFER_SIZE ? MIN_BUFFER_SIZE : bufferSize);
@@ -108,5 +108,9 @@ export class ToonMaterial extends ShaderMaterial {
         const view = new DataView(buffer);
         data.forEach((val, i) => view.setFloat32(i * 4, val, true));
         this.lightsBuffer.update(view);
+    }
+
+    public useVertexColors() {
+        this.setDefine("USE_VERTEX_COLORS", true);
     }
 }
