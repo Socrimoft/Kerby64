@@ -128,7 +128,6 @@ export class World extends Environment {
     setupLight(): void {
         // sun light
         this.light = new DirectionalLight("dirLight", new Vector3(0, -1, 0), this.scene);
-        Block.light = this.light;
         this.light.intensity = 1;
         this.light.shadowEnabled = true;
         this.light.diffuse = new Color3(1, 0.95, 0.8);

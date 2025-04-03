@@ -1,4 +1,4 @@
-import { BaseTexture, Color3, DirectionalLight, DynamicTexture, Material, Scene, ShaderLanguage, ShaderMaterial, StorageBuffer, Vector4, WebGPUEngine } from "@babylonjs/core";
+import { BaseTexture, Color3, Constants, DirectionalLight, DynamicTexture, Material, Matrix, Scene, ShaderLanguage, ShaderMaterial, StorageBuffer, TextureSampler, Vector4, WebGPUEngine } from "@babylonjs/core";
 
 enum LightOffsets {
     DIFFUSE_R = 0,
@@ -18,6 +18,9 @@ export class ToonMaterial extends ShaderMaterial {
     private prevLightData: Float32Array;
     public lightsBuffer: StorageBuffer;
 
+    private shadowMap: BaseTexture[] = [];
+    private shadowMatrices: Matrix[] = [];
+
     constructor(name: string, textureOrColor: BaseTexture | Color3, scene: Scene) {
         super(
             name,
@@ -32,8 +35,6 @@ export class ToonMaterial extends ShaderMaterial {
                 shaderLanguage: ShaderLanguage.WGSL,
             }
         );
-        this.transparencyMode = Material.MATERIAL_ALPHABLEND;
-        this.needDepthPrePass = true;
 
         this.directionalLights = scene.lights.filter(light => light instanceof DirectionalLight);
 
@@ -51,6 +52,10 @@ export class ToonMaterial extends ShaderMaterial {
             dynamicTexture.update();
             textureOrColor = dynamicTexture;
         }
+        else if (textureOrColor.hasAlpha) {
+            this.transparencyMode = Material.MATERIAL_ALPHABLEND;
+        }
+        this.needDepthPrePass = true;
 
         this.prevLightData = this.computeLightData();
         this.updateLightsBuffer(this.prevLightData);

@@ -11,7 +11,6 @@ export class Block {
     public fallUnderGravity = false;
     public static size = 1;
     static scene: LevelScene;
-    static light: DirectionalLight;
     private mesh: TransformNode | InstancedMesh;
     static readonly sediment = {
         "dirt": ["dirt.png"],
@@ -224,12 +223,12 @@ export class Block {
         }
 
         // make 2 planes
-        const face1 = MeshBuilder.CreatePlane(key + "_1", { size: 1 }, Block.scene);
+        const face1 = MeshBuilder.CreatePlane(key + "_1", { size: Block.size }, Block.scene);
         face1.position.y = 0.5;
         face1.rotation.x = Math.PI / 2;
         face1.material = this.runtimeMaterialBuffer[key];
 
-        const face2 = MeshBuilder.CreatePlane(key + "_2", { size: 1 }, Block.scene);
+        const face2 = MeshBuilder.CreatePlane(key + "_2", { size: Block.size }, Block.scene);
         face2.position.z = 0.5;
         face2.rotation.y = Math.PI / 2;
         face2.material = this.runtimeMaterialBuffer[key];
@@ -318,7 +317,7 @@ export class Block {
                 };
             });
             //texture.displayName = key + "Texture";
-            texture.hasAlpha = true;
+            texture.hasAlpha = key === "oak_leaves" || key == "glass" || key == "ice";
             this.runtimeMaterialBuffer[key] = new ToonMaterial(key + "Material", texture, Block.scene);
             //this.runtimeMaterialBuffer[key].specularColor = new Color3(0, 0, 0);
         }
