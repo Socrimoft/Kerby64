@@ -6,9 +6,11 @@ export class Chunk extends TransformNode {
     static readonly chunkSize = new Vector3(16, 256, 16);
     private static _debugChunk: Nullable<Chunk> = null;
     private blocks: Nullable<Block>[][][];
+    private readonly _ChunkCoord: Vector3;
     constructor(private coord: Vector2, public scene: LevelScene) {
         super(`${coord.x},${coord.y}`, scene);
         this.blocks = [];
+        this._ChunkCoord = new Vector3(coord.x * Chunk.chunkSize.x, 0, coord.y * Chunk.chunkSize.z);
         for (let x = 0; x < Chunk.chunkSize.x; x++) {
             this.blocks[x] = [];
             for (let y = 0; y < Chunk.chunkSize.y; y++) {
@@ -33,7 +35,7 @@ export class Chunk extends TransformNode {
             }*/
             for (let x = 0; x < Chunk.chunkSize.x; x++) {
                 for (let z = 0; z < Chunk.chunkSize.z; z++) {
-                    Chunk._debugChunk.blocks[x][0][z] = new Block(new Vector3(x, 0, z), Chunk._debugChunk, blockTypeList[0])
+                    Chunk._debugChunk.addBlockRelative(blockTypeList[0], new Vector3(x, 1, z));
                 }
             }
 
@@ -41,7 +43,7 @@ export class Chunk extends TransformNode {
                 for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
                     for (let z = 0; z < Chunk.chunkSize.z; z = z + 3) {
                         if (currentBlockTypeIndex < blockTypeList.length) {
-                            Chunk._debugChunk.blocks[x][y][z] = new Block(new Vector3(x, y, z), Chunk._debugChunk, blockTypeList[currentBlockTypeIndex]);
+                            Chunk._debugChunk.addBlockRelative(blockTypeList[currentBlockTypeIndex], new Vector3(x, y, z));
                             currentBlockTypeIndex++;
                         } /*else if (currentNotBlockTypeIndex < notBlockTypeList.length) {
                             Chunk._debugChunk.blocks[x][y][z] = new Block(new Vector3(x, y, z), Chunk._debugChunk, notBlockTypeList[currentNotBlockTypeIndex]);
@@ -54,6 +56,23 @@ export class Chunk extends TransformNode {
         await Chunk._debugChunk.populate();
         return Chunk._debugChunk;
     }
+    public addBlockRelative(type: BlockType, position: Vector3) {
+        // Add a block to the chunk at the given position
+        // The position should be in chunk coordinates
+        const x = Math.floor(position.x);
+        const y = Math.floor(position.y);
+        const z = Math.floor(position.z);
+
+        // Check if the position is within the chunk bounds
+        if (x < 0 || x >= Chunk.chunkSize.x || y < 0 || y >= Chunk.chunkSize.y || z < 0 || z >= Chunk.chunkSize.z) {
+            throw new Error(`Position ${position} is out of chunk bounds`);
+        }
+        this.blocks[x][y][z] = new Block(position.addInPlace(this.get3DChunkCoord()), this, type);
+    }
+    public get3DChunkCoord(): Vector3 {
+        return this._ChunkCoord;
+    }
+
     public async populate() {
         // Populate the blocks in the chunk asynchronously
         // Use Promise.allSettled to wait for all blocks to be populated

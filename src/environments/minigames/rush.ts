@@ -12,10 +12,6 @@ export class Rush extends Environment {
     private koombas: Koomba[] = [];
     private groundMaterial?: ToonMaterial;
 
-    constructor(scene: LevelScene, player: Player) {
-        super(scene, player);
-    }
-
     setupSkybox(): void {
         this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
         const skyboxMaterial = new StandardMaterial("skyBox", this.scene);

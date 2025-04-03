@@ -21,8 +21,7 @@ export abstract class Environment {
 
     constructor(scene: LevelScene, player: Player, seed?: number) {
         this.scene = scene;
-        if (!seed) seed = Number(Game.urlParams.get("seed"));
-        this.random = new Random(seed ?? Math.random() * 4294967296);
+        this.random = new Random(seed ?? Number(Game.urlParams.get("seed") ?? Math.random() * 4294967296));
         this.player = player;
         this.skybox = CreateBox("skybox", { size: this.skyboxSize }, this.scene);
 

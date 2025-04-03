@@ -51,14 +51,15 @@ export class LevelScene extends Scene {
     }
 
     // set up the game without gui, in the background
-    public async setUpLevelAsync(gameToLoad: number | string, classicLevel?: number): Promise<void> {
+    public async setUpLevelAsync(gameToLoad: number | string, classicLevel?: number, _seed?: number): Promise<void> {
         // environment
         const games = ["rush", "bird", "world", "classic"];
         if (typeof gameToLoad === "string")
             gameToLoad = games.indexOf((gameToLoad as string).toLowerCase()) + 1 || 1;
         const environments = [Rush, Bird, World, Classic];
         const controllers = [RushController, BirdController, WorldController, ClassicController];
-        this.environment = new (environments.at(gameToLoad - 1) || environments[0])(this, this.player);
+        console.log(_seed);
+        this.environment = new (environments.at(gameToLoad - 1) || environments[0])(this, this.player, _seed);
         const game = games.at(gameToLoad - 1) || games[0];
         await this.environment.load(game === "classic" ? classicLevel : undefined);
         const seed = this.environment.seed.toString();

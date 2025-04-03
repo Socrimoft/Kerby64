@@ -1,4 +1,4 @@
-import { Color3, Color4, CubeTexture, DirectionalLight, MeshBuilder, NoiseProceduralTexture, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, Color4, DirectionalLight, Mesh, MeshBuilder, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
@@ -7,11 +7,14 @@ import { Block } from "../../world/block";
 import { Chunk } from "../../world/chunk";
 
 export class World extends Environment {
-    private blockSize: number = Block.size;
-    private static dayDuration = 1200000; //20min in ms
+    private readonly blockSize: number = Block.size;
+    private readonly dayDuration = 1200000; //20min in ms
+    private readonly maxTick = 24000; // 24h in ticks
+    protected readonly skyboxSize = 10; // in blocks
     private _tick = 0; //used to set skycolor
+    public static readonly renderDistance = 10; // in blocks
     private day = 0;
-    private static knownSkyColor = {
+    private readonly knownSkyColor = {
         0: new Color3(0.447, 0.616, 0.929),
         167: new Color3(0.447, 0.616, 0.929),
         1000: new Color3(0.467, 0.663, 1),
@@ -39,8 +42,8 @@ export class World extends Environment {
         24000: new Color3(0.447, 0.616, 0.929)
     }
 
-    constructor(scene: LevelScene, player: Player) {
-        super(scene, player);
+    constructor(scene: LevelScene, player: Player, seed?: number) {
+        super(scene, player, seed);
         Block.scene = scene;
         globalThis.world = this;
     }
@@ -52,12 +55,11 @@ export class World extends Environment {
         this._tick = newtick;
     }
     private set skyColor(newcolor: Color4 | Color3) {
-        const color = new Color3(newcolor.r, newcolor.g, newcolor.b);
-        (this.skybox.material as StandardMaterial).emissiveColor = color;
+        this.scene.clearColor = newcolor instanceof Color4 ? newcolor : newcolor.toColor4();
     }
 
     private updateSkyColor() {
-        const keys = Object.keys(World.knownSkyColor).map(Number); //.sort((a, b) => a - b);
+        const keys = Object.keys(this.knownSkyColor).map(Number); //.sort((a, b) => a - b);
         const currentTick = this.tick;
         let lowerKey = keys[0];
         let upperKey = keys[keys.length - 1];
@@ -73,10 +75,10 @@ export class World extends Environment {
         }
 
         if (lowerKey === upperKey) {
-            this.skyColor = World.knownSkyColor[lowerKey];
+            this.skyColor = this.knownSkyColor[lowerKey];
         } else {
-            const lowerColor = World.knownSkyColor[lowerKey];
-            const upperColor = World.knownSkyColor[upperKey];
+            const lowerColor = this.knownSkyColor[lowerKey];
+            const upperColor = this.knownSkyColor[upperKey];
             const factor = (currentTick - lowerKey) / (upperKey - lowerKey);
 
             this.skyColor = new Color4(
@@ -87,16 +89,25 @@ export class World extends Environment {
             );
         }
     }
+    // there is no skybox, but 2 planes with a diffuseTexture to handle the image transparency
     setupSkybox(): void {
+        this.skybox.dispose();
+        this.skybox = new Mesh("skybox", this.scene); // should be a TransformNode, but inheritance is in the way
         this.skybox.position = new Vector3(0, 0, 0);
-        const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
-        skyboxMaterial.backFaceCulling = false;
-        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/world/skybox/", this.scene, ["sun.png", "_.png", "_.png", "moon.png", "_.png", "_.png"]);
-        skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-        skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
-        skyboxMaterial.specularColor = new Color3(0, 0, 0);
-        this.skybox.material = skyboxMaterial;
-        this.skybox.infiniteDistance = true;
+
+        const sun = MeshBuilder.CreatePlane("sun", { size: World.renderDistance * this.skyboxSize }, this.scene);
+        sun.material = new ToonMaterial("sunMaterial", new Texture("./assets/images/world/skybox/sun.png", this.scene), this.scene);
+        sun.parent = this.skybox;
+        sun.position = new Vector3(World.renderDistance * Chunk.chunkSize.x, 0, 0);
+        sun.rotation.y = -Math.PI / 2;
+
+        const moon = MeshBuilder.CreatePlane("moon", { size: World.renderDistance * this.skyboxSize }, this.scene);
+        moon.material = new ToonMaterial("moonMaterial", new Texture("./assets/images/world/skybox/moon.png", this.scene), this.scene);
+        moon.parent = this.skybox;
+        moon.position = new Vector3(-World.renderDistance * Chunk.chunkSize.x, 0, 0);
+        moon.rotation.y = Math.PI / 2;
+
+
     }
 
     async loadTerrain(): Promise<void> {
@@ -127,8 +138,8 @@ export class World extends Environment {
 
     setupLight(): void {
         // sun light
-        this.light = new DirectionalLight("dirLight", new Vector3(0, -1, 0), this.scene);
-        this.light.intensity = 1;
+        this.light = new DirectionalLight("Sun", new Vector3(0, -1, 0), this.scene);
+        this.light.intensity = 0.5;
         this.light.shadowEnabled = true;
         this.light.diffuse = new Color3(1, 0.95, 0.8);
 
@@ -159,20 +170,25 @@ export class World extends Environment {
         if (this.light)
             this.light.direction = direction;
     }
-
-    beforeRenderUpdate(): void {
-        const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
-        this.tick = this._tick + deltaTime * 20; //bypass math.floor to keep accuracy
-        if (this._tick > 24000) {
-            this.tick = this._tick - 24000;
-            this.day++;
-        }
+    updateSky(): void {
         this.updateSkyColor();
-        this.skybox.rotation.z = this.tick / 24000 * 2 * Math.PI;
+        this.skybox.rotation.z = this.tick / this.maxTick * 2 * Math.PI;
+        this.skybox.position = this.player.position;
         // light direction according to the sun position
         const sunDirection = new Vector3(Math.sin(this.skybox.rotation.z), Math.cos(this.skybox.rotation.z), 0);
         //(this.scene.lights[1] as DirectionalLight).direction = new Vector3(Math.sin(this.skybox.rotation.z + Math.PI), Math.cos(this.skybox.rotation.z + Math.PI), 0);
         this.setLightDirection(sunDirection);
+    }
+
+    beforeRenderUpdate(): void {
+        const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
+        this.tick = this._tick + deltaTime * 20; //bypass math.floor to keep accuracy
+        if (this._tick > this.maxTick) {
+            this.tick = this._tick - this.maxTick;
+            this.day++;
+        }
+        this.updateSky();
+
     }
 
     public async load(classicLevel?: number): Promise<void> {

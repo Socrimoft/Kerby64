@@ -10,9 +10,9 @@
   "author": "Socrimoft",
   "license": "GPL-3.0",
   "devDependencies": {
-    "@babylonjs/core": "^8.0.1",
-    "@babylonjs/inspector": "^8.0.1",
-    "@babylonjs/loaders": "^8.0.1",
+    "@babylonjs/core": "^8.1.1",
+    "@babylonjs/inspector": "^8.1.1",
+    "@babylonjs/loaders": "^8.1.1",
     "copy-webpack-plugin": "^13.0.0",
     "cross-env": "^7.0.3",
     "glsl-shader-loader": "^0.1.6",

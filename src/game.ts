@@ -1,7 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Animation, Engine, ShaderLanguage, ShaderStore, WebGPUEngine } from "@babylonjs/core";
+import { Engine, ShaderStore, WebGPUEngine } from "@babylonjs/core";
 import { MainMenuScene } from "./scenes/mainMenuScene";
 import { CutSceneScene } from "./scenes/cutSceneScene";
 import { LevelScene } from "./scenes/levelScene";
@@ -107,8 +107,10 @@ export class Game {
     }
 
     private async main(): Promise<void> {
-        if (this.engine instanceof WebGPUEngine)
+        if (this.engine instanceof WebGPUEngine) {
+            this.engine.compatibilityMode = true; // false breaks level scenes
             await this.engine.initAsync();
+        }
         let level = Game.urlParams.get("game");
         if (level)
             await this.switchToCutScene(level);
@@ -136,7 +138,7 @@ export class Game {
         this.state = State.MAINMENU;
     }
 
-    public async switchToCutScene(levelToLoad: number | string, classicLevel?: number) {
+    public async switchToCutScene(levelToLoad: number | string, classicLevel?: number, seed?: number) {
         const isWorld = levelToLoad == "world" || levelToLoad == 3
         if (!isWorld) {
             this.engine.displayLoadingUI();
@@ -151,7 +153,7 @@ export class Game {
         }
         // setting up during current scene
         this.levelScene = new LevelScene(this.engine);
-        await this.levelScene.setUpLevelAsync(levelToLoad, classicLevel);
+        await this.levelScene.setUpLevelAsync(levelToLoad, classicLevel, seed);
         if (isWorld) await this.switchToLevel();
     }
 

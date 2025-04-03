@@ -11,10 +11,6 @@ export class Bird extends Environment {
     private lastSegmentX: number = -this.segmentWidth;
     private passageHeight: number = 10;
 
-    constructor(scene: LevelScene, player: Player) {
-        super(scene, player);
-    }
-
     setupSkybox(): void {
         this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
         const skyboxMaterial = new StandardMaterial("skyBox", this.scene);

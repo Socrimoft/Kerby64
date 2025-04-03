@@ -1,5 +1,5 @@
 import { Color4, DynamicTexture, FreeCamera, MeshBuilder, Scene, SimplexPerlin3DBlock, StandardMaterial, Texture, UniversalCamera, Vector3 } from "@babylonjs/core";
-import { Button, Control, Grid, ScrollViewer, StackPanel, TextBlock, Image, InputText } from "@babylonjs/gui";
+import { Button, Control, Grid, ScrollViewer, StackPanel, TextBlock, Image, InputText, Rectangle } from "@babylonjs/gui";
 import { Game, GameEngine } from "../game";
 import { Menu } from "../gui/menu";
 
@@ -131,22 +131,23 @@ export class MainMenuScene extends Scene {
         const worldfont = "WorldOfSpell";
         const gui = new Menu("world_setting", 1920);
         let isWorldNormal = true;
-        //const backgroundTexture = AdvancedDynamicTexture.CreateFullscreenUI("backgroundTexture", false, this, AdvancedDynamicTexture.TRILINEAR_SAMPLINGMODE);
 
-        const backgroundMaterial = new StandardMaterial("backgroundMaterial", this);
-
-        const backgroundTexture = new DynamicTexture("backgroundTexture", this.canvas, this, undefined, Texture.NEAREST_SAMPLINGMODE);
+        const backgroundTexture = new DynamicTexture("backgroundTexture", { width: this.canvas.width, height: this.canvas.height }, this, undefined, Texture.NEAREST_SAMPLINGMODE);
         const backgroundContext = backgroundTexture.getContext();
-
-        // tile a texture 16 times horizontally and 9 vertically
-        backgroundTexture.uScale = 16;
-        backgroundTexture.vScale = 9;
-        // backgroundTexture.update(true);
-
-        backgroundMaterial.diffuseTexture = backgroundTexture;
-        //backgroundMaterial.diffuseTexture.uScale = 4; // Tiling the texture 4 times horizontally
-        //backgroundMaterial.diffuseTexture. = 4; // Tiling the texture 4 times vertically
-
+        let image = new window.Image();
+        image.src = "./assets/images/world/blocks/dirt.png";
+        await new Promise((resolve) => {
+            image.onload = () => {
+                for (let i = 0; i < this.canvas.width; i += 64) {
+                    for (let j = 0; j < this.canvas.height; j += 64) {
+                        backgroundContext.drawImage(image, i, j, 64, 64);
+                    }
+                }
+                backgroundTexture.update(undefined, undefined, true);
+                gui.addBackground("backgroundImage", backgroundContext.canvas.toDataURL("image/png"));
+                resolve(true);
+            };
+        });
 
         const rows = new Grid("rows");
         gui.ui.addControl(rows);
@@ -171,20 +172,32 @@ export class MainMenuScene extends Scene {
         rows.addControl(modeColumn, 1);
         const WorldNormalBtn = new Button("WorldNormal");
         modeColumn.addControl(WorldNormalBtn, 0, 0);
-        WorldNormalBtn.addControl(new TextBlock("solo", "solo"));
-        console.log(WorldNormalBtn.textBlock);
+        WorldNormalBtn.addControl(new TextBlock("Normal", "Normal"));
         WorldNormalBtn.thickness = 0;
         WorldNormalBtn.disabledColor = "white";
         WorldNormalBtn.focusedColor = "white";
         WorldNormalBtn.isEnabled = false;
 
         const WorldFlatBtn = new Button("WorldFlat");
+        WorldFlatBtn.addControl(new TextBlock("Flat", "Flat"));
+        WorldFlatBtn.thickness = 0;
+        WorldFlatBtn.disabledColor = "white";
+        WorldFlatBtn.focusedColor = "white";
+        WorldFlatBtn.isEnabled = false;
         modeColumn.addControl(WorldFlatBtn, 0, 1);
 
-        let logIsWorldNormal = () => console.log(isWorldNormal ? "normal" : "flat");
         // WorldNormalBtn.isEnabled is set to false when WorldNormal is selected
-        WorldNormalBtn.pointerUpAnimation = () => { isWorldNormal = WorldFlatBtn.isEnabled = !(WorldNormalBtn.isEnabled = false); logIsWorldNormal() }
-        WorldFlatBtn.pointerUpAnimation = () => { WorldNormalBtn.isEnabled = !(isWorldNormal = WorldFlatBtn.isEnabled = false); logIsWorldNormal() }
+        WorldNormalBtn.onPointerClickObservable.add(() => {
+            isWorldNormal = WorldFlatBtn.isEnabled = !(WorldNormalBtn.isEnabled = false);
+            WorldFlatBtn.background = "grey";
+            WorldNormalBtn.background = "white";
+        });
+        WorldFlatBtn.onPointerClickObservable.add(() => {
+            WorldNormalBtn.isEnabled = !(isWorldNormal = WorldFlatBtn.isEnabled = false);
+            WorldNormalBtn.background = "grey";
+            WorldFlatBtn.background = "white";
+
+        });
         //let advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("GUI", true, this);
         //let loadedGUI = await advancedTexture.parseFromURLAsync("./assets/gui/world_setting.json");
 
@@ -197,11 +210,18 @@ export class MainMenuScene extends Scene {
         seedGrid.addControl(seedText, 0, 0);
         const seedInput = new InputText("seedInput");
         seedInput.width = "80%";
+        seedInput.placeholderText = "Enter a seed or leave it blank for random";
+        seedInput.placeholderColor = "grey";
+        seedInput.color = "white";
         seedInput.highlightedText = "white";
         seedGrid.addControl(seedInput, 0, 1);
         const seedRandomButton = new Button("seedRandomButton");
         const seedRandomImage = new Image("seedRandomImage", "");
         const seedRandomText = new TextBlock("seedRandomText", "Random");
+        seedRandomButton.onPointerClickObservable.add(() => {
+            seedInput.text = String(Math.floor(Math.random() * 1000000));
+        })
+
         seedRandomButton.addControl(seedRandomImage);
         seedRandomButton.addControl(seedRandomText);
         seedRandomText.width = "100%";
@@ -212,15 +232,16 @@ export class MainMenuScene extends Scene {
         const play = new Button("playbtn");
         const playText = new TextBlock("playText", "Play");
         play.addControl(playText);
-        play.pointerUpAnimation = () => this.switchToCutScene("world");
+        const seed = () => seedInput.text.length > 0 ? parseInt(seedInput.text) : undefined;
+        play.pointerUpAnimation = () => this.switchToCutScene("world", 1 + +isWorldNormal, seed());
         // world do not have cutscene, it skip directly to the game
         rows.addControl(play, 3, 0);
         play.paddingLeft = "60%";
     }
 
-    private switchToCutScene(levelToLoad: number | string, classicLevel?: number): void {
+    private switchToCutScene(levelToLoad: number | string, classicLevel?: number, seed?: number): void {
         this.detachControl();
-        Game.Instance.switchToCutScene(levelToLoad, classicLevel);
+        Game.Instance.switchToCutScene(levelToLoad, classicLevel, seed);
         this.dispose();
     }
 }

@@ -13,9 +13,6 @@ import { KirDoom } from "./classicLevels/kirDoom";
 export class Classic extends Environment {
     private level?: Environment;
 
-    constructor(scene: LevelScene, player: Player) {
-        super(scene, player);
-    }
 
     setupSkybox(): void {
         this.level?.setupSkybox();

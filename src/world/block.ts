@@ -209,7 +209,7 @@ export class Block {
             if (faceColors != undefined)
                 toonMaterial.useVertexColors();
             (Block.runtimeMeshBuffer[key] as Mesh).material = toonMaterial;
-            
+
         }
         Block.runtimeMeshBuffer[key]!.setEnabled(false);
         return Block.runtimeMeshBuffer[key];
@@ -301,7 +301,7 @@ export class Block {
                     throw new Error(`Block ${key} not found`);
             };
             const texture = new DynamicTexture(key + "Texture", { width: 48, height: 32 }, Block.scene, true, Texture.NEAREST_SAMPLINGMODE);
-            const context = (texture as DynamicTexture).getContext();
+            const context = texture.getContext();
 
             // Draw each image onto the canvas
             let imagesLoaded = 0;

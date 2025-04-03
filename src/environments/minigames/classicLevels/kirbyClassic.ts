@@ -16,7 +16,7 @@ export class KirClassic extends Environment {
         this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
         const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
         skyboxMaterial.backFaceCulling = false;
-        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/classic/classic/skybox/", this.scene);
+        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/classic/skybox/", this.scene);
         skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
         skyboxMaterial.specularColor = new Color3(0, 0, 0);
@@ -117,7 +117,7 @@ export class KirClassic extends Environment {
         ground.checkCollisions = true;
         ground.receiveShadows = true;
 
-        const mat = new ToonMaterial("groundMaterial", new Texture("./assets/textures / cartoon - grass.jpg", this.scene), this.scene);
+        const mat = new ToonMaterial("groundMaterial", new Texture("./assets/textures/cartoon-grass.jpg", this.scene), this.scene);
         //Color of dirt for no texture
         //mat.diffuseColor = new Color3(0.5, 0.25, 0.1);
         ground.material = mat;
