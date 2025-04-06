@@ -14,6 +14,23 @@ import { Classic } from "../environments/minigames/classic";
 import { ClassicController } from "../components/classicController";
 import { Camera3DController } from "../components/camera3DController";
 
+enum loadableGame {
+    rush = 1,
+    bird = 2,
+    world = 3,
+    classic = 4
+}
+enum classicLoadableLevel {
+    classic = 0,
+    kircity = 1,
+    kirbros = 2,
+    kirbykawaii = 3,
+    kirdoom = 4
+}
+enum worldType {
+    flat = 1,
+    normal = 2
+}
 export class LevelScene extends Scene {
     private player: Player;
     public input: InputManager;
@@ -50,29 +67,81 @@ export class LevelScene extends Scene {
         window.history.pushState(data, "", "?" + params.toString())
     }
 
+    private static isGametoLoadValid(gameToLoad: any): gameToLoad is loadableGame {
+        if (typeof gameToLoad === "string") {
+            return Object.keys(loadableGame).includes(gameToLoad.toLowerCase());
+        } else if (typeof gameToLoad === "number") {
+            return Object.values(loadableGame).includes(gameToLoad);
+        }
+        return false;
+    }
+    private static isClassicLevelValid(classicLevel: any): classicLevel is classicLoadableLevel {
+        return typeof classicLevel === "number" && Object.values(classicLevel).includes(classicLevel);
+    }
+    private static isWorldTypeValid(worldType: any): worldType is worldType {
+        return typeof worldType === "number" && Object.values(worldType).includes(worldType);
+    }
     // set up the game without gui, in the background
     public async setUpLevelAsync(gameToLoad: number | string, classicLevel?: number, _seed?: number): Promise<void> {
         // environment
-        const games = ["rush", "bird", "world", "classic"];
-        if (typeof gameToLoad === "string")
-            gameToLoad = games.indexOf((gameToLoad as string).toLowerCase()) + 1 || 1;
-        const environments = [Rush, Bird, World, Classic];
-        const controllers = [RushController, BirdController, WorldController, ClassicController];
-        console.log(_seed);
-        this.environment = new (environments.at(gameToLoad - 1) || environments[0])(this, this.player, _seed);
-        const game = games.at(gameToLoad - 1) || games[0];
-        await this.environment.load(game === "classic" ? classicLevel : undefined);
-        const seed = this.environment.seed.toString();
-        const level = classicLevel?.toString() as string;
-        this.updateNavigatorHistory(game === "classic" ? { game, seed, level } : { game, seed })
+        console.log("Loading level: " + gameToLoad);
+        if (typeof gameToLoad === "string") {
+            console.log("Game to load is a string: " + gameToLoad, Object.keys(loadableGame));
+            gameToLoad = Object.values(loadableGame).indexOf(gameToLoad.toLowerCase()) + 1;
+        }
+        if (!LevelScene.isGametoLoadValid(gameToLoad)) {
+            gameToLoad = loadableGame.rush;
+        }
+        if (!_seed && gameToLoad !== loadableGame.world) _seed = undefined;
+        console.log("Loading level update: " + gameToLoad);
+        const playerpos = new Vector3(0, 20, 0);
+        const playerrot = new Vector3(0, Math.PI / 2, 0);
 
-        // instanciate player
-        await this.player.instanciate(new Vector3(0, 20, 0), new Vector3(0, Math.PI / 2, 0), this.input, gameToLoad == 3 ? Camera3DController : undefined);
-        this.player.addComponent(new (controllers.at(gameToLoad - 1) || controllers[0])(this.player, this.input));
+        switch (gameToLoad) {
+            case loadableGame.bird:
+                this.environment = new Bird(this, this.player, _seed);
+                await this.environment.load();
+                this.updateNavigatorHistory({ game: "bird", seed: this.environment.seed.toString() });
+                await this.player.instanciate(playerpos, playerrot, this.input);
+                this.player.addComponent(new BirdController(this.player, this.input));
+                break;
+
+            case loadableGame.world:
+                if (!LevelScene.isWorldTypeValid(classicLevel)) {
+                    classicLevel = worldType.flat;
+                }
+                const worldTypeName = Object.keys(worldType)[2 * classicLevel];
+                this.environment = new World(this, this.player, _seed);
+                await this.environment.load(classicLevel); // classicLevel is the world type (flat or normal)
+                this.updateNavigatorHistory({ game: "world", worldtype: worldTypeName, seed: this.environment.seed.toString() });
+                await this.player.instanciate(playerpos, playerrot, this.input, Camera3DController);
+                this.player.addComponent(new WorldController(this.player, this.input));
+                break;
+
+            case loadableGame.classic:
+                if (!LevelScene.isClassicLevelValid(classicLevel)) {
+                    classicLevel = classicLoadableLevel.classic;
+                }
+                const classicLevelName = Object.keys(classicLoadableLevel)[2 * classicLevel];
+                this.environment = new Classic(this, this.player, _seed);
+                await this.environment.load(classicLevel);
+                this.updateNavigatorHistory({ game: "classic", seed: this.environment.seed.toString(), classic: classicLevelName });
+                await this.player.instanciate(playerpos, playerrot, this.input);
+                this.player.addComponent(new ClassicController(this.player, this.input));
+                break;
+
+            default:
+                this.environment = new Rush(this, this.player, _seed);
+                await this.environment.load();
+                this.updateNavigatorHistory({ game: "rush", seed: this.environment.seed.toString() });
+                await this.player.instanciate(playerpos, playerrot, this.input);
+                this.player.addComponent(new RushController(this.player, this.input));
+                break;
+        };
+
         this.player.activateEntityComponents();
-
         this.registerBeforeRender(() => {
-            this.environment?.beforeRenderUpdate();
+            this.environment!.beforeRenderUpdate();
         });
     }
 }
