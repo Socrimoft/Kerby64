@@ -86,14 +86,12 @@ export class LevelScene extends Scene {
         // environment
         console.log("Loading level: " + gameToLoad);
         if (typeof gameToLoad === "string") {
-            console.log("Game to load is a string: " + gameToLoad, Object.keys(loadableGame));
             gameToLoad = Object.values(loadableGame).indexOf(gameToLoad.toLowerCase()) + 1;
         }
         if (!LevelScene.isGametoLoadValid(gameToLoad)) {
             gameToLoad = loadableGame.rush;
         }
         if (!_seed && gameToLoad !== loadableGame.world) _seed = undefined;
-        console.log("Loading level update: " + gameToLoad);
         const playerpos = new Vector3(0, 20, 0);
         const playerrot = new Vector3(0, Math.PI / 2, 0);
 

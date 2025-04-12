@@ -3,7 +3,7 @@ import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
 import { ToonMaterial } from "../../materials/toonMaterial";
-import { Block, BlockType } from "../../world/block";
+import { Block, BlockType, notaBlockList } from "../../world/block";
 import { Chunk } from "../../world/chunk";
 
 export class World extends Environment {
@@ -131,7 +131,9 @@ export class World extends Environment {
     }
 
     async loadEnvironment(worldtype?: number): Promise<void> {
-        console.log("loadEnvironment", worldtype);
+        console.log("loadEnvironment", worldtype ? "flat" : "normal");
+        Block.makeRuntimeMaterialBuffer();
+        Block.makeRuntimeMeshBuffer();
         if (this.seed == 0) {
             await this.loadDebugEnvironment();
             return;
@@ -240,8 +242,8 @@ export class World extends Environment {
         this.setupLight();
         this.setupSkybox();
         await this.loadEnvironment(worldtype);
-        console.log("load", this.gethighestBlock(0, 0));
         this.player.position = new Vector3(0, this.gethighestBlock(0, 0), 0);
+        console.log("player start position:", this.player.position.toString());
         [VertexBuffer.PositionKind,
         VertexBuffer.NormalKind,
         VertexBuffer.UVKind,
@@ -255,7 +257,7 @@ export class World extends Environment {
         VertexBuffer.MatricesIndicesExtraKind,
         VertexBuffer.MatricesWeightsKind,
         VertexBuffer.MatricesWeightsExtraKind].forEach((kind) => {
-            console.log(kind, Block.runtimeMeshBuffer["oak_leaves"]?.getVertexBuffer(kind));
+            console.log(kind, Block.runtimeMeshBuffer["oak_leaves"].getVertexBuffer(kind));
         })
     }
 }

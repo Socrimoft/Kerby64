@@ -10,17 +10,16 @@
   "author": "Socrimoft",
   "license": "GPL-3.0",
   "devDependencies": {
-    "@babylonjs/core": "^8.1.1",
-    "@babylonjs/inspector": "^8.1.1",
-    "@babylonjs/loaders": "^8.1.1",
+    "@babylonjs/core": "^8.2.0",
+    "@babylonjs/inspector": "^8.2.0",
+    "@babylonjs/loaders": "^8.2.0",
     "copy-webpack-plugin": "^13.0.0",
     "cross-env": "^7.0.3",
-    "glsl-shader-loader": "^0.1.6",
     "html-webpack-plugin": "^5.6.3",
     "raw-loader": "^4.0.2",
     "ts-loader": "^9.5.2",
     "typescript": "^5.8.3",
-    "webpack": "^5.98.0",
+    "webpack": "^5.99.5",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.1"
   }
