@@ -1,8 +1,8 @@
-import { Nullable, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
-import { Block, BlockType } from "./block";
+import { Mesh, Nullable, Vector2, Vector3 } from "@babylonjs/core";
+import { Block, blockList, blocks, BlockType, blockTypeList, notaBlockList } from "./block";
 import { LevelScene } from "../scenes/levelScene";
 
-export class Chunk extends TransformNode {
+export class Chunk extends Mesh {
     static readonly chunkSize = new Vector3(16, 256, 16);
     private static _debugChunk: Nullable<Chunk> = null;
     private blocks: Nullable<Block>[][][];
@@ -20,22 +20,18 @@ export class Chunk extends TransformNode {
                 }
             }
         }
+        this.occlusionType = Mesh.OCCLUSION_TYPE_OPTIMISTIC;
+        this.occlusionQueryAlgorithmType = Mesh.OCCLUSION_ALGORITHM_TYPE_CONSERVATIVE;
     }
+
     static async debugChunk(scene: LevelScene): Promise<Chunk> {
         if (!Chunk._debugChunk) {
             Chunk._debugChunk = new Chunk(new Vector2(0, 0), scene);
-            const blockTypeList = Object.keys(Block.blockList) as (keyof typeof Block.blockList)[];
-            const notBlockTypeList = Object.keys(Block.notABlock) as (keyof typeof Block.notABlock)[];
             let currentBlockTypeIndex = 0;
             let currentNotBlockTypeIndex = 0;
-            /*for (let x = 0; x < Chunk.chunkSize.x; x++) {
-                for (let z = 0; z < Chunk.chunkSize.z; z++) {
-                    Chunk._debugChunk.blocks[x][0][z] = new Block(new Vector3(x, 0, z), Chunk._debugChunk, blockTypeList[currentBlockTypeIndex]);
-                }
-            }*/
             for (let x = 0; x < Chunk.chunkSize.x; x++) {
                 for (let z = 0; z < Chunk.chunkSize.z; z++) {
-                    Chunk._debugChunk.addBlockRelative(blockTypeList[0], new Vector3(x, 1, z));
+                    Chunk._debugChunk.addBlock(new Vector3(x, 1, z), blockTypeList[0]);
                 }
             }
 
@@ -43,20 +39,36 @@ export class Chunk extends TransformNode {
                 for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
                     for (let z = 0; z < Chunk.chunkSize.z; z = z + 3) {
                         if (currentBlockTypeIndex < blockTypeList.length) {
-                            Chunk._debugChunk.addBlockRelative(blockTypeList[currentBlockTypeIndex], new Vector3(x, y, z));
+                            Chunk._debugChunk.addBlock(new Vector3(x, y, z), blockTypeList[currentBlockTypeIndex]);
                             currentBlockTypeIndex++;
-                        } /*else if (currentNotBlockTypeIndex < notBlockTypeList.length) {
-                            Chunk._debugChunk.blocks[x][y][z] = new Block(new Vector3(x, y, z), Chunk._debugChunk, notBlockTypeList[currentNotBlockTypeIndex]);
-                            currentNotBlockTypeIndex++;
-                        }*/
+
+                        }
+                    }
+                }
+            }
+            for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
+                for (let z = 0; z < Chunk.chunkSize.z; z = z + 3) {
+                    if (currentNotBlockTypeIndex < notaBlockList.length) {
+                        Chunk._debugChunk.addBlock(new Vector3(x, 4, z), notaBlockList[currentNotBlockTypeIndex]);
+                        currentNotBlockTypeIndex++;
                     }
                 }
             }
         };
-        await Chunk._debugChunk.populate();
+        Chunk._debugChunk.addBlock(new Vector3(0, 5, 0), "grass_block");
+        await Chunk._debugChunk.populateMesh();
         return Chunk._debugChunk;
     }
-    public addBlockRelative(type: BlockType, position: Vector3) {
+
+    getHighestBlock(x: number, z: number): number {
+        let y = Chunk.chunkSize.y - 1;
+        while (y > 0 && this.blocks[x][y][z]) {
+            y--;
+        }
+        return y;
+    }
+
+    public addBlock(position: Vector3, type: BlockType) {
         // Add a block to the chunk at the given position
         // The position should be in chunk coordinates
         const x = Math.floor(position.x);
@@ -69,11 +81,42 @@ export class Chunk extends TransformNode {
         }
         this.blocks[x][y][z] = new Block(position.addInPlace(this.get3DChunkCoord()), this, type);
     }
+    public popBlock(position: Vector3): Block | null {
+        const block = this.blocks[position.x][position.y][position.z];
+        if (block) {
+            //TODO: Remove the block from the chunk's mesh
+
+
+            this.blocks[position.x][position.y][position.z] = null;
+            return block;
+        }
+        return null;
+    }
+
     public get3DChunkCoord(): Vector3 {
         return this._ChunkCoord;
     }
 
-    public async populate() {
+    public populate(worldtype?: { type: "flat", map: BlockType[] } | { type: "normal", noise: "SimplexPerlin3DBlock" }): void {
+        // Load a flat world in the chunk
+        if (!worldtype)
+            throw new Error("World type is not defined");
+        if (worldtype.type === "flat") {
+            const map = worldtype.map;
+            const yMax = Math.min(map.length, Chunk.chunkSize.y);
+            for (let x = 0; x < Chunk.chunkSize.x; x++) {
+                for (let z = 0; z < Chunk.chunkSize.z; z++) {
+                    for (let y = 0; y < yMax; y++) {
+                        this.addBlock(new Vector3(x, y, z), map[y]);
+                    }
+                }
+            }
+        } else {
+            throw new Error("World type is not supported");
+        }
+    }
+
+    public async populateMesh() {
         // Populate the blocks in the chunk asynchronously
         // Use Promise.allSettled to wait for all blocks to be populated
         // ignore errors

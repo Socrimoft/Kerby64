@@ -1,9 +1,9 @@
-import { Color3, Color4, DirectionalLight, Mesh, MeshBuilder, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, Color4, DirectionalLight, Mesh, MeshBuilder, Texture, Vector2, Vector3, VertexBuffer } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
 import { ToonMaterial } from "../../materials/toonMaterial";
-import { Block } from "../../world/block";
+import { Block, BlockType, notaBlockList } from "../../world/block";
 import { Chunk } from "../../world/chunk";
 
 export class World extends Environment {
@@ -12,8 +12,10 @@ export class World extends Environment {
     private readonly maxTick = 24000; // 24h in ticks
     protected readonly skyboxSize = 10; // in blocks
     private _tick = 0; //used to set skycolor
-    public static readonly renderDistance = 10; // in blocks
+    public static readonly renderDistance = 2; // in blocks
     private day = 0;
+    private WorldType?: { type: "flat", map: BlockType[] } | { type: "normal", noise: "SimplexPerlin3DBlock" };
+    private chunksBuffer: Record<string, Chunk> = {}; // 2D array of chunks
     private readonly knownSkyColor = {
         0: new Color3(0.447, 0.616, 0.929),
         167: new Color3(0.447, 0.616, 0.929),
@@ -96,40 +98,51 @@ export class World extends Environment {
         this.skybox.position = new Vector3(0, 0, 0);
 
         const sun = MeshBuilder.CreatePlane("sun", { size: World.renderDistance * this.skyboxSize }, this.scene);
-        sun.material = new ToonMaterial("sunMaterial", new Texture("./assets/images/world/skybox/sun.png", this.scene), this.scene);
-        sun.parent = this.skybox;
+        const sunTexture = new Texture("./assets/images/world/skybox/sun.png", this.scene, undefined, undefined, Texture.NEAREST_SAMPLINGMODE);
+        sunTexture.hasAlpha = true;
+        sun.material = new ToonMaterial("sunMaterial", sunTexture, this.scene);
+        sun.setParent(this.skybox);
         sun.position = new Vector3(World.renderDistance * Chunk.chunkSize.x, 0, 0);
         sun.rotation.y = -Math.PI / 2;
 
         const moon = MeshBuilder.CreatePlane("moon", { size: World.renderDistance * this.skyboxSize }, this.scene);
-        moon.material = new ToonMaterial("moonMaterial", new Texture("./assets/images/world/skybox/moon.png", this.scene), this.scene);
-        moon.parent = this.skybox;
+        const moonTexture = new Texture("./assets/images/world/skybox/sun.png", this.scene, undefined, undefined, Texture.NEAREST_SAMPLINGMODE);
+        moonTexture.hasAlpha = true;
+        moon.material = new ToonMaterial("moonMaterial", moonTexture, this.scene);
+        moon.setParent(this.skybox);
         moon.position = new Vector3(-World.renderDistance * Chunk.chunkSize.x, 0, 0);
         moon.rotation.y = Math.PI / 2;
-
-
     }
 
     async loadTerrain(): Promise<void> {
-        // this is a test
-        // TODO: remove this
-        // TODO: add a terrain generator
-        // TODO: make it procedural
-        // TODO: add some perlin noise(s)
-        /*const testGround = MeshBuilder.CreateBox("test", { size: 1, width: 1, height: 1 });
-        testGround.position = new Vector3(0, 10, 0);
-        const grassTexture = new NoiseProceduralTexture("grassTexture", 16, this.scene);
-        const grassMaterial = new ToonMaterial(grassTexture, this.scene);
-        testGround.checkCollisions = true;
-        testGround.material = grassMaterial;*/
+        console.log("loadTerrain");
+        this.scene.getEngine().hideLoadingUI();
+        if (this.WorldType?.type === "flat") {
+            let promises = await this.loadChunkwithinRenderDistance();
+
+        } /*else if (this.WorldType?.noise === "SimplexPerlin3DBlock") {
+            const noise = new SimplexPerlin3DBlock(this.scene, { frequency: 0.1 });
+            noise.setScale(1, 1, 1);
+            noise.setOffset(0, 0, 0);
+            noise.setNoiseScale(1, 1, 1);
+            noise.setNoiseOffset(0, 0, 0);
+            noise.setBlockSize(Chunk.chunkSize.x * this.blockSize, Chunk.chunkSize.y * this.blockSize, Chunk.chunkSize.z * this.blockSize);
+        }*/
     }
 
-    async loadEnvironment(): Promise<void> {
-        //console.log(this.seed);
-        if (!this.seed) {
+    async loadEnvironment(worldtype?: number): Promise<void> {
+        console.log("loadEnvironment", worldtype ? "flat" : "normal");
+        Block.makeRuntimeMaterialBuffer();
+        Block.makeRuntimeMeshBuffer();
+        if (this.seed == 0) {
             await this.loadDebugEnvironment();
             return;
         }
+        worldtype = worldtype || 0;
+        this.WorldType = worldtype > 1 ? { type: "normal", noise: "SimplexPerlin3DBlock" } : {
+            type: "flat",
+            map: ["bedrock", "dirt"]
+        };
         await this.loadTerrain();
     }
     async loadDebugEnvironment() {
@@ -190,12 +203,61 @@ export class World extends Environment {
         this.updateSky();
 
     }
+    afterRenderUpdate(): void {
+        //get the player position to know which chunks to load
+        console.log("afterRenderUpdate", this.player.position);
+        this.loadChunkwithinRenderDistance();
 
-    public async load(classicLevel?: number): Promise<void> {
-        this.player.position = new Vector3(0, 120, 0);
-        await super.load(classicLevel);
-        //this.setupLight();
-        //this.setupSkybox();
-        //await this.loadEnvironment(classicLevel);
+    }
+    async loadChunkwithinRenderDistance(): Promise<Promise<Vector2>[]> {
+        const playerPosition = this.player.position;
+        const playerChunkX = Math.floor(playerPosition.x / this.blockSize);
+        const playerChunkZ = Math.floor(playerPosition.z / this.blockSize);
+        let promises: Promise<Vector2>[] = [];
+        //load the chunks around the player
+        for (let x = playerChunkX - World.renderDistance; x <= playerChunkX + World.renderDistance; x++) {
+            for (let z = playerChunkZ - World.renderDistance; z <= playerChunkZ + World.renderDistance; z++) {
+                const chunkKey = `${x}_${z}`;
+                if (!this.chunksBuffer[chunkKey]) {
+                    this.chunksBuffer[chunkKey] = new Chunk(new Vector2(x, z), this.scene);
+                    this.chunksBuffer[chunkKey].populate(this.WorldType);
+                    promises.push(this.chunksBuffer[chunkKey].populateMesh());
+                }
+            }
+        }
+        return promises;
+    }
+    public gethighestBlock(x: number, z: number): number {
+        const chunkX = Math.floor(x / this.blockSize);
+        const chunkZ = Math.floor(z / this.blockSize);
+        const chunkKey = `${chunkX}_${chunkZ}`;
+        if (this.chunksBuffer[chunkKey]) {
+            return this.chunksBuffer[chunkKey].getHighestBlock(x, z);
+        }
+        return 0;
+    }
+
+
+    public async load(worldtype?: number): Promise<void> {
+        this.setupLight();
+        this.setupSkybox();
+        await this.loadEnvironment(worldtype);
+        this.player.position = new Vector3(0, this.gethighestBlock(0, 0), 0);
+        console.log("player start position:", this.player.position.toString());
+        [VertexBuffer.PositionKind,
+        VertexBuffer.NormalKind,
+        VertexBuffer.UVKind,
+        VertexBuffer.UV2Kind,
+        VertexBuffer.UV3Kind,
+        VertexBuffer.UV4Kind,
+        VertexBuffer.UV5Kind,
+        VertexBuffer.UV6Kind,
+        VertexBuffer.ColorKind,
+        VertexBuffer.MatricesIndicesKind,
+        VertexBuffer.MatricesIndicesExtraKind,
+        VertexBuffer.MatricesWeightsKind,
+        VertexBuffer.MatricesWeightsExtraKind].forEach((kind) => {
+            console.log(kind, Block.runtimeMeshBuffer["oak_leaves"].getVertexBuffer(kind));
+        })
     }
 }
