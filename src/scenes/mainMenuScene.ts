@@ -39,7 +39,7 @@ export class MainMenuScene extends Scene {
 
     private secondClassicCallBack(menu: Menu, i: number) {
         menu.ui.dispose();
-        this.switchToCutScene(this.indexOfClassicMode + 1, i + 1);
+        this.switchToCutScene(this.indexOfClassicMode + 1, i);
     }
 
     private createMainMenu(): void {

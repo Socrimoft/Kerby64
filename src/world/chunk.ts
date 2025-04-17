@@ -5,7 +5,7 @@ import { LevelScene } from "../scenes/levelScene";
 export class Chunk extends Mesh {
     static readonly chunkSize = new Vector3(16, 256, 16);
     private static _debugChunk: Nullable<Chunk> = null;
-    private blocks: Nullable<Block>[][][];
+    public blocks: Nullable<Block>[][][];
     private readonly _ChunkCoord: Vector3;
     constructor(private coord: Vector2, public scene: LevelScene) {
         super(`${coord.x},${coord.y}`, scene);
@@ -62,7 +62,7 @@ export class Chunk extends Mesh {
 
     getHighestBlock(x: number, z: number): number {
         let y = Chunk.chunkSize.y - 1;
-        while (y > 0 && this.blocks[x][y][z]) {
+        while (y > 0 && !this.blocks[x][y][z]) {
             y--;
         }
         return y;

@@ -1,4 +1,4 @@
-import { Color4, Scene, Vector3 } from "@babylonjs/core";
+import { Color4, Logger, Scene, Vector3 } from "@babylonjs/core";
 import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { InputManager } from "../inputManager";
 import { Player } from "../actors/player";
@@ -68,23 +68,18 @@ export class LevelScene extends Scene {
     }
 
     private static isGametoLoadValid(gameToLoad: any): gameToLoad is loadableGame {
-        if (typeof gameToLoad === "string") {
-            return Object.keys(loadableGame).includes(gameToLoad.toLowerCase());
-        } else if (typeof gameToLoad === "number") {
-            return Object.values(loadableGame).includes(gameToLoad);
-        }
-        return false;
+        return typeof gameToLoad === "number" && Object.values(loadableGame).includes(gameToLoad);
     }
     private static isClassicLevelValid(classicLevel: any): classicLevel is classicLoadableLevel {
-        return typeof classicLevel === "number" && Object.values(classicLevel).includes(classicLevel);
+        return typeof classicLevel === "number" && Object.values(classicLoadableLevel).includes(classicLevel);
     }
-    private static isWorldTypeValid(worldType: any): worldType is worldType {
-        return typeof worldType === "number" && Object.values(worldType).includes(worldType);
+    private static isWorldTypeValid(worldtype: any): worldtype is worldType {
+        return typeof worldtype === "number" && Object.values(worldType).includes(worldtype);
     }
     // set up the game without gui, in the background
-    public async setUpLevelAsync(gameToLoad: number | string, classicLevel?: number, _seed?: number): Promise<void> {
+    public async setUpLevelAsync(gameToLoad: number | string, classicLevel?: number | string, _seed?: number): Promise<void> {
         // environment
-        console.log("Loading level: " + gameToLoad);
+        Logger.Log(["Loading game: " + gameToLoad, _seed != undefined ? (" with seed: " + _seed) : ""]);
         if (typeof gameToLoad === "string") {
             gameToLoad = Object.values(loadableGame).indexOf(gameToLoad.toLowerCase()) + 1;
         }
@@ -108,8 +103,9 @@ export class LevelScene extends Scene {
                 if (!LevelScene.isWorldTypeValid(classicLevel)) {
                     classicLevel = worldType.flat;
                 }
-                const worldTypeName = Object.keys(worldType)[2 * classicLevel];
+                const worldTypeName = Object.values(worldType)[classicLevel] as string;
                 this.environment = new World(this, this.player, _seed);
+                Logger.Log(`loadEnvironment: ${worldTypeName}`);
                 await this.environment.load(classicLevel); // classicLevel is the world type (flat or normal)
                 this.updateNavigatorHistory({ game: "world", worldtype: worldTypeName, seed: this.environment.seed.toString() });
                 await this.player.instanciate(playerpos, playerrot, this.input, Camera3DController);
@@ -117,11 +113,15 @@ export class LevelScene extends Scene {
                 break;
 
             case loadableGame.classic:
+                if (typeof classicLevel === "string") {
+                    classicLevel = Object.values(classicLoadableLevel).indexOf(classicLevel.toLowerCase())
+                };
                 if (!LevelScene.isClassicLevelValid(classicLevel)) {
                     classicLevel = classicLoadableLevel.classic;
                 }
-                const classicLevelName = Object.keys(classicLoadableLevel)[2 * classicLevel];
+                const classicLevelName = Object.values(classicLoadableLevel)[classicLevel] as string;
                 this.environment = new Classic(this, this.player, _seed);
+                Logger.Log("Loading classic level: " + classicLevelName);
                 await this.environment.load(classicLevel);
                 this.updateNavigatorHistory({ game: "classic", seed: this.environment.seed.toString(), classic: classicLevelName });
                 await this.player.instanciate(playerpos, playerrot, this.input);

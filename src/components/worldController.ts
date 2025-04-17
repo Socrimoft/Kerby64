@@ -1,4 +1,4 @@
-import { Color4, Nullable, Ray, Vector3, AbstractMesh } from "@babylonjs/core";
+import { Color4, Nullable, Ray, Vector3, AbstractMesh, PickingInfo, Tools, Logger } from "@babylonjs/core";
 import { InputManager } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Player } from "../actors/player";
@@ -24,7 +24,27 @@ export class WorldController extends EntityController {
         player.meshRef.scaling = new Vector3(0.7, 0.7, 0.7);
     }
 
-    private moveBeforeUpdate(deltaTime: number) {
+    private jumpBeforeRender(deltaTime: number) {
+        // jump if jump's key is pressed and not already jumping
+        if (this.input.inputMap[this.input.jumpKey] && !this.isJumping) {
+            this.jumpStartTime = performance.now();
+            this.isJumping = true;
+        }
+
+        if (this.isJumping && this.jumpStartTime) {
+            const elapsedTime = (performance.now() - this.jumpStartTime) / 1000;
+            const jumpVelocity = this.jumpSpeed * Math.exp(-this.k * elapsedTime);
+
+            if (jumpVelocity > this.jumpThreshold)
+                this.entity.moveWithCollisions(new Vector3(0, jumpVelocity * deltaTime, 0));
+            else
+                this.isJumping = false;
+        }
+        else
+            this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
+    }
+
+    private moveBeforeRender(deltaTime: number) {
         const movUpDown = +this.input.inputMap[this.input.upKey] - +this.input.inputMap[this.input.downKey]
         const movLeftRight = +this.input.inputMap[this.input.leftKey] - +this.input.inputMap[this.input.rightKey]
         const isRunning = this.input.inputMap[this.input.shiftKey]
@@ -47,30 +67,7 @@ export class WorldController extends EntityController {
             this.playAnimation(Player.Animation.Idle);
     }
 
-    public beforeRenderUpdate(): void {
-        // Gets the time spent between current and previous frame
-        const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
-
-        // jump if jump's key is pressed and not already jumping
-        if (this.input.inputMap[this.input.jumpKey] && !this.isJumping) {
-            this.jumpStartTime = performance.now();
-            this.isJumping = true;
-        }
-
-        if (this.isJumping && this.jumpStartTime) {
-            const elapsedTime = (performance.now() - this.jumpStartTime) / 1000;
-            const jumpVelocity = this.jumpSpeed * Math.exp(-this.k * elapsedTime);
-
-            if (jumpVelocity > this.jumpThreshold)
-                this.entity.moveWithCollisions(new Vector3(0, jumpVelocity * deltaTime, 0));
-            else
-                this.isJumping = false;
-        }
-        else
-            this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
-
-        this.moveBeforeUpdate(deltaTime);
-
+    private cameraRotationBeforeRender() {
         const oldRotation = this.entity.rotation;
         let newRotationX = oldRotation.x + this.input.MouseMovement.y * this.mouseSensibilityY;
         let newRotationY = oldRotation.y + this.input.MouseMovement.x * this.mouseSensibilityX;
@@ -86,10 +83,9 @@ export class WorldController extends EntityController {
         this.entity.rotation = new Vector3(newRotationX, newRotationY, oldRotation.z);
         this.input.MouseMovement.y = this.input.MouseMovement.x = 0;
 
+    }
 
-        const ray = new Ray(this.entity.position, this.entity.getForward(), this.blockPickRange);
-        const hit = this.scene.pickWithRay(ray);
-
+    private highlightHitBlock(hit: Nullable<PickingInfo>): void {
         if (hit && hit.pickedMesh && this.oldHitMesh && hit.pickedMesh !== this.oldHitMesh) {
             this.oldHitMesh.disableEdgesRendering();
             this.oldHitMesh = null;
@@ -105,6 +101,30 @@ export class WorldController extends EntityController {
             hit.pickedMesh.enableEdgesRendering();
             this.oldHitMesh = hit.pickedMesh;
         }
+    }
+
+    public beforeRenderUpdate(): void {
+        // Gets the time spent between current and previous frame
+        const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
+
+        this.jumpBeforeRender(deltaTime);
+        this.moveBeforeRender(deltaTime);
+        this.cameraRotationBeforeRender();
+
+        const ray = new Ray(this.entity.position, this.entity.getForward(), this.blockPickRange);
+        const hit = this.scene.pickWithRay(ray);
+
+        this.highlightHitBlock(hit);
+
+        if (this.input.inputMap[this.input.screenShotKey]) {
+            this.input.inputMap[this.input.screenShotKey] = false;
+            const date = new Date();
+            const filename = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}_${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.png`;
+            Tools.CreateScreenshotUsingRenderTarget(this.scene.getEngine(), this.scene.activeCamera!,
+                { precision: 1 }, undefined, undefined, undefined, undefined, filename);
+            Logger.Log(`Saved screenshot as ` + filename);
+        }
+
         if (this.input.inputMap[this.input.escapeKey]) {
             this.input.isWorldPlaying = !this.input.isWorldPlaying;
             this.input.inputMap[this.input.escapeKey] = false;

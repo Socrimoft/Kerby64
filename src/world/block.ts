@@ -1,9 +1,10 @@
-import { Color4, DynamicTexture, InstancedMesh, Mesh, MeshBuilder, Nullable, Texture, TransformNode, Vector3, Vector4, VertexBuffer } from "@babylonjs/core";
+import { Color4, DynamicTexture, InstancedMesh, Logger, Mesh, MeshBuilder, Nullable, Texture, TransformNode, Vector3, Vector4, VertexBuffer, VertexData } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Chunk } from "./chunk";
 import { ToonMaterial } from "../materials/toonMaterial";
 import blocks from "./blocks.json";
-import vertexs from "./vertexData.json";
+import vertexs from "./vertexData.json"; // 24 * kindsize
+import vertexs2 from "./vertexData2.json"; // 16 * kindsize
 
 export { blocks };
 export const notaBlockList = Object.keys(blocks.notABlock) as (keyof typeof blocks.notABlock)[];
@@ -16,6 +17,7 @@ export class Block {
     public fallUnderGravity = false;
     public static size = 1;
     static scene: LevelScene;
+    private vertexData: VertexData;
     private mesh: TransformNode | InstancedMesh;
 
     static runtimeMeshBuffer: { [key in BlockType]: Mesh };
@@ -91,6 +93,19 @@ export class Block {
             // make a root node
             const root = Mesh.MergeMeshes([face1, face2])!;
             root.setEnabled(false);
+            let colors: Color4[] = [];
+            for (let i = 0; i < 16; i++) {
+                switch (key) {
+                    case "long_grass":
+                    case "short_grass":
+                        colors.push(new Color4(0, 0.48, 0, 1));
+                        break;
+                    default:
+                        colors.push(new Color4(1, 1, 1, 1));
+                }
+            }
+            root.setVerticesData(VertexBuffer.ColorKind, colors.map((v) => v.asArray()).flat());
+            root.useVertexColors = true;
             root.checkCollisions = false;
             buffer[key] = root;
         }
@@ -130,9 +145,23 @@ export class Block {
 
     }
 
-    constructor(position: Vector3, protected chunk: Chunk, public type: BlockType) {
+    constructor(public position: Vector3, protected chunk: Chunk, public type: BlockType) {
         this.mesh = new TransformNode(`block_${position.x},${position.y},${position.z}`, Block.scene);
         this.mesh.position = position.scale(Block.size);
+        this.vertexData = new VertexData();
+        this.vertexData.positions = vertexs.positions.map(
+            (v) => [
+                (v[0] + position.x) * Block.size,
+                (v[1] + position.y) * Block.size,
+                (v[2] + position.z) * Block.size
+            ]).flat();
+        this.vertexData.normals = vertexs.normals.flat();
+        this.vertexData.uvs = vertexs.uvs.flat();
+        let colors: Color4[] = [];
+        for (let i = 0; i < 24 * 4; i++) {
+            colors.push(new Color4(1, 1, 1, 1));
+        }
+        this.vertexData.colors = colors.map((v) => v.asArray()).flat();
     }
 
     public async populateMesh(): Promise<Block> {

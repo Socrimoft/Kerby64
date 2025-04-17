@@ -1,7 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine, ShaderStore, WebGPUEngine } from "@babylonjs/core";
+import { Engine, Logger, ShaderStore, WebGPUEngine } from "@babylonjs/core";
 import { MainMenuScene } from "./scenes/mainMenuScene";
 import { CutSceneScene } from "./scenes/cutSceneScene";
 import { LevelScene } from "./scenes/levelScene";
@@ -37,6 +37,8 @@ export class Game {
         this.engine = this.createEngine();
         this.engine.loadingScreen = new KerbyLoadingScreen("");
         if (process.env.NODE_ENV === "development") {
+            Logger.LogLevels = Logger.AllLogLevel; // all logs
+            Logger.Log("Development mode enabled");
             this.engine.enableOfflineSupport = false;
             window.addEventListener("keydown", (ev) => {
                 if (ev.ctrlKey && ev.altKey && ev.key === "i") {
@@ -47,6 +49,9 @@ export class Game {
                     }
                 }
             });
+        } else {
+            Logger.LogLevels = Logger.ErrorLogLevel; // errors only
+            this.engine.enableOfflineSupport = true;
         }
 
         // load shaders
@@ -112,8 +117,10 @@ export class Game {
             await this.engine.initAsync();
         }
         let level = Game.urlParams.get("game");
+        let classicLevel = Game.urlParams.get("classic") || Game.urlParams.get("worldtype");
+        let seed = Game.urlParams.get("seed");
         if (level)
-            await this.switchToCutScene(level);
+            await this.switchToCutScene(level, classicLevel || undefined, seed ? +seed : undefined);
         else
             await this.switchToMainMenu();
 
@@ -138,7 +145,7 @@ export class Game {
         this.state = State.MAINMENU;
     }
 
-    public async switchToCutScene(levelToLoad: number | string, classicLevel?: number, seed?: number) {
+    public async switchToCutScene(levelToLoad: number | string, classicLevel?: number | string, seed?: number) {
         const isWorld = levelToLoad == "world" || levelToLoad == 3
         if (!isWorld) {
             this.engine.displayLoadingUI();

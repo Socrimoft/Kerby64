@@ -12,6 +12,8 @@ export class InputManager extends MouseManager {
     public shiftKey = "Shift";
     public cameraKey = "F5";
     public statsKey = "F3";
+    public screenShotKey = "F2";
+    public hudKey = "F1";
     public escapeKey = "Escape";
     public chatKey = "t";
     public inputMap = {
@@ -25,7 +27,9 @@ export class InputManager extends MouseManager {
         [this.shiftKey]: false,
         [this.cameraKey]: false,
         [this.statsKey]: false,
-        [this.escapeKey]: false
+        [this.escapeKey]: false,
+        [this.screenShotKey]: false,
+        [this.hudKey]: false,
     };
     public isWorldPlaying = false;
     public isPointerLocked = false;
@@ -37,7 +41,14 @@ export class InputManager extends MouseManager {
         this.canvas = canvas;
         scene.actionManager = new ActionManager(scene);
         scene.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnKeyDownTrigger, (event) => {
-            if (this.isWorldPlaying && ["F3", "F5"].includes(event.sourceEvent.key))
+            if (event.sourceEvent.key == this.hudKey) {
+                if (!this.isWorldPlaying) {
+                    event.sourceEvent.preventDefault();
+                    window.open("https://github.com/Socrimoft/Kerby64", "_blank");
+                    return;
+                }
+            }
+            if (this.isWorldPlaying && ["F1", "F2", "F3", "F5"].includes(event.sourceEvent.key))
                 event.sourceEvent.preventDefault();
             this.inputMap[event.sourceEvent.key] = event.sourceEvent.type == "keydown";
         }));

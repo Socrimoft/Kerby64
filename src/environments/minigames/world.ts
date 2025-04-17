@@ -1,4 +1,4 @@
-import { Color3, Color4, DirectionalLight, Mesh, MeshBuilder, Texture, Vector2, Vector3, VertexBuffer } from "@babylonjs/core";
+import { Color3, Color4, DirectionalLight, Logger, Mesh, MeshBuilder, Texture, Vector2, Vector3, VertexBuffer } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
@@ -115,7 +115,7 @@ export class World extends Environment {
     }
 
     async loadTerrain(): Promise<void> {
-        console.log("loadTerrain");
+        Logger.Log("loadTerrain");
         this.scene.getEngine().hideLoadingUI();
         if (this.WorldType?.type === "flat") {
             let promises = await this.loadChunkwithinRenderDistance();
@@ -131,7 +131,6 @@ export class World extends Environment {
     }
 
     async loadEnvironment(worldtype?: number): Promise<void> {
-        console.log("loadEnvironment", worldtype ? "flat" : "normal");
         Block.makeRuntimeMaterialBuffer();
         Block.makeRuntimeMeshBuffer();
         if (this.seed == 0) {
@@ -146,7 +145,7 @@ export class World extends Environment {
         await this.loadTerrain();
     }
     async loadDebugEnvironment() {
-        Chunk.debugChunk(this.scene);
+        this.chunksBuffer["0,0"] = await Chunk.debugChunk(this.scene);
     }
 
     setupLight(): void {
@@ -205,7 +204,7 @@ export class World extends Environment {
     }
     afterRenderUpdate(): void {
         //get the player position to know which chunks to load
-        console.log("afterRenderUpdate", this.player.position);
+        Logger.Log(`afterRenderUpdate ${this.player.position}`);
         this.loadChunkwithinRenderDistance();
 
     }
@@ -228,11 +227,11 @@ export class World extends Environment {
         return promises;
     }
     public gethighestBlock(x: number, z: number): number {
-        const chunkX = Math.floor(x / this.blockSize);
-        const chunkZ = Math.floor(z / this.blockSize);
-        const chunkKey = `${chunkX}_${chunkZ}`;
+        const chunkX = Math.floor(x / this.blockSize / Chunk.chunkSize.x);
+        const chunkZ = Math.floor(z / this.blockSize / Chunk.chunkSize.z);
+        const chunkKey = `${chunkX},${chunkZ}`;
         if (this.chunksBuffer[chunkKey]) {
-            return this.chunksBuffer[chunkKey].getHighestBlock(x, z);
+            return this.chunksBuffer[chunkKey].getHighestBlock(x - chunkX * Chunk.chunkSize.x, z - chunkZ * Chunk.chunkSize.z);
         }
         return 0;
     }
@@ -242,22 +241,20 @@ export class World extends Environment {
         this.setupLight();
         this.setupSkybox();
         await this.loadEnvironment(worldtype);
-        this.player.position = new Vector3(0, this.gethighestBlock(0, 0), 0);
-        console.log("player start position:", this.player.position.toString());
-        [VertexBuffer.PositionKind,
-        VertexBuffer.NormalKind,
-        VertexBuffer.UVKind,
-        VertexBuffer.UV2Kind,
-        VertexBuffer.UV3Kind,
-        VertexBuffer.UV4Kind,
-        VertexBuffer.UV5Kind,
-        VertexBuffer.UV6Kind,
-        VertexBuffer.ColorKind,
-        VertexBuffer.MatricesIndicesKind,
-        VertexBuffer.MatricesIndicesExtraKind,
-        VertexBuffer.MatricesWeightsKind,
-        VertexBuffer.MatricesWeightsExtraKind].forEach((kind) => {
-            console.log(kind, Block.runtimeMeshBuffer["oak_leaves"].getVertexBuffer(kind));
-        })
+
+        const pos = new Vector3(0, this.gethighestBlock(0, 0), 0);
+        this.player.position = pos;
+        Logger.Log(`player start position: ${pos}`);
+
+        const kinds = [VertexBuffer.PositionKind, VertexBuffer.NormalKind,
+        VertexBuffer.UVKind, VertexBuffer.ColorKind];
+        Logger.Log("vertexdata oak_leaves:");
+        kinds.forEach((kind) => {
+            Logger.Log([kind, Block.runtimeMeshBuffer["oak_leaves"].getVertexBuffer(kind)]);
+        });
+        Logger.Log("vertexdata long_grass:");
+        kinds.forEach((kind) => {
+            Logger.Log([kind, Block.runtimeMeshBuffer["long_grass"].getVertexBuffer(kind)]);
+        });
     }
 }
