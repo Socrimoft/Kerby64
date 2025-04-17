@@ -4,7 +4,7 @@ import { Chunk } from "./chunk";
 import { ToonMaterial } from "../materials/toonMaterial";
 import blocks from "./blocks.json";
 import vertexs from "./vertexData.json"; // 24 * kindsize
-import vertexs2 from "./vertexData2.json"; // 16 * kindsize
+import vertexs2 from "./vertexData2d.json"; // 16 * kindsize
 
 export { blocks };
 export const notaBlockList = Object.keys(blocks.notABlock) as (keyof typeof blocks.notABlock)[];
