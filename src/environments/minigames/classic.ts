@@ -22,7 +22,7 @@ export class Classic extends Environment {
     async loadEnvironment(classicLevel?: number): Promise<void> {
         const levels = [KirClassic, KirCity, KirBros, KirbyKawaii, KirDoom];
 
-        classicLevel = classicLevel && classicLevel >= 0 && classicLevel < levels.length ? classicLevel - 1 : 0;
+        if (!classicLevel) classicLevel = 0;
         this.level = new levels[classicLevel](this.scene, this.player);
         await this.level?.loadEnvironment();
 

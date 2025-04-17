@@ -3,6 +3,7 @@ import { Player } from "../../../actors/player";
 import { LevelScene } from "../../../scenes/levelScene";
 import { Environment } from "../../environment";
 import { ToonMaterial } from "../../../materials/toonMaterial";
+import { Portal } from "../../../actors/portal";
 
 export class KirClassic extends Environment {
     private segmentWidth: number = 6;
@@ -25,7 +26,7 @@ export class KirClassic extends Environment {
     }
 
     setupLight(): DirectionalLight {
-        this.light = new DirectionalLight("dirLight", new Vector3(1, 1, -1), this.scene);
+        this.light = new DirectionalLight("dirLight", new Vector3(1, 1, 0), this.scene);
         return this.light;
     }
 
@@ -99,7 +100,10 @@ export class KirClassic extends Environment {
         this.createBlock(500, 4, 4);
         this.createFences(500);
         this.createWaterFences(530, 10);
-        // porte de fin
+        // quand kirby arrive en 534 fin du jeu
+
+        const portal = new Portal(this.scene, false);
+        await portal.instanciate(new Vector3(533.4, 13, 0), new Vector3(0, 240 * Math.PI / 180, 0), 2);
     }
 
     beforeRenderUpdate(): void {

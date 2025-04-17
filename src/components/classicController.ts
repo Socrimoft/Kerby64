@@ -29,6 +29,7 @@ export class ClassicController extends EntityController {
         this.playAnimation(this.Animation.Idle);
     }
 
+
     public beforeRenderUpdate(): void {
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
 

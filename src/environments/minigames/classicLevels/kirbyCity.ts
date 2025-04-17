@@ -2,6 +2,7 @@ import { Color3, CubeTexture, DirectionalLight, StandardMaterial, Texture, Vecto
 import { Player } from "../../../actors/player";
 import { LevelScene } from "../../../scenes/levelScene";
 import { Environment } from "../../environment";
+import { GlbMapManager } from "../../../actors/GlbMapManager";
 
 export class KirCity extends Environment {
     constructor(scene: LevelScene, player: Player) {
@@ -34,10 +35,11 @@ export class KirCity extends Environment {
     }
 
     async loadEnvironment() {
-        throw new Error("Method not implemented.");
+        const cityMap = new GlbMapManager("cityMap", this.scene);
+        await cityMap.instanciate(new Vector3(0, 0, 0), new Vector3(0, 0, 0));
+
     }
 
     beforeRenderUpdate(): void {
-        throw new Error("Method not implemented.");
     }
 }
