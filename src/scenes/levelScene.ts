@@ -12,7 +12,6 @@ import { World } from "../environments/minigames/world";
 import { WorldController } from "../components/worldController";
 import { Classic } from "../environments/minigames/classic";
 import { ClassicController } from "../components/classicController";
-import { Camera3DController } from "../components/camera3DController";
 
 enum loadableGame {
     rush = 1,
@@ -79,7 +78,7 @@ export class LevelScene extends Scene {
     // set up the game without gui, in the background
     public async setUpLevelAsync(gameToLoad: number | string, classicLevel?: number | string, _seed?: number): Promise<void> {
         // environment
-        Logger.Log(["Loading game: " + gameToLoad, _seed != undefined ? (" with seed: " + _seed) : ""]);
+        Logger.Log(["Loading game: " + gameToLoad, _seed != undefined ? ("with seed: " + _seed) : ""]);
         if (typeof gameToLoad === "string") {
             gameToLoad = Object.values(loadableGame).indexOf(gameToLoad.toLowerCase()) + 1;
         }
@@ -103,13 +102,15 @@ export class LevelScene extends Scene {
                 if (!LevelScene.isWorldTypeValid(classicLevel)) {
                     classicLevel = worldType.flat;
                 }
-                const worldTypeName = Object.values(worldType)[classicLevel] as string;
+                const worldTypeName = Object.values(worldType)[classicLevel - 1] as string;
                 this.environment = new World(this, this.player, _seed);
-                Logger.Log(`loadEnvironment: ${worldTypeName}`);
+                Logger.Log("loadEnvironment: " + worldTypeName);
                 await this.environment.load(classicLevel); // classicLevel is the world type (flat or normal)
                 this.updateNavigatorHistory({ game: "world", worldtype: worldTypeName, seed: this.environment.seed.toString() });
-                await this.player.instanciate(playerpos, playerrot, this.input, Camera3DController);
-                this.player.addComponent(new WorldController(this.player, this.input));
+                await this.player.instanciate(playerpos, playerrot, this.input, false);
+                const controller = new WorldController(this.player, this.input);
+                controller.setupGUI();
+                this.player.addComponent(controller);
                 break;
 
             case loadableGame.classic:

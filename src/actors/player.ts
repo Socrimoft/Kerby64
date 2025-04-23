@@ -31,14 +31,12 @@ export class Player extends GameEntity {
     constructor(scene: LevelScene, ...components: Component[]) {
         super("kerby", scene, ...components)
         components.forEach((comp) => {
-            if (comp instanceof RushController || comp instanceof BirdController) {
+            if (comp instanceof EntityController)
                 this.entityController = comp;
-            }
         });
     }
 
-    public async instanciate(position: Vector3, rotation: Vector3, input?: InputManager,
-        cameraclass: new (player: Player, input: InputManager) => CameraController = Camera2DController): Promise<void> {
+    public async instanciate(position: Vector3, rotation: Vector3, input?: InputManager, is2D: boolean = true): Promise<void> {
         await super.instanciate(position, rotation);
         if (!this.mesh)
             throw new Error("Error while instanciating the GameEntity " + this.name);
@@ -46,7 +44,7 @@ export class Player extends GameEntity {
             throw new Error("no InputManager for GameEntity" + this.name);
         this.mesh.scaling = new Vector3(2.5, 2.5, 2.5);
 
-        this.cameraController = new cameraclass(this, input);
+        this.cameraController = new (is2D ? Camera2DController : Camera3DController)(this, input);
 
         this.addComponent(this.cameraController);
 

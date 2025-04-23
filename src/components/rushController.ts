@@ -1,5 +1,5 @@
 import { Ray, Vector3 } from "@babylonjs/core";
-import { InputManager } from "../inputManager";
+import { InputManager, Key } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Player } from "../actors/player";
 import { Game } from "../game";
@@ -18,7 +18,7 @@ export class RushController extends EntityController {
     public beforeRenderUpdate(): void {
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
 
-        if (this.input.inputMap[this.input.jumpKey] && !this.isJumping && this.remainingJumps) {
+        if (this.input.inputMap[Key.Jump] && !this.isJumping && this.remainingJumps) {
             this.jumpStartTime = performance.now();
             this.isJumping = true;
             this.remainingJumps--;
@@ -36,13 +36,13 @@ export class RushController extends EntityController {
         else
             this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
 
-        if (this.input.inputMap[this.input.rightKey]) {
+        if (this.input.inputMap[Key.Right]) {
             this.entity.rotation = new Vector3(0, Math.PI / 2, 0);
             // this.updateShaderLightDirection(new Vector3(1, 1, 0));
             this.playAnimation(Player.Animation.Run);
             this.entity.moveForwardWithCollisions(this.linearSpeed * deltaTime);
         }
-        else if (this.input.inputMap[this.input.leftKey]) {
+        else if (this.input.inputMap[Key.Left]) {
             this.entity.rotation = new Vector3(0, -Math.PI / 2, 0);
             // this.updateShaderLightDirection(new Vector3(-1, 1, 0));
             this.playAnimation(Player.Animation.Run);

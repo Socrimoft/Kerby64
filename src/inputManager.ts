@@ -1,36 +1,27 @@
 import { ActionManager, ExecuteCodeAction, PointerEventTypes, Scene } from "@babylonjs/core";
 import { InputManager as MouseManager } from "@babylonjs/core/Inputs/scene.inputManager";
+
+export enum Key {
+    Up = "z",
+    Down = "s",
+    Left = "q",
+    Right = "d",
+    Jump = " ",
+    Action = "LeftAlt",
+    Shift = "Shift",
+    Camera = "F5",
+    Stats = "F3",
+    ScreenShot = "F2",
+    Hud = "F1",
+    Escape = "Escape",
+    Chat = "t"
+}
 export class InputManager extends MouseManager {
     public MouseMovement = { x: 0, y: 0 };
     private canvas: HTMLCanvasElement;
-    public upKey = "z";
-    public downKey = "s";
-    public leftKey = "q";
-    public rightKey = "d";
-    public jumpKey = " ";
-    public actionKey = "LeftAlt";
-    public shiftKey = "Shift";
-    public cameraKey = "F5";
-    public statsKey = "F3";
-    public screenShotKey = "F2";
-    public hudKey = "F1";
-    public escapeKey = "Escape";
-    public chatKey = "t";
-    public inputMap = {
-        [this.upKey]: false,
-        [this.downKey]: false,
-        [this.leftKey]: false,
-        [this.rightKey]: false,
-        [this.jumpKey]: false,
-        [this.actionKey]: false,
-        [this.chatKey]: false,
-        [this.shiftKey]: false,
-        [this.cameraKey]: false,
-        [this.statsKey]: false,
-        [this.escapeKey]: false,
-        [this.screenShotKey]: false,
-        [this.hudKey]: false,
-    };
+    public inputMap: { [key in Key]: boolean } = Object.fromEntries(
+        Object.values(Key).map((key) => [key, false])
+    ) as any;
     public isWorldPlaying = false;
     public isPointerLocked = false;
 
@@ -40,47 +31,50 @@ export class InputManager extends MouseManager {
         if (!canvas) throw new Error("no canvas on engine");
         this.canvas = canvas;
         scene.actionManager = new ActionManager(scene);
+        this.inputMap[Key.Escape] = true; // simulate keydown to bring the pause menu in the event of pointer not being locked
         scene.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnKeyDownTrigger, (event) => {
-            if (event.sourceEvent.key == this.hudKey) {
-                if (!this.isWorldPlaying) {
+            switch (event.sourceEvent.key as Key) {
+                case (Key.Escape):
+                    if (this.isWorldPlaying && !this.isPointerLocked) {
+                        //event.sourceEvent.preventDefault();
+                        this.isWorldPlaying = false;
+                    };
+                    break;
+                case (Key.Hud):         //F1
+                    if (!this.isWorldPlaying)
+                        window.open("https://github.com/Socrimoft/Kerby64", "_blank");
+                case (Key.ScreenShot):  //F2
+                case (Key.Stats):       //F3
+                case (Key.Camera):      //F5
                     event.sourceEvent.preventDefault();
-                    window.open("https://github.com/Socrimoft/Kerby64", "_blank");
-                    return;
-                }
+                default:
+                    this.inputMap[event.sourceEvent.key] = event.sourceEvent.type == "keydown";
+                    break;
             }
-            if (this.isWorldPlaying && ["F1", "F2", "F3", "F5"].includes(event.sourceEvent.key))
-                event.sourceEvent.preventDefault();
-            this.inputMap[event.sourceEvent.key] = event.sourceEvent.type == "keydown";
         }));
         scene.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnKeyUpTrigger, (event) => {
             this.inputMap[event.sourceEvent.key] = event.sourceEvent.type == "keydown";
         }));
-        // Request pointer lock for the canvas
-        this.canvas.addEventListener("click", () => {
-            if (this.isWorldPlaying)
-                (this.canvas.requestPointerLock() || Promise.resolve()).catch(() => null);
-        });
-
         document.addEventListener("pointerlockchange", () => {
-            this.isPointerLocked = document.pointerLockElement === this.canvas;
+            this.isPointerLocked = document.pointerLockElement === this.canvas
+            console.log(`Pointer lock changed: ${this.isPointerLocked}`);
+            if (!this.isPointerLocked) {
+                this.inputMap[Key.Escape] = true;
+            }
             //(this.isPointerLocked ? this.attachControl : this.detachControl)();
             //console.log(`input : ${this.isPointerLocked} ${this.isWorldPlaying}`);
         });
         scene.onPointerObservable.add((pointerInfo) => {
             if (!this.isPointerLocked) return;
-            switch (pointerInfo.type) {
-                case PointerEventTypes.POINTERMOVE:
-                    // Handle pointer move event
-                    this.MouseMovement.x += pointerInfo.event.movementX;
-                    this.MouseMovement.y += pointerInfo.event.movementY;
-                    break;
+            if (pointerInfo.type == 4) { // PointerMove
+                this.MouseMovement.x += pointerInfo.event.movementX;
+                this.MouseMovement.y += pointerInfo.event.movementY;
             }
         });
-        /* scene.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnPointerMoveTrigger, (event) => {
-        }));
-        scene.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnKeyUpTrigger, (event) => {
-            this.inputMap[event.sourceEvent.key] = event.sourceEvent.type == "keydown";
-        }));
- */
+        // Request pointer lock for the canvas
+        this.canvas.addEventListener("click", () => {
+            if (this.isWorldPlaying && !this.isPointerLocked)
+                (this.canvas.requestPointerLock() || Promise.resolve()).catch(() => null);
+        });
     }
 }

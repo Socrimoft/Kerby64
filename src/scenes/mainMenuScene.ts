@@ -128,6 +128,7 @@ export class MainMenuScene extends Scene {
     }
 
     private async createWorldMenu() {
+        this.getEngine().displayLoadingUI();
         const worldfont = "WorldOfSpell";
         const gui = new Menu("world_setting", 1920);
         let isWorldNormal = true;
@@ -229,14 +230,32 @@ export class MainMenuScene extends Scene {
         seedGrid.addControl(seedRandomButton, 0, 2);
         rows.addControl(seedGrid, 2, 0);
 
+        const bottomGrid = new Grid("bottomGrid");
+        bottomGrid.addColumnDefinition(0.5);
+        bottomGrid.addColumnDefinition(0.5);
+
+
         const play = new Button("playbtn");
         const playText = new TextBlock("playText", "Play");
         play.addControl(playText);
         const seed = () => seedInput.text.length > 0 ? parseInt(seedInput.text) : undefined;
         play.pointerUpAnimation = () => this.switchToCutScene("world", 1 + +isWorldNormal, seed());
         // world do not have cutscene, it skip directly to the game
-        rows.addControl(play, 3, 0);
-        play.paddingLeft = "60%";
+        bottomGrid.addControl(play, 0, 1);
+        play.paddingLeft = "10%";
+
+        const back = new Button("backbtn");
+        const backText = new TextBlock("backText", "Back to Main Menu");
+        back.addControl(backText);
+        back.pointerUpAnimation = () => {
+            gui.ui.dispose();
+            backgroundTexture.dispose();
+            this.createLevelSelectionMenu("Choose a game to play", ["Kirby Rush", "Kirby Bird", "Kirby World", "Kirby Classic"], this.firstClassicCallback.bind(this));
+        };
+        back.paddingRight = "10%";
+        bottomGrid.addControl(back, 0, 0);
+        rows.addControl(bottomGrid, 3, 0);
+        this.getEngine().hideLoadingUI();
     }
 
     private switchToCutScene(levelToLoad: number | string, classicLevel?: number, seed?: number): void {

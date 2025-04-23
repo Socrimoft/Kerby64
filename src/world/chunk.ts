@@ -81,7 +81,7 @@ export class Chunk extends Mesh {
         }
         this.blocks[x][y][z] = new Block(position.addInPlace(this.get3DChunkCoord()), this, type);
     }
-    public popBlock(position: Vector3): Block | null {
+    public popBlock(position: Vector3): Nullable<Block> {
         const block = this.blocks[position.x][position.y][position.z];
         if (block) {
             //TODO: Remove the block from the chunk's mesh
@@ -137,5 +137,8 @@ export class Chunk extends Mesh {
         }
         await Promise.allSettled(promises);
         return this.coord;
+    }
+    getBlock(vector3: Vector3): Nullable<Block> {
+        return this.blocks[vector3.x][vector3.y][vector3.z];
     }
 }

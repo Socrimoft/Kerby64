@@ -1,5 +1,5 @@
 import { Ray, Vector3 } from "@babylonjs/core";
-import { InputManager } from "../inputManager";
+import { InputManager, Key } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Game } from "../game";
 import { Player } from "../actors/player";
@@ -26,7 +26,7 @@ export class BirdController extends EntityController {
     public beforeRenderUpdate(): void {
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
 
-        if (this.input.inputMap[this.input.jumpKey] && !this.isJumping) {
+        if (this.input.inputMap[Key.Jump] && !this.isJumping) {
             this.jumpStartTime = performance.now();
             this.isJumping = true;
         }

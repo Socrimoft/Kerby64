@@ -1,8 +1,9 @@
 import { Color4, Nullable, Ray, Vector3, AbstractMesh, PickingInfo, Tools, Logger } from "@babylonjs/core";
-import { InputManager } from "../inputManager";
+import { InputManager, Key } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Player } from "../actors/player";
 import { Block } from "../world/block";
+import { WorldGui } from "../gui/worldGui";
 
 export class WorldController extends EntityController {
     private input: InputManager;
@@ -11,6 +12,7 @@ export class WorldController extends EntityController {
     private blockPickRange = 4; // 
     private blockPicked: Nullable<Block> = null;
     protected linearSpeed = 5;     // ?blocks/s
+    private gui: WorldGui;
     private oldHitMesh: Nullable<AbstractMesh> = null;
 
     constructor(player: Player, input: InputManager) {
@@ -19,14 +21,21 @@ export class WorldController extends EntityController {
         this.input = input;
         this.entity.stopAllAnims();
         this.playAnimation(Player.Animation.Idle);
-
+        globalThis.input = input; // for debugging purposes
         input.isWorldPlaying = true;
         player.meshRef.scaling = new Vector3(0.7, 0.7, 0.7);
+
+        this.gui = new WorldGui(player.scene);
+        this.gui.makePauseMenu(() => {
+            this.input.isWorldPlaying = true;
+        });
+
+        globalThis.gui = this.gui; // for debugging purposes
     }
 
     private jumpBeforeRender(deltaTime: number) {
         // jump if jump's key is pressed and not already jumping
-        if (this.input.inputMap[this.input.jumpKey] && !this.isJumping) {
+        if (this.input.inputMap[Key.Jump] && !this.isJumping) {
             this.jumpStartTime = performance.now();
             this.isJumping = true;
         }
@@ -45,9 +54,9 @@ export class WorldController extends EntityController {
     }
 
     private moveBeforeRender(deltaTime: number) {
-        const movUpDown = +this.input.inputMap[this.input.upKey] - +this.input.inputMap[this.input.downKey]
-        const movLeftRight = +this.input.inputMap[this.input.leftKey] - +this.input.inputMap[this.input.rightKey]
-        const isRunning = this.input.inputMap[this.input.shiftKey]
+        const movUpDown = +this.input.inputMap[Key.Up] - +this.input.inputMap[Key.Down]
+        const movLeftRight = +this.input.inputMap[Key.Left] - +this.input.inputMap[Key.Right]
+        const isRunning = this.input.inputMap[Key.Shift]
         const displacement = this.linearSpeed * deltaTime * (1 + +isRunning);
 
         if (movUpDown) {
@@ -84,7 +93,7 @@ export class WorldController extends EntityController {
         this.input.MouseMovement.y = this.input.MouseMovement.x = 0;
 
     }
-
+    //returns the block in front of the player, if any
     private highlightHitBlock(hit: Nullable<PickingInfo>): void {
         if (hit && hit.pickedMesh && this.oldHitMesh && hit.pickedMesh !== this.oldHitMesh) {
             this.oldHitMesh.disableEdgesRendering();
@@ -100,6 +109,25 @@ export class WorldController extends EntityController {
             hit.pickedMesh.edgesWidth = 1;
             hit.pickedMesh.enableEdgesRendering();
             this.oldHitMesh = hit.pickedMesh;
+            console.log(this.oldHitMesh.position);
+        }
+    }
+
+    setupGUI() {
+        this.gui.isVisible = true;
+    }
+    private guiBeforeRender() {
+        if (this.input.inputMap[Key.Hud]) {
+            this.gui.toggleUIVisibility();
+            this.input.inputMap[Key.Hud] = false;
+        }
+        this.gui.PauseMenuVisibility = !this.input.isPointerLocked;
+        if (this.input.inputMap[Key.Escape]) {
+            this.input.isWorldPlaying = false;
+            this.gui.PauseMenuVisibility = true;
+            this.input.inputMap[Key.Escape] = false;
+
+            console.log("pause menu opened");
         }
     }
 
@@ -116,26 +144,14 @@ export class WorldController extends EntityController {
 
         this.highlightHitBlock(hit);
 
-        if (this.input.inputMap[this.input.screenShotKey]) {
-            this.input.inputMap[this.input.screenShotKey] = false;
+        if (this.input.inputMap[Key.ScreenShot]) {
+            this.input.inputMap[Key.ScreenShot] = false;
             const date = new Date();
             const filename = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}_${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.png`;
             Tools.CreateScreenshotUsingRenderTarget(this.scene.getEngine(), this.scene.activeCamera!,
                 { precision: 1 }, undefined, undefined, undefined, undefined, filename);
             Logger.Log(`Saved screenshot as ` + filename);
         }
-
-        if (this.input.inputMap[this.input.escapeKey]) {
-            this.input.isWorldPlaying = !this.input.isWorldPlaying;
-            this.input.inputMap[this.input.escapeKey] = false;
-            // TODO: add a pause menu
-            //this.input.isWorldPlaying ? this.scene.getEngine().runRenderLoop(() => this.scene.render()) : this.scene.getEngine().stopRenderLoop();
-        }
-        // TODO: proper game over condition
-        /*if (this.entity.getPosition().y < 0) {
-            this.entity.dispose();
-            this.input.isWorldPlaying = false;
-            Game.Instance.switchToGameOver();
-        }*/
+        this.guiBeforeRender();
     }
 }

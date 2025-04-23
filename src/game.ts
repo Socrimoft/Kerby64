@@ -30,11 +30,12 @@ export class Game {
     private gameOverScene!: GameOverScene;
 
     private state: State = State.MAINMENU;
-    private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true }
+    private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true, antialias: true }
 
     constructor() {
         this.canvas = this.createCanvas();
         this.engine = this.createEngine();
+        console.log(this.engine.hostInformation);
         this.engine.loadingScreen = new KerbyLoadingScreen("");
         if (process.env.NODE_ENV === "development") {
             Logger.LogLevels = Logger.AllLogLevel; // all logs
@@ -107,6 +108,8 @@ export class Game {
         if (allowWebGPU && navigator.gpu) { // should be the synchronous variant of "await WebGPUEngine.IsSupportedAsync"
             return new WebGPUEngine(this.canvas, this.options);
         } else {
+            errorHandler(new Error(`WebGPU not supported. Try using a different browser or enable WebGPU in your browser settings.
+            Go to https://caniuse.com/webgpu ?`), () => window.open("https://caniuse.com/webgpu", "_blank"));
             return new Engine(this.canvas, false, this.options);
         }
     }
@@ -114,7 +117,7 @@ export class Game {
     private async main(): Promise<void> {
         if (this.engine instanceof WebGPUEngine) {
             this.engine.compatibilityMode = true; // false breaks level scenes
-            await this.engine.initAsync();
+            await this.engine.initAsync().catch((err) => errorHandler(err));
         }
         let level = Game.urlParams.get("game");
         let classicLevel = Game.urlParams.get("classic") || Game.urlParams.get("worldtype");
@@ -181,5 +184,9 @@ export class Game {
         this.state = State.GAMEOVER;
         this.engine.hideLoadingUI();
     }
+}
+function errorHandler(error: Error, callback = () => location.reload()) {
+    console.error("Error occurred:", error);
+    confirm("An error occurred: " + error.message) && callback();
 }
 Game.Instance;

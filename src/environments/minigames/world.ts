@@ -137,8 +137,9 @@ export class World extends Environment {
             await this.loadDebugEnvironment();
             return;
         }
-        worldtype = worldtype || 0;
-        this.WorldType = worldtype > 1 ? { type: "normal", noise: "SimplexPerlin3DBlock" } : {
+        worldtype = worldtype || 1;
+        // worldtype should be 1 for flat world, 2 for normal world
+        this.WorldType = worldtype == 2 ? { type: "normal", noise: "SimplexPerlin3DBlock" } : {
             type: "flat",
             map: ["bedrock", "dirt"]
         };

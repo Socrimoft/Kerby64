@@ -1,7 +1,7 @@
 import { Mesh, UniversalCamera, Vector3 } from "@babylonjs/core"
 import { Component } from "./component";
 import { Player } from "../actors/player";
-import { InputManager } from "../inputManager";
+import { InputManager, Key } from "../inputManager";
 import { LevelScene } from "../scenes/levelScene";
 
 enum CameraMode {
@@ -49,9 +49,9 @@ export class Camera3DController implements Component {
 
     public beforeRenderUpdate(): void {
         // update position
-        if (this.input.inputMap[this.input.cameraKey]) {
+        if (this.input.inputMap[Key.Camera]) {
             this.changeActiveCamera();
-            this.input.inputMap[this.input.cameraKey] = false;
+            this.input.inputMap[Key.Camera] = false;
         }
         switch (this.currentCamera) {
             case (CameraMode.FPSMode):
