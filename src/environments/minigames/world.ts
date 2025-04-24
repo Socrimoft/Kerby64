@@ -44,10 +44,13 @@ export class World extends Environment {
         24000: new Color3(0.447, 0.616, 0.929)
     }
 
+    private chunkGenerationQueue: Array<Chunk> = [];
+    private activeJobs = 0;
+    private readonly MAX_PARALLEL_JOBS = 3;
+
     constructor(scene: LevelScene, player: Player, seed?: number) {
         super(scene, player, seed);
-        Block.scene = scene;
-        globalThis.world = this;
+        globalThis.world = this; // ??
     }
 
     public get tick() {
@@ -114,11 +117,19 @@ export class World extends Environment {
         moon.rotation.y = Math.PI / 2;
     }
 
-    async loadTerrain(): Promise<void> {
-        Logger.Log("loadTerrain");
+    loadTerrain(): void {
+        console.log("loadTerrain");
         this.scene.getEngine().hideLoadingUI();
         if (this.WorldType?.type === "flat") {
-            let promises = await this.loadChunkwithinRenderDistance();
+            // this.loadChunkwithinRenderDistance();
+            const x = 0;
+            const z = 0;
+
+            const chunkKey = `${x}_${z}`;
+            if (!this.chunksBuffer[chunkKey]) {
+                this.chunksBuffer[chunkKey] = new Chunk(new Vector2(x, z), this.scene);
+                this.chunksBuffer[chunkKey].populate(this.WorldType);
+            }
 
         } /*else if (this.WorldType?.noise === "SimplexPerlin3DBlock") {
             const noise = new SimplexPerlin3DBlock(this.scene, { frequency: 0.1 });
@@ -131,8 +142,8 @@ export class World extends Environment {
     }
 
     async loadEnvironment(worldtype?: number): Promise<void> {
-        Block.makeRuntimeMaterialBuffer();
-        Block.makeRuntimeMeshBuffer();
+        console.log("loadEnvironment", worldtype ? "flat" : "normal");
+        Block.generateTextureAtlas(this.scene);
         if (this.seed == 0) {
             await this.loadDebugEnvironment();
             return;
@@ -141,12 +152,13 @@ export class World extends Environment {
         // worldtype should be 1 for flat world, 2 for normal world
         this.WorldType = worldtype == 2 ? { type: "normal", noise: "SimplexPerlin3DBlock" } : {
             type: "flat",
-            map: ["bedrock", "dirt"]
+            map: ["bedrock", "bedrock"]
         };
-        await this.loadTerrain();
+        this.loadTerrain();
     }
+
     async loadDebugEnvironment() {
-        this.chunksBuffer["0,0"] = await Chunk.debugChunk(this.scene);
+        // Chunk.debugChunk(this.scene);
     }
 
     setupLight(): void {
@@ -201,32 +213,47 @@ export class World extends Environment {
             this.day++;
         }
         this.updateSky();
-
     }
+
     afterRenderUpdate(): void {
         //get the player position to know which chunks to load
-        Logger.Log(`afterRenderUpdate ${this.player.position}`);
         this.loadChunkwithinRenderDistance();
-
     }
-    async loadChunkwithinRenderDistance(): Promise<Promise<Vector2>[]> {
+
+    loadChunkwithinRenderDistance() {
         const playerPosition = this.player.position;
         const playerChunkX = Math.floor(playerPosition.x / this.blockSize);
         const playerChunkZ = Math.floor(playerPosition.z / this.blockSize);
-        let promises: Promise<Vector2>[] = [];
         //load the chunks around the player
         for (let x = playerChunkX - World.renderDistance; x <= playerChunkX + World.renderDistance; x++) {
             for (let z = playerChunkZ - World.renderDistance; z <= playerChunkZ + World.renderDistance; z++) {
                 const chunkKey = `${x}_${z}`;
                 if (!this.chunksBuffer[chunkKey]) {
                     this.chunksBuffer[chunkKey] = new Chunk(new Vector2(x, z), this.scene);
-                    this.chunksBuffer[chunkKey].populate(this.WorldType);
-                    promises.push(this.chunksBuffer[chunkKey].populateMesh());
+                    this.chunkGenerationQueue.push(this.chunksBuffer[chunkKey]);
+                    this.processChunkQueue();
                 }
             }
         }
-        return promises;
     }
+
+    private processChunkQueue() {
+        if (this.activeJobs >= this.MAX_PARALLEL_JOBS || this.chunkGenerationQueue.length === 0)
+            return;
+
+        const nextChunk = this.chunkGenerationQueue.shift();
+        if (!nextChunk) return;
+
+        this.activeJobs++;
+
+        nextChunk.populate(this.WorldType).then(() => {
+            this.activeJobs--;
+            this.processChunkQueue();
+        });
+
+        this.processChunkQueue();
+    }
+
     public gethighestBlock(x: number, z: number): number {
         const chunkX = Math.floor(x / this.blockSize / Chunk.chunkSize.x);
         const chunkZ = Math.floor(z / this.blockSize / Chunk.chunkSize.z);
@@ -237,25 +264,12 @@ export class World extends Environment {
         return 0;
     }
 
-
     public async load(worldtype?: number): Promise<void> {
         this.setupLight();
         this.setupSkybox();
         await this.loadEnvironment(worldtype);
+        this.player.position = new Vector3(0, this.gethighestBlock(0, 0), 0);
 
-        const pos = new Vector3(0, this.gethighestBlock(0, 0), 0);
-        this.player.position = pos;
-        Logger.Log(`player start position: ${pos}`);
-
-        const kinds = [VertexBuffer.PositionKind, VertexBuffer.NormalKind,
-        VertexBuffer.UVKind, VertexBuffer.ColorKind];
-        Logger.Log("vertexdata oak_leaves:");
-        kinds.forEach((kind) => {
-            Logger.Log([kind, Block.runtimeMeshBuffer["oak_leaves"].getVertexBuffer(kind)]);
-        });
-        Logger.Log("vertexdata long_grass:");
-        kinds.forEach((kind) => {
-            Logger.Log([kind, Block.runtimeMeshBuffer["long_grass"].getVertexBuffer(kind)]);
-        });
+        // this.scene.onAfterRenderObservable.add(() => this.afterRenderUpdate());
     }
 }

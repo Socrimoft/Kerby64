@@ -49,8 +49,8 @@ export class WorldController extends EntityController {
             else
                 this.isJumping = false;
         }
-        else
-            this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
+        // else
+        //     this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
     }
 
     private moveBeforeRender(deltaTime: number) {
