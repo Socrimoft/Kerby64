@@ -159,14 +159,14 @@ export class Chunk extends Mesh {
                         const totalIndexes = counterData[0] * 2 * 3; // faceCount * fragments * vertices
 
                         // debug
-                        this.computeShader.vertexBuffer.read().then((data) => {
-                            const floatArray = new Float32Array(data.buffer);
-                            console.log(floatArray);
-                        });
-                        this.computeShader.indexBuffer.read().then((data) => {
-                            const uintArray = new Uint32Array(data.buffer);
-                            console.log(uintArray);
-                        });
+                        // this.computeShader.vertexBuffer.read().then((data) => {
+                        //     const floatArray = new Float32Array(data.buffer);
+                        //     console.log(floatArray);
+                        // });
+                        // this.computeShader.indexBuffer.read().then((data) => {
+                        //     const uintArray = new Uint32Array(data.buffer);
+                        //     console.log(uintArray);
+                        // });
 
                         this.setIndexBuffer(this.computeShader.indexBuffer.getBuffer(), totalVertices, totalIndexes, true);
 

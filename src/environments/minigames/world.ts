@@ -121,15 +121,15 @@ export class World extends Environment {
         console.log("loadTerrain");
         this.scene.getEngine().hideLoadingUI();
         if (this.WorldType?.type === "flat") {
-            // this.loadChunkwithinRenderDistance();
-            const x = 0;
-            const z = 0;
+            this.loadChunkwithinRenderDistance();
+            // const x = 0;
+            // const z = 0;
 
-            const chunkKey = `${x}_${z}`;
-            if (!this.chunksBuffer[chunkKey]) {
-                this.chunksBuffer[chunkKey] = new Chunk(new Vector2(x, z), this.scene);
-                this.chunksBuffer[chunkKey].populate(this.WorldType);
-            }
+            // const chunkKey = `${x}_${z}`;
+            // if (!this.chunksBuffer[chunkKey]) {
+            //     this.chunksBuffer[chunkKey] = new Chunk(new Vector2(x, z), this.scene);
+            //     this.chunksBuffer[chunkKey].populate(this.WorldType);
+            // }
 
         } /*else if (this.WorldType?.noise === "SimplexPerlin3DBlock") {
             const noise = new SimplexPerlin3DBlock(this.scene, { frequency: 0.1 });
@@ -270,6 +270,6 @@ export class World extends Environment {
         await this.loadEnvironment(worldtype);
         this.player.position = new Vector3(0, this.gethighestBlock(0, 0), 0);
 
-        // this.scene.onAfterRenderObservable.add(() => this.afterRenderUpdate());
+        this.scene.onAfterRenderObservable.add(() => this.afterRenderUpdate());
     }
 }
