@@ -143,17 +143,19 @@ export class World extends Environment {
 
     async loadEnvironment(worldtype?: number): Promise<void> {
         console.log("loadEnvironment", worldtype ? "flat" : "normal");
-        Block.generateTextureAtlas(this.scene);
-        if (this.seed == 0) {
-            await this.loadDebugEnvironment();
-            return;
-        }
         worldtype = worldtype || 1;
         // worldtype should be 1 for flat world, 2 for normal world
         this.WorldType = worldtype == 2 ? { type: "normal", noise: "SimplexPerlin3DBlock" } : {
             type: "flat",
-            map: ["bedrock", "bedrock"]
+            map: ["grass_block", "grass_block"]
         };
+
+        Block.generateTextureAtlas(this.scene);
+        // if (this.seed == 0) {
+        //     await this.loadDebugEnvironment();
+        //     return;
+        // }
+
         this.loadTerrain();
     }
 
@@ -222,8 +224,8 @@ export class World extends Environment {
 
     loadChunkwithinRenderDistance() {
         const playerPosition = this.player.position;
-        const playerChunkX = Math.floor(playerPosition.x / this.blockSize);
-        const playerChunkZ = Math.floor(playerPosition.z / this.blockSize);
+        const playerChunkX = Math.floor(playerPosition.x / Chunk.chunkSize.x);
+        const playerChunkZ = Math.floor(playerPosition.z / Chunk.chunkSize.z);
         //load the chunks around the player
         for (let x = playerChunkX - World.renderDistance; x <= playerChunkX + World.renderDistance; x++) {
             for (let z = playerChunkZ - World.renderDistance; z <= playerChunkZ + World.renderDistance; z++) {

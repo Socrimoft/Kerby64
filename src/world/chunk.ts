@@ -1,11 +1,11 @@
-import { Color3, DrawWrapper, Engine, Mesh, Nullable, StandardMaterial, Vector2, Vector3, VertexBuffer, WebGPUEngine } from "@babylonjs/core";
+import { AxesViewer, Color3, DrawWrapper, Engine, Mesh, Nullable, StandardMaterial, Vector2, Vector3, VertexBuffer, WebGPUEngine } from "@babylonjs/core";
 import { Block, blockList, BlockType, blockTypeList, notaBlockList } from "./block";
 import { LevelScene } from "../scenes/levelScene";
 import { ChunkCompute } from "../compute_shaders/chunk/chunkCompute";
 import { ToonMaterial } from "../materials/toonMaterial";
 
 export class Chunk extends Mesh {
-    static readonly chunkSize = new Vector3(16, 16, 16);
+    static readonly chunkSize = new Vector3(16, 256, 16);
     static readonly blockCount = this.chunkSize.x * this.chunkSize.y * this.chunkSize.z;
     public blocks = new Uint32Array(Chunk.blockCount);
 
@@ -25,9 +25,9 @@ export class Chunk extends Mesh {
 
         this.computeShader = new ChunkCompute(scene.getEngine() as WebGPUEngine, Chunk.chunkSize);
 
-        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.computeShader.vertexBuffer.getBuffer(), VertexBuffer.PositionKind, true, false, 48, false, 0, 3, VertexBuffer.FLOAT, false, true));
-        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.computeShader.vertexBuffer.getBuffer(), VertexBuffer.NormalKind, true, false, 48, false, 16, 3, VertexBuffer.FLOAT, false, true));
-        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.computeShader.vertexBuffer.getBuffer(), VertexBuffer.UVKind, true, false, 48, false, 32, 2, VertexBuffer.FLOAT, false, true));
+        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.computeShader.vertexBuffer.getBuffer(), VertexBuffer.PositionKind, true, false, 48, false, 0, 3, VertexBuffer.FLOAT, true, true));
+        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.computeShader.vertexBuffer.getBuffer(), VertexBuffer.NormalKind, true, false, 48, false, 16, 3, VertexBuffer.FLOAT, true, true));
+        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.computeShader.vertexBuffer.getBuffer(), VertexBuffer.UVKind, true, false, 48, false, 32, 2, VertexBuffer.FLOAT, true, true));
 
         this.material = new ToonMaterial(`${this.name}_mat`, Block.getTextureAtlas(), this.scene);
         this.material.backFaceCulling = false;
@@ -35,6 +35,11 @@ export class Chunk extends Mesh {
         // cause flickering
         // this.occlusionType = Mesh.OCCLUSION_TYPE_OPTIMISTIC;
         // this.occlusionQueryAlgorithmType = Mesh.OCCLUSION_ALGORITHM_TYPE_CONSERVATIVE;
+
+        const axes = new AxesViewer(scene, 3);
+        axes.xAxis.parent = this;
+        axes.yAxis.parent = this;
+        axes.zAxis.parent = this;
     }
 
     public getBlockIndex(position: Vector3) {
@@ -135,12 +140,15 @@ export class Chunk extends Mesh {
             if (worldtype.type === "flat") {
                 const map = worldtype.map;
                 const yMax = Math.min(map.length, Chunk.chunkSize.y);
-                for (let x = 0; x < Chunk.chunkSize.x; x++) {
-                    for (let z = 0; z < Chunk.chunkSize.z; z++) {
-                        for (let y = 0; y < yMax; y++) {
-                            this.setBlock(new Vector3(x, y, z), BlockType[map[y]]);
-                        }
-                    }
+                // for (let x = 0; x < Chunk.chunkSize.x; x++) {
+                //     for (let z = 0; z < Chunk.chunkSize.z; z++) {
+                //         for (let y = 0; y < yMax; y++) {
+                //             this.setBlock(new Vector3(x, y, z), BlockType[map[y]]);
+                //         }
+                //     }
+                // }
+                for (let y = 0; y < yMax; y++) {
+                    this.setBlock(new Vector3(0, y, 0), BlockType[map[y]]);
                 }
             } else {
                 throw new Error("World type is not supported");

@@ -45,11 +45,13 @@ const normals = array<vec3<i32>, 6>(
 );
 
 const uvs = array<vec2<f32>, 4>(
-    vec2<f32>(1, 1),
     vec2<f32>(0, 1),
     vec2<f32>(0, 0),
-    vec2<f32>(1, 0)
+    vec2<f32>(1, 0),
+    vec2<f32>(1, 1)
 );
+
+const tile_size: f32 = 16.0;
 
 @compute @workgroup_size(8, 8, 1)
 fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
@@ -59,8 +61,7 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
 
     let blockId = chunkBuffer[getBlockIndex(gid.x, gid.y, gid.z)];
 
-    let tileSize = vec2<f32>(16.0, 16.0);
-    let atlasSize = vec2<f32>(96.0, 16.0 * f32(uniforms.chunkSize.w));
+    let atlasSize = vec2<f32>(tile_size * 6, tile_size * f32(uniforms.chunkSize.w));
 
     for (var face: u32 = 0u; face < 6u; face++)
     {
@@ -77,13 +78,14 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
 
             let position = vec3<f32>(f32(gid.x), f32(gid.y), f32(gid.z));
 
-            let tileOffset = vec2<f32>(f32(face) * 16, f32(blockId) * 16);
+            let tileOffset = vec2<f32>(f32(face) * tile_size, f32(blockId) * tile_size);
 
             for (var v: u32 = 0u; v < 4u; v++) {
                 vertexBuffer[vertexIndex + v].position = position + vertices[face][v];
                 vertexBuffer[vertexIndex + v].normal = vec3<f32>(normal);
-                let uvPixel = tileOffset + tileSize * uvs[v];
-                vertexBuffer[vertexIndex + v].uv = uvPixel / atlasSize;
+                let uvx = (tileOffset.x / atlasSize.x) + (uvs[v].x / tile_size);
+                let uvy = 1 - ((tileOffset.y / atlasSize.y) + (uvs[v].y / tile_size));
+                vertexBuffer[vertexIndex + v].uv = vec2<f32>(uvx, uvy);
             }
 
             indexBuffer[indexIndex] = vertexIndex + 0u;

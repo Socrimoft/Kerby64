@@ -1,4 +1,4 @@
-import { Color4, DynamicTexture, InstancedMesh, Logger, Mesh, MeshBuilder, Nullable, Texture, TransformNode, Vector3, Vector4, VertexBuffer, VertexData } from "@babylonjs/core";
+import { Color4, DynamicTexture, Engine, InstancedMesh, Logger, Mesh, MeshBuilder, Nullable, Texture, TransformNode, Vector3, Vector4, VertexBuffer, VertexData } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Chunk } from "./chunk";
 import { ToonMaterial } from "../materials/toonMaterial";
@@ -37,9 +37,10 @@ export class Block {
 
     public static generateTextureAtlas(scene: LevelScene): DynamicTexture {
         // make texture atlas
-        this.atlas = new DynamicTexture("block_atlas", { width: 96, height: 16 * Object.keys(blockList).length }, scene, true, Texture.NEAREST_SAMPLINGMODE);
+        this.atlas = new DynamicTexture("block_atlas", { width: 96, height: 16 * blockTypeCount }, scene, true, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTUREFORMAT_RGBA);
+        console.log("atlas size: ", this.atlas.getSize());
 
-        for (let i = 1; i < blockTypeList.length; i++) {
+        for (let i = 1; i < blockTypeCount; i++) {
             const filelist = blockList[blockTypeList[i]];
 
             // Draw each image onto the canvas

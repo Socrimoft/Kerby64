@@ -33,7 +33,7 @@ export class ChunkCompute extends ComputeShader {
         this.chunkSize = chunkSize;
 
         this.uniforms = new UniformBuffer(engine);
-        this.uniforms.addUniform("chunkSize", [...this.chunkSize.asArray(), blockTypeCount]);
+        this.uniforms.updateInt4("chunkSize", this.chunkSize.x, this.chunkSize.y, this.chunkSize.z, blockTypeCount);
         this.uniforms.update();
 
         this.chunkBuffer = new StorageBuffer(engine, chunkSize.x * chunkSize.y * chunkSize.z * 4, Constants.BUFFER_CREATIONFLAG_READWRITE);
