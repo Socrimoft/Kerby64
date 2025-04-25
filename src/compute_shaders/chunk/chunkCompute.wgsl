@@ -59,7 +59,7 @@ const faceUVs = array<array<vec2<f32>, 4>, 6>(
     array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(0, 0), vec2<f32>(0, 1), vec2<f32>(1, 1))
 );
 
-const tile_size: f32 = 16.0;
+const tile_size: f32 = 32.0;
 
 @compute @workgroup_size(8, 8, 1)
 fn main(@builtin(global_invocation_id) gid: vec3<u32>) {

@@ -3,8 +3,6 @@ import { LevelScene } from "../scenes/levelScene";
 import { Chunk } from "./chunk";
 import { ToonMaterial } from "../materials/toonMaterial";
 import blocks from "./blocks.json";
-import vertexs from "./vertexData.json"; // 24 * kindsize
-import vertexs2 from "./vertexData2d.json"; // 16 * kindsize
 
 export { blocks };
 export const notaBlockList = Object.keys(blocks.notABlock) as (keyof typeof blocks.notABlock)[];
@@ -21,23 +19,23 @@ export type BlockType = keyof typeof BlockType;
 export class Block {
     private static readonly rootURI = "./assets/images/world/blocks/";
     private static atlas: DynamicTexture;
-
+    public static tileSize = 32;
     public static size = 1;
-
-    public static readonly faceUV = [
-        // x+ y+ z+
-        // x- y- z-
-        new Vector4(2 / 3, 0.5, 1, 1),      // side 0 faces the positive z direction = left face
-        new Vector4(2 / 3, 0, 1, 0.5),      // side 1 faces the negative z direction = right face
-        new Vector4(0, 0.5, 1 / 3, 1),      // side 2 faces the positive x direction = front face
-        new Vector4(0, 0, 1 / 3, 0.5),      // side 3 faces the negative x direction = back face
-        new Vector4(1 / 3, 0.5, 2 / 3, 1),  // side 4 faces the positive y direction = top face
-        new Vector4(1 / 3, 0, 2 / 3, 0.5),  // side 5 faces the negative y direction = bottom face
-    ];
-
+    /*
+        public static readonly faceUV = [
+            // x+ y+ z+
+            // x- y- z-
+            new Vector4(2 / 3, 0.5, 1, 1),      // side 0 faces the positive z direction = left face
+            new Vector4(2 / 3, 0, 1, 0.5),      // side 1 faces the negative z direction = right face
+            new Vector4(0, 0.5, 1 / 3, 1),      // side 2 faces the positive x direction = front face
+            new Vector4(0, 0, 1 / 3, 0.5),      // side 3 faces the negative x direction = back face
+            new Vector4(1 / 3, 0.5, 2 / 3, 1),  // side 4 faces the positive y direction = top face
+            new Vector4(1 / 3, 0, 2 / 3, 0.5),  // side 5 faces the negative y direction = bottom face
+        ];
+    */
     public static generateTextureAtlas(scene: LevelScene): DynamicTexture {
         // make texture atlas
-        this.atlas = new DynamicTexture("block_atlas", { width: 96, height: 16 * blockTypeCount }, scene, true, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTUREFORMAT_RGBA);
+        this.atlas = new DynamicTexture("block_atlas", { width: 6 * this.tileSize, height: this.tileSize * blockTypeCount }, scene, true, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTUREFORMAT_RGBA);
         console.log("atlas size: ", this.atlas.getSize());
 
         for (let i = 1; i < blockTypeCount; i++) {
@@ -45,16 +43,16 @@ export class Block {
             const color = this.getFaceColors(blockTypeList[i]);
 
             // Draw each image onto the canvas
-            filelist.map(file => Block.rootURI + file).forEach((imgUrl, index) => {
+            filelist.map(file => Block.rootURI + file).forEach((imgUrl: string, index: number) => {
                 let image = new Image();
                 image.src = imgUrl;
                 image.onload = () => {
-                    const dx = index * 16;
-                    const dy = i * 16;
-                    
-                    this.atlas.getContext().drawImage(image, dx, dy, 16, 16); // Adjust placement on canvas
+                    const dx = index * this.tileSize;
+                    const dy = i * this.tileSize;
 
-                    const imageData = this.atlas.getContext().getImageData(dx, dy, 16, 16);
+                    this.atlas.getContext().drawImage(image, dx, dy, this.tileSize, this.tileSize); // Adjust placement on canvas
+
+                    const imageData = this.atlas.getContext().getImageData(dx, dy, this.tileSize, this.tileSize);
 
                     for (let j = 0; j < imageData.data.length; j += 4) {
                         imageData.data[j] *= color[index].r;

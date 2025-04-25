@@ -8,6 +8,8 @@ export class Chunk extends Mesh {
     static readonly chunkSize = new Vector3(16, 256, 16);
     static readonly blockCount = this.chunkSize.x * this.chunkSize.y * this.chunkSize.z;
     public blocks = new Uint32Array(Chunk.blockCount);
+    static worldtype: { type: "flat"; map: (keyof typeof blockList)[] } | { type: "normal" } | { type: "debug" } = { type: "debug" };
+
 
     private static _debugChunk: Nullable<Chunk> = null;
 
@@ -29,6 +31,13 @@ export class Chunk extends Mesh {
         // cause flickering
         // this.occlusionType = Mesh.OCCLUSION_TYPE_OPTIMISTIC;
         // this.occlusionQueryAlgorithmType = Mesh.OCCLUSION_ALGORITHM_TYPE_CONSERVATIVE;
+
+        const axes = new AxesViewer(scene, 3);
+        axes.xAxis.parent = this;
+        axes.yAxis.parent = this;
+        axes.zAxis.parent = this;
+        this.checkCollisions = true;
+        this.receiveShadows = true;
     }
 
     public getBlockIndex(position: Vector3) {
@@ -73,41 +82,41 @@ export class Chunk extends Mesh {
         return null;
     }
 
-    // static async debugChunk(scene: LevelScene): Promise<Chunk> {
-    //     if (!Chunk._debugChunk) {
-    //         Chunk._debugChunk = new Chunk(new Vector2(0, 0), scene);
-    //         let currentBlockTypeIndex = 0;
-    //         let currentNotBlockTypeIndex = 0;
-    //         for (let x = 0; x < Chunk.chunkSize.x; x++) {
-    //             for (let z = 0; z < Chunk.chunkSize.z; z++) {
-    //                 Chunk._debugChunk.addBlock(new Vector3(x, 1, z), blockTypeList[0]);
-    //             }
-    //         }
+    static debugChunk(scene: LevelScene): Chunk {
+        if (!Chunk._debugChunk) {
+            Chunk._debugChunk = new Chunk(new Vector2(0, 0), scene);
+            let currentBlockTypeIndex = 1; // to skip air
+            let currentNotBlockTypeIndex = 0;
+            for (let x = 0; x < Chunk.chunkSize.x; x++) {
+                for (let z = 0; z < Chunk.chunkSize.z; z++) {
+                    Chunk._debugChunk.setBlock(new Vector3(x, 0, z), BlockType.grass_block);
+                }
+            }
+            for (let y = 3; y < Chunk.chunkSize.y; y = y + 3) {
+                for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
+                    for (let z = 0; z < Chunk.chunkSize.z; z = z + 3) {
+                        if (currentBlockTypeIndex < blockTypeList.length) {
+                            Chunk._debugChunk.setBlock(new Vector3(x, y, z), currentBlockTypeIndex);
+                            currentBlockTypeIndex++;
+                        }
+                    }
+                }
+            }
+            /*
+            for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
+                for (let z = 0; z < Chunk.chunkSize.z; z = z + 3) {
+                    if (currentNotBlockTypeIndex < notaBlockList.length) {
+                        Chunk._debugChunk.addBlock(new Vector3(x, 4, z), notaBlockList[currentNotBlockTypeIndex]);
+                        currentNotBlockTypeIndex++;
+                    }
+                }
+            }*/
 
-    //         for (let y = 3; y < Chunk.chunkSize.y; y = y + 3) {
-    //             for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
-    //                 for (let z = 0; z < Chunk.chunkSize.z; z = z + 3) {
-    //                     if (currentBlockTypeIndex < blockTypeList.length) {
-    //                         Chunk._debugChunk.addBlock(new Vector3(x, y, z), blockTypeList[currentBlockTypeIndex]);
-    //                         currentBlockTypeIndex++;
-
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
-    //             for (let z = 0; z < Chunk.chunkSize.z; z = z + 3) {
-    //                 if (currentNotBlockTypeIndex < notaBlockList.length) {
-    //                     Chunk._debugChunk.addBlock(new Vector3(x, 4, z), notaBlockList[currentNotBlockTypeIndex]);
-    //                     currentNotBlockTypeIndex++;
-    //                 }
-    //             }
-    //         }
-    //     };
-    //     Chunk._debugChunk.addBlock(new Vector3(0, 5, 0), "grass_block");
-    //     await Chunk._debugChunk.populateMesh();
-    //     return Chunk._debugChunk;
-    // }
+            Chunk._debugChunk.setBlock(new Vector3(0, 5, 0), BlockType.grass_block);
+        };
+        console.log("debug chunk populated", Chunk._debugChunk);
+        return Chunk._debugChunk;
+    }
 
     getHighestBlock(x: number, z: number): number {
         let y = Chunk.chunkSize.y - 1;
@@ -121,23 +130,28 @@ export class Chunk extends Mesh {
         return this.position;
     }
 
-    public populate(worldtype?: { type: "flat", map: BlockType[] } | { type: "normal", noise: "SimplexPerlin3DBlock" }): Promise<void> {
+    public populate(): Promise<void> {
         return new Promise((resolve) => {
             // Load a flat world in the chunk
-            if (!worldtype)
+            if (!Chunk.worldtype)
                 throw new Error("World type is not defined");
-            if (worldtype.type === "flat") {
-                const map = worldtype.map;
-                const yMax = Math.min(map.length, Chunk.chunkSize.y);
-                for (let x = 0; x < Chunk.chunkSize.x; x++) {
-                    for (let z = 0; z < Chunk.chunkSize.z; z++) {
-                        for (let y = 0; y < yMax; y++) {
-                            this.setBlock(new Vector3(x, y, z), BlockType[map[y]]);
+            switch (Chunk.worldtype.type) {
+                case "flat":
+                    const map = Chunk.worldtype.map;
+                    const yMax = Math.min(map.length, Chunk.chunkSize.y);
+                    for (let x = 0; x < Chunk.chunkSize.x; x++) {
+                        for (let z = 0; z < Chunk.chunkSize.z; z++) {
+                            for (let y = 0; y < yMax; y++) {
+                                this.setBlock(new Vector3(x, y, z), BlockType[map[y]]);
+                            }
                         }
                     }
-                }
-            } else {
-                throw new Error("World type is not supported");
+                    break;
+                case "debug":
+                    break;
+                case "normal":
+                default:
+                    throw new Error("World type is not supported");
             }
 
             this.computeShader.waitForReady().then(() => {

@@ -12,9 +12,8 @@ export class World extends Environment {
     private readonly maxTick = 24000; // 24h in ticks
     protected readonly skyboxSize = 10; // in blocks
     private _tick = 0; //used to set skycolor
-    public static readonly renderDistance = 2; // in blocks
+    public static readonly renderDistance = 5; // in blocks
     private day = 0;
-    private WorldType?: { type: "flat", map: BlockType[] } | { type: "normal", noise: "SimplexPerlin3DBlock" };
     private chunksBuffer: Record<string, Chunk> = {}; // 2D array of chunks
     private readonly knownSkyColor = {
         0: new Color3(0.447, 0.616, 0.929),
@@ -120,7 +119,7 @@ export class World extends Environment {
     loadTerrain(): void {
         console.log("loadTerrain");
         this.scene.getEngine().hideLoadingUI();
-        if (this.WorldType?.type === "flat") {
+        if (Chunk.worldtype.type === "flat") {
             this.loadChunkwithinRenderDistance();
             // const x = 0;
             // const z = 0;
@@ -145,7 +144,12 @@ export class World extends Environment {
         console.log("loadEnvironment", worldtype ? "flat" : "normal");
         worldtype = worldtype || 1;
         // worldtype should be 1 for flat world, 2 for normal world
-        this.WorldType = worldtype == 2 ? { type: "normal", noise: "SimplexPerlin3DBlock" } : {
+        Block.generateTextureAtlas(this.scene);
+        if (this.seed == 0) {
+            await this.loadDebugEnvironment();
+            return;
+        }
+        Chunk.worldtype = worldtype == 2 ? { type: "normal" } : {
             type: "flat",
             map: ["bedrock", "dirt", "dirt", "grass_block"]
         };
@@ -160,7 +164,9 @@ export class World extends Environment {
     }
 
     async loadDebugEnvironment() {
-        // Chunk.debugChunk(this.scene);
+        this.chunksBuffer["0_0"] = Chunk.debugChunk(this.scene);
+        this.chunkGenerationQueue.push(this.chunksBuffer["0_0"]);
+        this.processChunkQueue();
     }
 
     setupLight(): void {
@@ -247,8 +253,7 @@ export class World extends Environment {
         if (!nextChunk) return;
 
         this.activeJobs++;
-
-        nextChunk.populate(this.WorldType).then(() => {
+        nextChunk.populate().then(() => {
             this.activeJobs--;
             this.processChunkQueue();
         });
