@@ -147,7 +147,7 @@ export class World extends Environment {
         // worldtype should be 1 for flat world, 2 for normal world
         this.WorldType = worldtype == 2 ? { type: "normal", noise: "SimplexPerlin3DBlock" } : {
             type: "flat",
-            map: ["grass_block", "grass_block"]
+            map: ["bedrock", "dirt", "dirt", "grass_block"]
         };
 
         Block.generateTextureAtlas(this.scene);

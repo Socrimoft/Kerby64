@@ -44,11 +44,19 @@ const normals = array<vec3<i32>, 6>(
     vec3<i32>(0, 0, -1) // -Z
 );
 
-const uvs = array<vec2<f32>, 4>(
-    vec2<f32>(0, 1),
-    vec2<f32>(0, 0),
-    vec2<f32>(1, 0),
-    vec2<f32>(1, 1)
+const faceUVs = array<array<vec2<f32>, 4>, 6>(
+    // +X
+    array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0)),
+    // -X
+    array<vec2<f32>, 4>(vec2<f32>(0, 0), vec2<f32>(0, 1), vec2<f32>(1, 1), vec2<f32>(1, 0)),
+    // +Y
+    array<vec2<f32>, 4>(vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0), vec2<f32>(1, 0)),
+    // -Y
+    array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0)),
+    // +Z
+    array<vec2<f32>, 4>(vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0), vec2<f32>(1, 0)),
+    // -Z
+    array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(0, 0), vec2<f32>(0, 1), vec2<f32>(1, 1))
 );
 
 const tile_size: f32 = 16.0;
@@ -83,9 +91,8 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
             for (var v: u32 = 0u; v < 4u; v++) {
                 vertexBuffer[vertexIndex + v].position = position + vertices[face][v];
                 vertexBuffer[vertexIndex + v].normal = vec3<f32>(normal);
-                let uvx = (tileOffset.x / atlasSize.x) + (uvs[v].x / tile_size);
-                let uvy = 1 - ((tileOffset.y / atlasSize.y) + (uvs[v].y / tile_size));
-                vertexBuffer[vertexIndex + v].uv = vec2<f32>(uvx, uvy);
+                let uv = tileOffset + faceUVs[face][v] * tile_size;
+                vertexBuffer[vertexIndex + v].uv = vec2<f32>(uv.x / atlasSize.x, 1 - uv.y / atlasSize.y);
             }
 
             indexBuffer[indexIndex] = vertexIndex + 0u;

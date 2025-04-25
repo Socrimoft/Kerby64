@@ -42,13 +42,28 @@ export class Block {
 
         for (let i = 1; i < blockTypeCount; i++) {
             const filelist = blockList[blockTypeList[i]];
+            const color = this.getFaceColors(blockTypeList[i]);
 
             // Draw each image onto the canvas
             filelist.map(file => Block.rootURI + file).forEach((imgUrl, index) => {
                 let image = new Image();
                 image.src = imgUrl;
                 image.onload = () => {
-                    this.atlas.getContext().drawImage(image, index * 16, i * 16, 16, 16); // Adjust placement on canvas
+                    const dx = index * 16;
+                    const dy = i * 16;
+                    
+                    this.atlas.getContext().drawImage(image, dx, dy, 16, 16); // Adjust placement on canvas
+
+                    const imageData = this.atlas.getContext().getImageData(dx, dy, 16, 16);
+
+                    for (let j = 0; j < imageData.data.length; j += 4) {
+                        imageData.data[j] *= color[index].r;
+                        imageData.data[j + 1] *= color[index].g;
+                        imageData.data[j + 2] *= color[index].b;
+                    }
+
+                    this.atlas.getContext().putImageData(imageData, dx, dy);
+
                     this.atlas.update(undefined, undefined, true);
                 };
             });
@@ -77,30 +92,30 @@ export class Block {
         switch (key) {
             case "oak_leaves":
                 return [
-                    new Color4(0, 0.48, 0, 1), // Left face
-                    new Color4(0, 0.48, 0, 1), // Right face
-                    new Color4(0, 0.48, 0, 1), // Front face
-                    new Color4(0, 0.48, 0, 1), // Back face
-                    new Color4(0, 0.48, 0, 1), // Bottom face
-                    new Color4(0, 0.48, 0, 1), // Top face
+                    new Color4(0, 0.48, 0, 1), // +X
+                    new Color4(0, 0.48, 0, 1), // -X
+                    new Color4(0, 0.48, 0, 1), // +Y
+                    new Color4(0, 0.48, 0, 1), // -Y
+                    new Color4(0, 0.48, 0, 1), // +Z
+                    new Color4(0, 0.48, 0, 1), // -Z
                 ];
             case "grass_block":
                 return [
-                    new Color4(1, 1, 1, 1), // Left face
-                    new Color4(1, 1, 1, 1), // Right face
-                    new Color4(1, 1, 1, 1), // Front face
-                    new Color4(1, 1, 1, 1), // Back face
-                    new Color4(0.48, 0.74, 0.42, 1), // Top face
-                    new Color4(1, 1, 1, 1), // Bottom face
+                    new Color4(1, 1, 1, 1),
+                    new Color4(1, 1, 1, 1),
+                    new Color4(0.48, 0.74, 0.42, 1),
+                    new Color4(1, 1, 1, 1),
+                    new Color4(1, 1, 1, 1),
+                    new Color4(1, 1, 1, 1),
                 ];
             default:
                 return [
-                    new Color4(1, 1, 1, 1), // Left face
-                    new Color4(1, 1, 1, 1), // Right face
-                    new Color4(1, 1, 1, 1), // Front face
-                    new Color4(1, 1, 1, 1), // Back face
-                    new Color4(1, 1, 1, 1), // Bottom face
-                    new Color4(1, 1, 1, 1), // Top face
+                    new Color4(1, 1, 1, 1),
+                    new Color4(1, 1, 1, 1),
+                    new Color4(1, 1, 1, 1),
+                    new Color4(1, 1, 1, 1),
+                    new Color4(1, 1, 1, 1),
+                    new Color4(1, 1, 1, 1),
                 ];
         }
     }

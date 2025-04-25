@@ -34,10 +34,10 @@
         ],
         "grass_block": [
             "grass_block_side.png",
+            "grass_block_side.png",
             "grass_block_top.png",
-            "grass_block_side.png",
-            "grass_block_side.png",
             "dirt.png",
+            "grass_block_side.png",
             "grass_block_side.png"
         ],
         "sand": [
@@ -114,24 +114,24 @@
         ],
         "furnace": [
             "furnace_front.png",
-            "furnace_top.png",
-            "furnace_side.png",
             "furnace_side.png",
             "furnace_top.png",
+            "furnace_top.png",
+            "furnace_side.png",
             "furnace_side.png"
         ],
         "pumpkin": [
             "pumpkin_side.png",
-            "pumpkin_top.png",
             "pumpkin_side.png",
+            "pumpkin_top.png",
             "pumpkin_side.png",
             "pumpkin_side.png",
             "pumpkin_side.png"
         ],
         "carved_pumpkin": [
             "carved_pumpkin.png",
-            "pumpkin_top.png",
             "pumpkin_side.png",
+            "pumpkin_top.png",
             "pumpkin_side.png",
             "pumpkin_side.png",
             "pumpkin_side.png"
@@ -148,10 +148,10 @@
         ],
         "oak_log": [
             "oak_log.png",
-            "oak_log_top.png",
-            "oak_log.png",
             "oak_log.png",
             "oak_log_top.png",
+            "oak_log_top.png",
+            "oak_log.png",
             "oak_log.png"
         ],
         "oak_planks": [
@@ -164,18 +164,18 @@
         ],
         "tnt": [
             "tnt_side.png",
+            "tnt_side.png",
             "tnt_top.png",
-            "tnt_side.png",
-            "tnt_side.png",
             "tnt_bottom.png",
+            "tnt_side.png",
             "tnt_side.png"
         ],
         "bookshelf": [
             "bookshelf.png",
-            "oak_planks.png",
-            "bookshelf.png",
             "bookshelf.png",
             "oak_planks.png",
+            "oak_planks.png",
+            "bookshelf.png",
             "bookshelf.png"
         ],
         "coal_block": [
@@ -188,18 +188,18 @@
         ],
         "hay_block": [
             "hay_block_side.png",
-            "hay_block_top.png",
-            "hay_block_side.png",
             "hay_block_side.png",
             "hay_block_top.png",
+            "hay_block_top.png",
+            "hay_block_side.png",
             "hay_block_side.png"
         ],
         "crafting_table": [
             "crafting_table_front.png",
+            "crafting_table_side.png",
             "crafting_table_top.png",
-            "crafting_table_side.png",
-            "crafting_table_side.png",
             "oak_planks.png",
+            "crafting_table_side.png",
             "crafting_table_side.png"
         ]
     },
