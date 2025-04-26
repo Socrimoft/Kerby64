@@ -7,7 +7,7 @@ import { ToonMaterial } from "../materials/toonMaterial";
 export class Chunk extends Mesh {
     static readonly chunkSize = new Vector3(16, 256, 16);
     static readonly blockCount = this.chunkSize.x * this.chunkSize.y * this.chunkSize.z;
-    public blocks = new Uint32Array(Chunk.blockCount);
+    public blocks = new Uint32Array(Chunk.blockCount / 2);
     static worldtype: { type: "flat"; map: (keyof typeof blockList)[] } | { type: "normal" } | { type: "debug" } = { type: "debug" };
 
 
@@ -40,23 +40,14 @@ export class Chunk extends Mesh {
         this.receiveShadows = true;
     }
 
-    public getBlockIndex(position: Vector3) {
-        return position.x + position.y * Chunk.chunkSize.x + position.z * Chunk.chunkSize.x * Chunk.chunkSize.y;
-    }
-
-    public getBlockCoords(index: number): Vector3 {
-        const xSize = Chunk.chunkSize.x;
-        const ySize = Chunk.chunkSize.y;
-
-        const z = Math.floor(index / (xSize * ySize));
-        const y = Math.floor((index % (xSize * ySize)) / xSize);
-        const x = index % xSize;
-
-        return new Vector3(x, y, z);
+    public getBlockU32Index(position: Vector3) {
+        return (position.x + position.y * Chunk.chunkSize.x + position.z * Chunk.chunkSize.x * Chunk.chunkSize.y);
     }
 
     public getBlock(position: Vector3): number {
-        return this.blocks[this.getBlockIndex(position)];
+        const u32Index = this.getBlockU32Index(position);
+        const packed = this.blocks[u32Index >> 1];
+        return (u32Index & 1) == 0 ? packed & 0xFFFF : (packed >> 16) & 0xFFFF;
     }
 
     public setBlock(position: Vector3, type: number): void {
@@ -70,7 +61,9 @@ export class Chunk extends Mesh {
         if (x < 0 || x >= Chunk.chunkSize.x || y < 0 || y >= Chunk.chunkSize.y || z < 0 || z >= Chunk.chunkSize.z) {
             throw new Error(`Position ${position} is out of chunk bounds`);
         }
-        this.blocks[this.getBlockIndex(position)] = type;
+        const u32Index = this.getBlockU32Index(position);
+        const packed = this.blocks[u32Index >> 1];
+        this.blocks[u32Index >> 1] = (u32Index & 1) == 0 ? packed | (type & 0xFFFF) : packed | ((type & 0xFFFF) << 16);
     }
 
     public popBlock(position: Vector3): number | null {

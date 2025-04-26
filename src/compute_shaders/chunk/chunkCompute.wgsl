@@ -15,15 +15,27 @@ struct Vertex {
 @group(0) @binding(4) var<storage, read_write> counterBuffer: atomic<u32>;
 // @group(0) @binding(5) var<storage, read_write> indirectArgsBuffer: array<u32>;
 
-fn getBlockIndex(x: u32, y: u32, z: u32) -> u32 {
+fn getBlockU32Index(x: u32, y: u32, z: u32) -> u32 {
     return x + y * uniforms.chunkSize.x + z * uniforms.chunkSize.x * uniforms.chunkSize.y;
+}
+
+fn getBlockId(x: u32, y: u32, z: u32) -> u32 {
+    let u32Index = getBlockU32Index(x, y, z);
+    let packed = chunkBuffer[u32Index >> 1];
+    if ((u32Index & 1) == 0u) {
+        return packed & 0xFFFFu;
+    }
+    else {
+        let temp = packed >> 16u;
+        return temp & 0xFFFFu;
+    }
 }
 
 fn isFilledBlock(x: u32, y: u32, z: u32) -> bool {
     if (x >= uniforms.chunkSize.x || y >= uniforms.chunkSize.y || z >= uniforms.chunkSize.z) {
         return false;
     }
-    return chunkBuffer[getBlockIndex(x, y, z)] != 0u;
+    return getBlockId(x, y, z) != 0u;
 }
 
 const vertices = array<array<vec3<f32>, 4>, 6>(
@@ -67,7 +79,7 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
         return;
     }
 
-    let blockId = chunkBuffer[getBlockIndex(gid.x, gid.y, gid.z)];
+    let blockId = getBlockId(gid.x, gid.y, gid.z);
 
     let atlasSize = vec2<f32>(tile_size * 6, tile_size * f32(uniforms.chunkSize.w));
 
