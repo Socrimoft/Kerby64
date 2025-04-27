@@ -1,6 +1,7 @@
 import { Color4, DynamicTexture, Engine, Texture } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import blocks from "./blocks.json";
+import { ToonMaterial } from "../materials/toonMaterial";
 
 export { blocks };
 export const notaBlockList = Object.keys(blocks.notABlock) as (keyof typeof blocks.notABlock)[];
@@ -17,6 +18,7 @@ export type BlockType = keyof typeof BlockType;
 export class Block {
     private static readonly rootURI = "./assets/images/world/blocks/";
     private static atlas: DynamicTexture;
+    private static atlasMaterial: ToonMaterial;
     public static tileSize = 32;
     public static size = 1;
     /*
@@ -31,8 +33,18 @@ export class Block {
             new Vector4(1 / 3, 0, 2 / 3, 0.5),  // side 5 faces the negative y direction = bottom face
         ];
     */
+    public static generateMaterial(scene: LevelScene): ToonMaterial {
+        if (!this.atlasMaterial) {
+
+            this.atlasMaterial = new ToonMaterial("block_atlas_material", this.generateTextureAtlas(scene), scene);
+        }
+        return this.atlasMaterial;
+    }
     public static generateTextureAtlas(scene: LevelScene): DynamicTexture {
         // make texture atlas
+        if (this.atlas) {
+            return this.atlas;
+        }
         this.atlas = new DynamicTexture("block_atlas", { width: 6 * this.tileSize, height: this.tileSize * blockTypeCount }, scene, true, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTUREFORMAT_RGBA);
         console.log("atlas size: ", this.atlas.getSize());
 

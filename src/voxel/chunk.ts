@@ -1,7 +1,6 @@
-import { AxesViewer, Constants, DataBuffer, Mesh, Nullable, StorageBuffer, Vector2, Vector3, VertexBuffer, WebGPUEngine } from "@babylonjs/core";
-import { Block, blockList, BlockType, blockTypeList, notaBlockList } from "./block";
+import { Constants, DataBuffer, Mesh, Nullable, Vector2, Vector3, VertexBuffer, WebGPUEngine } from "@babylonjs/core";
+import { Block, blockList, BlockType, blockTypeList } from "./block";
 import { LevelScene } from "../scenes/levelScene";
-import { ToonMaterial } from "../materials/toonMaterial";
 import { ChunkCompute } from "../compute_shaders/chunk/chunkCompute";
 
 export class Chunk extends Mesh {
@@ -20,7 +19,7 @@ export class Chunk extends Mesh {
 
         this.position = new Vector3(coord.x * Chunk.chunkSize.x, 0, coord.y * Chunk.chunkSize.z);
 
-        this.material = new ToonMaterial(`${this.name}_mat`, Block.getTextureAtlas(), this.scene);
+        this.material = Block.generateMaterial(scene);
 
         // cause flickering
         // this.occlusionType = Mesh.OCCLUSION_TYPE_OPTIMISTIC;
