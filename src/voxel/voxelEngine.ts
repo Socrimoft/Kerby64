@@ -1,12 +1,13 @@
 import { TransformNode, Vector2, Vector3, WebGPUEngine } from "@babylonjs/core";
 import { ChunkCompute } from "../compute_shaders/chunk/chunkCompute";
 import { Chunk } from "./chunk";
-import { Block, BlockType } from "./block";
+import { Block } from "./block";
 import { LevelScene } from "../scenes/levelScene";
+import { ChunkGen } from "../compute_shaders/chunk/chunkGen";
 
 export class VoxelEngine {
     private scene: LevelScene;
-    
+
     private world: TransformNode;
 
     public readonly renderDistance = 5;
@@ -17,12 +18,14 @@ export class VoxelEngine {
     private chunkGenerationQueue: Array<Chunk> = [];
 
     private chunkCompute: ChunkCompute;
+    private chunkGen: ChunkGen;
 
     private lastPlayerChunkPosition?: Vector2;
 
-    constructor(scene: LevelScene) {
+    constructor(scene: LevelScene, seed: number) {
         this.scene = scene;
         this.chunkCompute = new ChunkCompute(scene.getEngine() as WebGPUEngine);
+        this.chunkGen = new ChunkGen(scene.getEngine() as WebGPUEngine, seed);
 
         this.world = new TransformNode("world", scene);
     }
@@ -45,7 +48,7 @@ export class VoxelEngine {
             this.processChunkQueue();
         });
 
-        this.processChunkQueue();
+        this.processChunkQueue(); // ??
     }
 
     public loadChunkwithinRenderDistance(playerPosition: Vector3) {
@@ -72,8 +75,8 @@ export class VoxelEngine {
 
         for (const key of visibleKeys) {
             if (!this.chunksBuffer[key]) {
-                const [x, z] = key.split("_").map(Number);
-                const chunk = new Chunk(new Vector2(x, z), this.scene);
+                const chunkCoord = VoxelEngine.keytoChunkPosition(key);
+                const chunk = new Chunk(chunkCoord, this.scene);
                 chunk.setParent(this.world);
                 this.chunksBuffer[key] = chunk;
                 this.enqueueChunk(chunk);
@@ -81,47 +84,38 @@ export class VoxelEngine {
         }
     }
 
+    public static keytoChunkPosition(key: string): Vector2 {
+        return new Vector2(...key.split("_", 2).map(Number));
+    }
+
     private populateChunk(chunk: Chunk): Promise<void> {
         return new Promise((resolve) => {
             // Load a flat world in the chunk
             if (!Chunk.worldtype)
                 throw new Error("World type is not defined");
-            switch (Chunk.worldtype.type) {
-                case "flat":
-                    const map = Chunk.worldtype.map;
-                    const yMax = Math.min(map.length, Chunk.chunkSize.y);
-                    for (let x = 0; x < Chunk.chunkSize.x; x++) {
-                        for (let z = 0; z < Chunk.chunkSize.z; z++) {
-                            for (let y = 0; y < yMax; y++) {
-                                chunk.setBlock(new Vector3(x, y, z), BlockType[map[y]]);
-                            }
-                        }
-                    }
-                    break;
-                case "debug":
-                    break;
-                case "normal":
-                default:
-                    throw new Error("World type is not supported");
-            }
 
-            this.chunkCompute.waitForReady().then(() => {
-                // update geometry
-                this.chunkCompute.updateGeometry(chunk.blocks);
+            // generate the blocks' chunk using the compute shader
+            this.chunkGen.generateChunk(chunk).then((blockBuffer) => {
+                this.chunkCompute.waitForReady().then(() => {
+                    // update geometry
+                    this.chunkCompute.updateGeometry(blockBuffer);
 
-                const webGpuEngine: WebGPUEngine = this.scene.getEngine() as WebGPUEngine;
+                    const webGpuEngine: WebGPUEngine = this.scene.getEngine() as WebGPUEngine;
 
-                webGpuEngine._device.queue.onSubmittedWorkDone().then(() => {
-                    const counterData: Uint32Array = new Uint32Array(1);
-                    webGpuEngine.readFromStorageBuffer(this.chunkCompute.counterBuffer.getBuffer(), 0, 4, counterData, true).then(() => {
-                        chunk.setupBuffers(counterData[0], this.chunkCompute.getVertexBuffer(), this.chunkCompute.getIndexBuffer());
+                    webGpuEngine._device.queue.onSubmittedWorkDone().then(() => {
+                        const counterData: Uint32Array = new Uint32Array(1);
+                        webGpuEngine.readFromStorageBuffer(this.chunkCompute.counterBuffer.getBuffer(), 0, 4, counterData, true).then(() => {
+                            chunk.setupBuffers(counterData[0], this.chunkCompute.getVertexBuffer(), this.chunkCompute.getIndexBuffer());
 
-                        chunk.refreshBoundingInfo();
+                            chunk.refreshBoundingInfo();
 
-                        resolve();
+                            resolve();
+                        });
                     });
                 });
             });
+
+
         });
     }
 

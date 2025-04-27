@@ -9,7 +9,6 @@ export class ChunkCompute extends ComputeShader {
     private engine: WebGPUEngine;
 
     private uniforms: UniformBuffer;
-    private chunkBuffer: StorageBuffer;
     private vertexBuffer: StorageBuffer;
     private indexBuffer: StorageBuffer;
     public counterBuffer: StorageBuffer;
@@ -40,8 +39,6 @@ export class ChunkCompute extends ComputeShader {
 
         this.uniforms.update();
 
-        this.chunkBuffer = new StorageBuffer(this.engine, Chunk.chunkSize.x * Chunk.chunkSize.y * Chunk.chunkSize.z * 4, Constants.BUFFER_CREATIONFLAG_READWRITE);
-
         const maxFacesCount = Chunk.chunkSize.x * Chunk.chunkSize.y * Chunk.chunkSize.z * 6;
 
         const vertexBufferSize = (maxFacesCount * 4 * ChunkCompute.VERTEX_STRUCT_SIZE * 4) / 2;
@@ -56,14 +53,13 @@ export class ChunkCompute extends ComputeShader {
         this.dispatchParamsBuffer.update(new Uint32Array([Chunk.chunkSize.x / this.workGroupSize.x, Chunk.chunkSize.y / this.workGroupSize.y, Chunk.chunkSize.z / this.workGroupSize.z]));
 
         this.setUniformBuffer("uniforms", this.uniforms);
-        this.setStorageBuffer("chunkBuffer", this.chunkBuffer);
         this.setStorageBuffer("vertexBuffer", this.vertexBuffer);
         this.setStorageBuffer("indexBuffer", this.indexBuffer);
         this.setStorageBuffer("counterBuffer", this.counterBuffer);
     }
 
-    public updateGeometry(blocks: Uint32Array): void {
-        this.chunkBuffer.update(blocks);
+    public updateGeometry(blocksBuffer: StorageBuffer): void {
+        this.setStorageBuffer("chunkBuffer", blocksBuffer);
         this.counterBuffer.update(new Uint32Array([0]), 0, 4);
 
         this.dispatchIndirect(this.dispatchParamsBuffer);
