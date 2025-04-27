@@ -3,18 +3,16 @@ import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
 import { ToonMaterial } from "../../materials/toonMaterial";
-import { Block, BlockType, notaBlockList } from "../../world/block";
-import { Chunk } from "../../world/chunk";
+import { Block, BlockType, notaBlockList } from "../../voxel/block";
+import { Chunk } from "../../voxel/chunk";
+import { VoxelEngine } from "../../voxel/voxelEngine";
 
 export class World extends Environment {
-    private readonly blockSize: number = Block.size;
     private readonly dayDuration = 1200000; //20min in ms
     private readonly maxTick = 24000; // 24h in ticks
     protected readonly skyboxSize = 10; // in blocks
     private _tick = 0; //used to set skycolor
-    public static readonly renderDistance = 5; // in blocks
     private day = 0;
-    private chunksBuffer: Record<string, Chunk> = {}; // 2D array of chunks
     private readonly knownSkyColor = {
         0: new Color3(0.447, 0.616, 0.929),
         167: new Color3(0.447, 0.616, 0.929),
@@ -43,13 +41,13 @@ export class World extends Environment {
         24000: new Color3(0.447, 0.616, 0.929)
     }
 
-    private chunkGenerationQueue: Array<Chunk> = [];
-    private activeJobs = 0;
-    private readonly MAX_PARALLEL_JOBS = 3;
+    private voxelEngine: VoxelEngine;
 
     constructor(scene: LevelScene, player: Player, seed?: number) {
         super(scene, player, seed);
         globalThis.world = this; // ??
+
+        this.voxelEngine = new VoxelEngine(scene);
     }
 
     public get tick() {
@@ -99,20 +97,20 @@ export class World extends Environment {
         this.skybox = new Mesh("skybox", this.scene); // should be a TransformNode, but inheritance is in the way
         this.skybox.position = new Vector3(0, 0, 0);
 
-        const sun = MeshBuilder.CreatePlane("sun", { size: World.renderDistance * this.skyboxSize }, this.scene);
+        const sun = MeshBuilder.CreatePlane("sun", { size: this.voxelEngine.renderDistance * this.skyboxSize }, this.scene);
         const sunTexture = new Texture("./assets/images/world/skybox/sun.png", this.scene, undefined, undefined, Texture.NEAREST_SAMPLINGMODE);
         sunTexture.hasAlpha = true;
         sun.material = new ToonMaterial("sunMaterial", sunTexture, this.scene);
         sun.setParent(this.skybox);
-        sun.position = new Vector3(World.renderDistance * Chunk.chunkSize.x, 0, 0);
+        sun.position = new Vector3(this.voxelEngine.renderDistance * Chunk.chunkSize.x, 0, 0);
         sun.rotation.y = -Math.PI / 2;
 
-        const moon = MeshBuilder.CreatePlane("moon", { size: World.renderDistance * this.skyboxSize }, this.scene);
+        const moon = MeshBuilder.CreatePlane("moon", { size: this.voxelEngine.renderDistance * this.skyboxSize }, this.scene);
         const moonTexture = new Texture("./assets/images/world/skybox/sun.png", this.scene, undefined, undefined, Texture.NEAREST_SAMPLINGMODE);
         moonTexture.hasAlpha = true;
         moon.material = new ToonMaterial("moonMaterial", moonTexture, this.scene);
         moon.setParent(this.skybox);
-        moon.position = new Vector3(-World.renderDistance * Chunk.chunkSize.x, 0, 0);
+        moon.position = new Vector3(-this.voxelEngine.renderDistance * Chunk.chunkSize.x, 0, 0);
         moon.rotation.y = Math.PI / 2;
     }
 
@@ -120,7 +118,7 @@ export class World extends Environment {
         console.log("loadTerrain");
         this.scene.getEngine().hideLoadingUI();
         if (Chunk.worldtype.type === "flat") {
-            this.loadChunkwithinRenderDistance();
+            this.voxelEngine.loadChunkwithinRenderDistance(this.player.position);
             // const x = 0;
             // const z = 0;
 
@@ -146,7 +144,7 @@ export class World extends Environment {
         // worldtype should be 1 for flat world, 2 for normal world
         Block.generateTextureAtlas(this.scene);
         if (this.seed == 0) {
-            await this.loadDebugEnvironment();
+            this.voxelEngine.loadDebugEnvironment();
             return;
         }
         Chunk.worldtype = worldtype == 2 ? { type: "normal" } : {
@@ -161,12 +159,6 @@ export class World extends Environment {
         // }
 
         this.loadTerrain();
-    }
-
-    async loadDebugEnvironment() {
-        this.chunksBuffer["0_0"] = Chunk.debugChunk(this.scene);
-        this.chunkGenerationQueue.push(this.chunksBuffer["0_0"]);
-        this.processChunkQueue();
     }
 
     setupLight(): void {
@@ -225,57 +217,14 @@ export class World extends Environment {
 
     afterRenderUpdate(): void {
         //get the player position to know which chunks to load
-        this.loadChunkwithinRenderDistance();
-    }
-
-    loadChunkwithinRenderDistance() {
-        const playerPosition = this.player.position;
-        const playerChunkX = Math.floor(playerPosition.x / Chunk.chunkSize.x);
-        const playerChunkZ = Math.floor(playerPosition.z / Chunk.chunkSize.z);
-        //load the chunks around the player
-        for (let x = playerChunkX - World.renderDistance; x <= playerChunkX + World.renderDistance; x++) {
-            for (let z = playerChunkZ - World.renderDistance; z <= playerChunkZ + World.renderDistance; z++) {
-                const chunkKey = `${x}_${z}`;
-                if (!this.chunksBuffer[chunkKey]) {
-                    this.chunksBuffer[chunkKey] = new Chunk(new Vector2(x, z), this.scene);
-                    this.chunkGenerationQueue.push(this.chunksBuffer[chunkKey]);
-                    this.processChunkQueue();
-                }
-            }
-        }
-    }
-
-    private processChunkQueue() {
-        if (this.activeJobs >= this.MAX_PARALLEL_JOBS || this.chunkGenerationQueue.length === 0)
-            return;
-
-        const nextChunk = this.chunkGenerationQueue.shift();
-        if (!nextChunk) return;
-
-        this.activeJobs++;
-        nextChunk.populate().then(() => {
-            this.activeJobs--;
-            this.processChunkQueue();
-        });
-
-        this.processChunkQueue();
-    }
-
-    public gethighestBlock(x: number, z: number): number {
-        const chunkX = Math.floor(x / this.blockSize / Chunk.chunkSize.x);
-        const chunkZ = Math.floor(z / this.blockSize / Chunk.chunkSize.z);
-        const chunkKey = `${chunkX},${chunkZ}`;
-        if (this.chunksBuffer[chunkKey]) {
-            return this.chunksBuffer[chunkKey].getHighestBlock(x - chunkX * Chunk.chunkSize.x, z - chunkZ * Chunk.chunkSize.z);
-        }
-        return 0;
+        this.voxelEngine.loadChunkwithinRenderDistance(this.player.position);
     }
 
     public async load(worldtype?: number): Promise<void> {
         this.setupLight();
         this.setupSkybox();
         await this.loadEnvironment(worldtype);
-        this.player.position = new Vector3(0, this.gethighestBlock(0, 0), 0);
+        this.player.position = new Vector3(0, this.voxelEngine.gethighestBlock(0, 0), 0);
 
         this.scene.onAfterRenderObservable.add(() => this.afterRenderUpdate());
     }

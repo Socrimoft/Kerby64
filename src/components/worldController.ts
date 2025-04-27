@@ -2,7 +2,7 @@ import { Color4, Nullable, Ray, Vector3, AbstractMesh, PickingInfo, Tools, Logge
 import { InputManager, Key } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Player } from "../actors/player";
-import { Block } from "../world/block";
+import { Block } from "../voxel/block";
 import { WorldGui } from "../gui/worldGui";
 
 export class WorldController extends EntityController {

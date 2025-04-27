@@ -1,23 +1,23 @@
-import { ComputeShader, Constants, DataBuffer, DrawWrapper, Engine, StorageBuffer, UniformBuffer, Vector3, WebGPUDataBuffer, WebGPUDrawContext, WebGPUEngine } from "@babylonjs/core";
+import { ComputeShader, Constants, DataBuffer, StorageBuffer, UniformBuffer, Vector3, WebGPUEngine } from "@babylonjs/core";
 import chunkComputeShader from "./chunkCompute.wgsl";
-import { Block, BlockType, blockTypeCount, blockTypeList } from "../../world/block";
+import { blockTypeCount } from "../../voxel/block";
+import { Chunk } from "../../voxel/chunk";
 
 export class ChunkCompute extends ComputeShader {
-    private engine: WebGPUEngine;
+    public static readonly VERTEX_STRUCT_SIZE = 12;
 
-    private chunkSize: Vector3;
+    private engine: WebGPUEngine;
 
     private uniforms: UniformBuffer;
     private chunkBuffer: StorageBuffer;
-    public vertexBuffer: StorageBuffer;
-    public indexBuffer: StorageBuffer;
+    private vertexBuffer: StorageBuffer;
+    private indexBuffer: StorageBuffer;
     public counterBuffer: StorageBuffer;
     private dispatchParamsBuffer: StorageBuffer;
-    // private indirectDrawBuffer: StorageBuffer;
 
     private workGroupSize: Vector3 = new Vector3(8, 8, 1);
 
-    constructor(engine: WebGPUEngine, chunkSize: Vector3) {
+    constructor(engine: WebGPUEngine) {
         super("chunkCompute", engine, { computeSource: chunkComputeShader }, {
             bindingsMapping:
             {
@@ -26,55 +26,47 @@ export class ChunkCompute extends ComputeShader {
                 "vertexBuffer": { group: 0, binding: 2 },
                 "indexBuffer": { group: 0, binding: 3 },
                 "counterBuffer": { group: 0, binding: 4 },
-                // "indirectArgsBuffer": { group: 0, binding: 5 },
             }
         });
         this.engine = engine;
-        this.chunkSize = chunkSize;
 
         this.uniforms = new UniformBuffer(engine);
-        this.uniforms.updateInt4("chunkSize", this.chunkSize.x, this.chunkSize.y, this.chunkSize.z, blockTypeCount);
+
+        this.uniforms.addUniform("chunkSize", 3);
+        this.uniforms.addUniform("blockTypeCount", 1);
+
+        this.uniforms.updateUInt3("chunkSize", Chunk.chunkSize.x, Chunk.chunkSize.y, Chunk.chunkSize.z);
+        this.uniforms.updateUInt("blockTypeCount", blockTypeCount);
+
         this.uniforms.update();
 
-        this.chunkBuffer = new StorageBuffer(engine, chunkSize.x * chunkSize.y * chunkSize.z * 4, Constants.BUFFER_CREATIONFLAG_READWRITE);
+        this.chunkBuffer = new StorageBuffer(this.engine, Chunk.chunkSize.x * Chunk.chunkSize.y * Chunk.chunkSize.z * 4, Constants.BUFFER_CREATIONFLAG_READWRITE);
 
-        const facesCount = chunkSize.x * chunkSize.y * chunkSize.z * 6;
-        this.vertexBuffer = new StorageBuffer(engine, facesCount * 4 * (4 + 4 + 2 + 2) * 4, Constants.BUFFER_CREATIONFLAG_VERTEX | Constants.BUFFER_CREATIONFLAG_READWRITE); // faces * vertex * struct size * float
-        this.indexBuffer = new StorageBuffer(engine, facesCount * 2 * 3 * 4, Constants.BUFFER_CREATIONFLAG_INDEX | Constants.BUFFER_CREATIONFLAG_READWRITE); // faces * fragment * vertex * u32
+        const maxFacesCount = Chunk.chunkSize.x * Chunk.chunkSize.y * Chunk.chunkSize.z * 6;
+
+        const vertexBufferSize = (maxFacesCount * 4 * ChunkCompute.VERTEX_STRUCT_SIZE * 4) / 2;
+        const indexBufferSize = (maxFacesCount * 2 * 3 * 4) / 2;
+
+        this.vertexBuffer = new StorageBuffer(engine, vertexBufferSize, Constants.BUFFER_CREATIONFLAG_READWRITE); // faces * vertex * struct size * float
+        this.indexBuffer = new StorageBuffer(engine, indexBufferSize, Constants.BUFFER_CREATIONFLAG_READWRITE); // faces * fragment * vertex * u32
+
         this.counterBuffer = new StorageBuffer(engine, 4, Constants.BUFFER_CREATIONFLAG_READWRITE); // u32
 
         this.dispatchParamsBuffer = new StorageBuffer(engine, 3 * 4, Constants.BUFFER_CREATIONFLAG_INDIRECT | Constants.BUFFER_CREATIONFLAG_READWRITE);
-        this.dispatchParamsBuffer.update(new Uint32Array([this.chunkSize.x / this.workGroupSize.x, this.chunkSize.y / this.workGroupSize.y, this.chunkSize.z / this.workGroupSize.z]));
-
-        // this.indirectDrawBuffer = new StorageBuffer(engine, 5 * 4, Constants.BUFFER_CREATIONFLAG_STORAGE | Constants.BUFFER_CREATIONFLAG_INDIRECT);
-
-        // magouille mais rapide
-        // console.log(drawWrapper);
-        // const drawContext: WebGPUDrawContext = drawWrapper?.drawContext as WebGPUDrawContext;
-        // const gpuBuffer = this.indirectDrawBuffer.getBuffer().underlyingResource as GPUBuffer;
-        // drawContext.indirectDrawBuffer = gpuBuffer;
+        this.dispatchParamsBuffer.update(new Uint32Array([Chunk.chunkSize.x / this.workGroupSize.x, Chunk.chunkSize.y / this.workGroupSize.y, Chunk.chunkSize.z / this.workGroupSize.z]));
 
         this.setUniformBuffer("uniforms", this.uniforms);
         this.setStorageBuffer("chunkBuffer", this.chunkBuffer);
         this.setStorageBuffer("vertexBuffer", this.vertexBuffer);
         this.setStorageBuffer("indexBuffer", this.indexBuffer);
         this.setStorageBuffer("counterBuffer", this.counterBuffer);
-        // this.setStorageBuffer("indirectDrawBuffer", this.indirectDrawBuffer);
     }
 
-    public updateGeometry(blocks: Uint32Array, position?: Vector3): void {
-        if (position)
-            this.uniforms.updateVector3("chunkPos", position);
+    public updateGeometry(blocks: Uint32Array): void {
         this.chunkBuffer.update(blocks);
-        // this.counterBuffer.update(new Uint32Array([0]), 0, 4);
-
-        // let blockIndex = 0 + 2 * this.chunkSize.x + 15 * this.chunkSize.x * this.chunkSize.y;
-        // console.log(blocks[blockIndex]);
+        this.counterBuffer.update(new Uint32Array([0]), 0, 4);
 
         this.dispatchIndirect(this.dispatchParamsBuffer);
-        // await this.dispatchWhenReady(this.chunkSize.x / this.workGroupSize.x, this.chunkSize.y / this.workGroupSize.y, this.chunkSize.z / this.workGroupSize.z);
-
-        // TODO: indirect drawing if possible
     }
 
     // magouille
@@ -93,5 +85,13 @@ export class ChunkCompute extends ComputeShader {
                 this.engine.onEndFrameObservable.add(checkReady);
             }
         });
+    }
+
+    public getVertexBuffer(): DataBuffer {
+        return this.vertexBuffer.getBuffer();
+    }
+
+    public getIndexBuffer(): DataBuffer {
+        return this.indexBuffer.getBuffer();
     }
 }

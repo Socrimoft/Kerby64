@@ -1,5 +1,6 @@
 struct Uniforms {
-    chunkSize: vec4<u32>,
+    chunkSize: vec3<u32>,
+    blockTypeCount: u32,
 };
 
 struct Vertex {
@@ -13,7 +14,6 @@ struct Vertex {
 @group(0) @binding(2) var<storage, read_write> vertexBuffer: array<Vertex>;
 @group(0) @binding(3) var<storage, read_write> indexBuffer: array<u32>;
 @group(0) @binding(4) var<storage, read_write> counterBuffer: atomic<u32>;
-// @group(0) @binding(5) var<storage, read_write> indirectArgsBuffer: array<u32>;
 
 fn getBlockU32Index(x: u32, y: u32, z: u32) -> u32 {
     return x + y * uniforms.chunkSize.x + z * uniforms.chunkSize.x * uniforms.chunkSize.y;
@@ -57,18 +57,12 @@ const normals = array<vec3<i32>, 6>(
 );
 
 const faceUVs = array<array<vec2<f32>, 4>, 6>(
-    // +X
-    array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0)),
-    // -X
-    array<vec2<f32>, 4>(vec2<f32>(0, 0), vec2<f32>(0, 1), vec2<f32>(1, 1), vec2<f32>(1, 0)),
-    // +Y
-    array<vec2<f32>, 4>(vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0), vec2<f32>(1, 0)),
-    // -Y
-    array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0)),
-    // +Z
-    array<vec2<f32>, 4>(vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0), vec2<f32>(1, 0)),
-    // -Z
-    array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(0, 0), vec2<f32>(0, 1), vec2<f32>(1, 1))
+    array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0)), // +X
+    array<vec2<f32>, 4>(vec2<f32>(0, 0), vec2<f32>(0, 1), vec2<f32>(1, 1), vec2<f32>(1, 0)), // -X
+    array<vec2<f32>, 4>(vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0), vec2<f32>(1, 0)), // +Y
+    array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0)), // -Y
+    array<vec2<f32>, 4>(vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0), vec2<f32>(1, 0)), // +Z
+    array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(0, 0), vec2<f32>(0, 1), vec2<f32>(1, 1)) // -Z
 );
 
 const tile_size: f32 = 32.0;
@@ -81,7 +75,7 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
 
     let blockId = getBlockId(gid.x, gid.y, gid.z);
 
-    let atlasSize = vec2<f32>(tile_size * 6, tile_size * f32(uniforms.chunkSize.w));
+    let atlasSize = vec2<f32>(tile_size * 6, tile_size * f32(uniforms.blockTypeCount));
 
     for (var face: u32 = 0u; face < 6u; face++)
     {

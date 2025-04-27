@@ -1,7 +1,5 @@
-import { Color4, DynamicTexture, Engine, InstancedMesh, Logger, Mesh, MeshBuilder, Nullable, Texture, TransformNode, Vector3, Vector4, VertexBuffer, VertexData } from "@babylonjs/core";
+import { Color4, DynamicTexture, Engine, Texture } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
-import { Chunk } from "./chunk";
-import { ToonMaterial } from "../materials/toonMaterial";
 import blocks from "./blocks.json";
 
 export { blocks };

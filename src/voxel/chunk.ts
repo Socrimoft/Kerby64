@@ -1,8 +1,8 @@
-import { AxesViewer, Color3, DrawWrapper, Engine, Mesh, Nullable, StandardMaterial, Vector2, Vector3, VertexBuffer, WebGPUEngine } from "@babylonjs/core";
+import { AxesViewer, Constants, DataBuffer, Mesh, Nullable, StorageBuffer, Vector2, Vector3, VertexBuffer, WebGPUEngine } from "@babylonjs/core";
 import { Block, blockList, BlockType, blockTypeList, notaBlockList } from "./block";
 import { LevelScene } from "../scenes/levelScene";
-import { ChunkCompute } from "../compute_shaders/chunk/chunkCompute";
 import { ToonMaterial } from "../materials/toonMaterial";
+import { ChunkCompute } from "../compute_shaders/chunk/chunkCompute";
 
 export class Chunk extends Mesh {
     static readonly chunkSize = new Vector3(16, 256, 16);
@@ -10,21 +10,15 @@ export class Chunk extends Mesh {
     public blocks = new Uint32Array(Chunk.blockCount / 2);
     static worldtype: { type: "flat"; map: (keyof typeof blockList)[] } | { type: "normal" } | { type: "debug" } = { type: "debug" };
 
-
     private static _debugChunk: Nullable<Chunk> = null;
 
-    public computeShader: ChunkCompute;
+    public vertexBuffer?: DataBuffer;
+    public indexBuffer?: DataBuffer;
 
     constructor(private coord: Vector2, public scene: LevelScene) {
         super(`${coord.x},${coord.y}`, scene);
 
         this.position = new Vector3(coord.x * Chunk.chunkSize.x, 0, coord.y * Chunk.chunkSize.z);
-
-        this.computeShader = new ChunkCompute(scene.getEngine() as WebGPUEngine, Chunk.chunkSize);
-
-        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.computeShader.vertexBuffer.getBuffer(), VertexBuffer.PositionKind, true, false, 48, false, 0, 3, VertexBuffer.FLOAT, true, true));
-        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.computeShader.vertexBuffer.getBuffer(), VertexBuffer.NormalKind, true, false, 48, false, 16, 3, VertexBuffer.FLOAT, true, true));
-        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.computeShader.vertexBuffer.getBuffer(), VertexBuffer.UVKind, true, false, 48, false, 32, 2, VertexBuffer.FLOAT, true, true));
 
         this.material = new ToonMaterial(`${this.name}_mat`, Block.getTextureAtlas(), this.scene);
 
@@ -32,12 +26,12 @@ export class Chunk extends Mesh {
         // this.occlusionType = Mesh.OCCLUSION_TYPE_OPTIMISTIC;
         // this.occlusionQueryAlgorithmType = Mesh.OCCLUSION_ALGORITHM_TYPE_CONSERVATIVE;
 
-        const axes = new AxesViewer(scene, 3);
-        axes.xAxis.parent = this;
-        axes.yAxis.parent = this;
-        axes.zAxis.parent = this;
-        this.checkCollisions = true;
-        this.receiveShadows = true;
+        // const axes = new AxesViewer(scene, 3);
+        // axes.xAxis.parent = this;
+        // axes.yAxis.parent = this;
+        // axes.zAxis.parent = this;
+        // this.checkCollisions = true;
+        // this.receiveShadows = true;
     }
 
     public getBlockU32Index(position: Vector3) {
@@ -123,60 +117,38 @@ export class Chunk extends Mesh {
         return this.position;
     }
 
-    public populate(): Promise<void> {
-        return new Promise((resolve) => {
-            // Load a flat world in the chunk
-            if (!Chunk.worldtype)
-                throw new Error("World type is not defined");
-            switch (Chunk.worldtype.type) {
-                case "flat":
-                    const map = Chunk.worldtype.map;
-                    const yMax = Math.min(map.length, Chunk.chunkSize.y);
-                    for (let x = 0; x < Chunk.chunkSize.x; x++) {
-                        for (let z = 0; z < Chunk.chunkSize.z; z++) {
-                            for (let y = 0; y < yMax; y++) {
-                                this.setBlock(new Vector3(x, y, z), BlockType[map[y]]);
-                            }
-                        }
-                    }
-                    break;
-                case "debug":
-                    break;
-                case "normal":
-                default:
-                    throw new Error("World type is not supported");
-            }
+    public setupBuffers(facesCount: number, vertexBuffer: DataBuffer, indexBuffer: DataBuffer) {
+        this.destroyBuffers();
 
-            this.computeShader.waitForReady().then(() => {
-                // update geometry
-                this.computeShader.updateGeometry(this.blocks);
+        const totalVertices = facesCount * 4;
+        const totalIndices = facesCount * 2 * 3;
 
-                const webGpuEngine: WebGPUEngine = this.scene.getEngine() as WebGPUEngine;
+        const vertexBufferSize = totalVertices * ChunkCompute.VERTEX_STRUCT_SIZE * 4;
+        const indexBufferSize = totalIndices * 4;
 
-                webGpuEngine._device.queue.onSubmittedWorkDone().then(() => {
-                    const counterData: Uint32Array = new Uint32Array(1);
-                    webGpuEngine.readFromStorageBuffer(this.computeShader.counterBuffer.getBuffer(), 0, 4, counterData, true).then(() => {
-                        const totalVertices = counterData[0] * 4; // faceCount * vertices
-                        const totalIndexes = counterData[0] * 2 * 3; // faceCount * fragments * vertices
+        const webGpuEngine: WebGPUEngine = this.scene.getEngine() as WebGPUEngine;
+        this.vertexBuffer = webGpuEngine._createBuffer(vertexBufferSize, Constants.BUFFER_CREATIONFLAG_VERTEX | Constants.BUFFER_CREATIONFLAG_READWRITE);
+        this.indexBuffer = webGpuEngine._createBuffer(indexBufferSize, Constants.BUFFER_CREATIONFLAG_INDEX | Constants.BUFFER_CREATIONFLAG_READWRITE);
 
-                        // debug
-                        // this.computeShader.vertexBuffer.read().then((data) => {
-                        //     const floatArray = new Float32Array(data.buffer);
-                        //     console.log(floatArray);
-                        // });
-                        // this.computeShader.indexBuffer.read().then((data) => {
-                        //     const uintArray = new Uint32Array(data.buffer);
-                        //     console.log(uintArray);
-                        // });
+        webGpuEngine._renderEncoder.copyBufferToBuffer(vertexBuffer.underlyingResource, 0, this.vertexBuffer.underlyingResource, 0, vertexBufferSize);
+        webGpuEngine._renderEncoder.copyBufferToBuffer(indexBuffer.underlyingResource, 0, this.indexBuffer.underlyingResource, 0, indexBufferSize);
 
-                        this.setIndexBuffer(this.computeShader.indexBuffer.getBuffer(), totalVertices, totalIndexes, true);
+        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.vertexBuffer, VertexBuffer.PositionKind, true, false, 48, false, 0, 3, VertexBuffer.FLOAT, true, true));
+        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.vertexBuffer, VertexBuffer.NormalKind, true, false, 48, false, 16, 3, VertexBuffer.FLOAT, true, true));
+        this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.vertexBuffer, VertexBuffer.UVKind, true, false, 48, false, 32, 2, VertexBuffer.FLOAT, true, true));
 
-                        this.refreshBoundingInfo();
+        this.setIndexBuffer(this.indexBuffer, totalVertices, totalIndices, true);
+    }
 
-                        resolve();
-                    });
-                });
-            });
-        });
+    private destroyBuffers() {
+        if (this.vertexBuffer)
+            (this.vertexBuffer.underlyingResource as GPUBuffer).destroy();
+        if (this.indexBuffer)
+            (this.indexBuffer.underlyingResource as GPUBuffer).destroy();
+    }
+
+    public dispose(doNotRecurse?: boolean, disposeMaterialAndTextures?: boolean): void {
+        super.dispose(doNotRecurse, disposeMaterialAndTextures);
+        (this.scene.getEngine() as WebGPUEngine)._device.queue.onSubmittedWorkDone().then(() => this.destroyBuffers());
     }
 }
