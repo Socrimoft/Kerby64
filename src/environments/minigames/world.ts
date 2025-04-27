@@ -1,9 +1,9 @@
-import { Color3, Color4, DirectionalLight, Logger, Mesh, MeshBuilder, Texture, Vector2, Vector3, VertexBuffer } from "@babylonjs/core";
+import { Color3, Color4, DirectionalLight, Mesh, MeshBuilder, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
 import { ToonMaterial } from "../../materials/toonMaterial";
-import { Block, BlockType, notaBlockList } from "../../voxel/block";
+import { Block } from "../../voxel/block";
 import { Chunk } from "../../voxel/chunk";
 import { VoxelEngine } from "../../voxel/voxelEngine";
 
@@ -47,7 +47,7 @@ export class World extends Environment {
         super(scene, player, seed);
         globalThis.world = this; // ??
 
-        this.voxelEngine = new VoxelEngine(scene);
+        this.voxelEngine = new VoxelEngine(scene, this.seed);
     }
 
     public get tick() {
@@ -224,7 +224,7 @@ export class World extends Environment {
         this.setupLight();
         this.setupSkybox();
         await this.loadEnvironment(worldtype);
-        this.player.position = new Vector3(0, this.voxelEngine.gethighestBlock(0, 0), 0);
+        this.player.position = new Vector3(0, this.voxelEngine.gethighestBlock(0, 0) + 2, 0); // + player height
 
         this.scene.onAfterRenderObservable.add(() => this.afterRenderUpdate());
     }

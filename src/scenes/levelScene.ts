@@ -105,9 +105,9 @@ export class LevelScene extends Scene {
                 const worldTypeName = Object.values(worldType)[classicLevel - 1] as string;
                 this.environment = new World(this, this.player, _seed);
                 Logger.Log("loadEnvironment: " + worldTypeName);
+                await this.player.instanciate(playerpos, playerrot, this.input, false);
                 await this.environment.load(classicLevel); // classicLevel is the world type (flat or normal)
                 this.updateNavigatorHistory({ game: "world", worldtype: worldTypeName, seed: this.environment.seed.toString() });
-                await this.player.instanciate(playerpos, playerrot, this.input, false);
                 const controller = new WorldController(this.player, this.input);
                 controller.setupGUI();
                 this.player.addComponent(controller);
