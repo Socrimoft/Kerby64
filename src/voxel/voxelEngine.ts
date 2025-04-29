@@ -1,7 +1,7 @@
 import { TransformNode, Vector2, Vector3, WebGPUEngine } from "@babylonjs/core";
 import { ChunkCompute } from "../compute_shaders/chunk/chunkCompute";
 import { Chunk } from "./chunk";
-import { Block } from "./block";
+import { Block, blockList } from "./block";
 import { LevelScene } from "../scenes/levelScene";
 import { ChunkGen } from "../compute_shaders/chunk/chunkGen";
 
@@ -10,7 +10,7 @@ export class VoxelEngine {
 
     private world: TransformNode;
 
-    public readonly renderDistance = 5;
+    public readonly renderDistance = 12;
     private chunksBuffer: Record<string, Chunk> = {};
 
     private activeJobs = 0;
@@ -29,7 +29,12 @@ export class VoxelEngine {
 
         this.world = new TransformNode("world", scene);
     }
-
+    set worldType(worldtype: { type: "flat"; map: (keyof typeof blockList)[] } | { type: "normal" }) {
+        this.chunkGen.worldType = worldtype;
+    }
+    public get worldType() {
+        return this.chunkGen.worldType as any;
+    }
     private enqueueChunk(chunk: Chunk) {
         this.chunkGenerationQueue.push(chunk);
         this.processChunkQueue();
@@ -90,10 +95,6 @@ export class VoxelEngine {
 
     private populateChunk(chunk: Chunk): Promise<void> {
         return new Promise((resolve) => {
-            // Load a flat world in the chunk
-            if (!Chunk.worldtype)
-                throw new Error("World type is not defined");
-
             // generate the blocks' chunk using the compute shader
             this.chunkGen.generateChunk(chunk).then((blockBuffer) => {
                 this.chunkCompute.waitForReady().then(() => {
@@ -122,16 +123,10 @@ export class VoxelEngine {
     public gethighestBlock(x: number, z: number): number {
         const chunkX = Math.floor(x / Block.size / Chunk.chunkSize.x);
         const chunkZ = Math.floor(z / Block.size / Chunk.chunkSize.z);
-        const chunkKey = `${chunkX},${chunkZ}`;
+        const chunkKey = `${chunkX}_${chunkZ}`;
         if (this.chunksBuffer[chunkKey]) {
             return this.chunksBuffer[chunkKey].getHighestBlock(x - chunkX * Chunk.chunkSize.x, z - chunkZ * Chunk.chunkSize.z);
         }
         return 0;
-    }
-
-    public loadDebugEnvironment() {
-        this.chunksBuffer["0_0"] = Chunk.debugChunk(this.scene);
-        this.chunkGenerationQueue.push(this.chunksBuffer["0_0"]);
-        this.processChunkQueue();
     }
 }

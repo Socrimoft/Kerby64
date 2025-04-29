@@ -1,14 +1,15 @@
-@group(0) @binding(0)
-var<uniform> seed: i32;
-@group(0) @binding(1)
-var<uniform> chunkInfo: vec4<u32>;
-@group(0) @binding(2)
-var<uniform> chunkCoord: vec2<i32>;
-@group(0) @binding(3)
-var<storage, read_write> blockBuffer: array<u32>;
+struct Uniforms {
+    seed: i32,
+    chunkSize: vec3<u32>,
+    chunkCoord: vec2<i32>,
+    worldType: u32,
+};
+@group(0) @binding(0) var<uniform> uniforms: Uniforms;
+@group(0) @binding(1) var<storage, read_write> blockBuffer: array<u32>;
+@group(0) @binding(2) var<storage, read> flatWorldInfoBuffer: array<u32>;
 
 //
-// GLSL modulo functions
+// GLSL modulo function
 fn modVec4(a: vec4f, b: vec4f) -> vec4f {
     return vec4f(trueMod(a.x, b.x), trueMod(a.y, b.y), trueMod(a.z, b.z), trueMod(a.w, b.w));
 }
@@ -23,7 +24,7 @@ fn trueMod(x: f32, y: f32) -> f32 {
 
 // MIT License. © Stefan Gustavson, Munrocket
 fn permute4(x: vec4f) -> vec4f {
-    return modVec4(((x * 34. + 1.) * x + vec4f(f32(seed))), vec4f(289.));
+    return modVec4(((x * 34. + 1.) * x + vec4f(f32(uniforms.seed))), vec4f(289.));
 }
 
 fn taylorInvSqrt4(r: vec4f) -> vec4f {
@@ -155,26 +156,58 @@ fn perlinNoise3(P: vec3f) -> f32 {
 }
 
 fn getBlockU32Index(gid: vec3<u32>) -> u32 {
-    return gid.x + gid.y * chunkInfo.x + gid.z * chunkInfo.x * chunkInfo.y;
+    return gid.x + gid.y * uniforms.chunkSize.x + gid.z * uniforms.chunkSize.x * uniforms.chunkSize.y;
 }
 
-fn setBlockId(coord: vec3<u32>, id: u32) {
-    let u32Index = getBlockU32Index(coord);
-    if ((u32Index & 1) == 0u) {
-        blockBuffer[u32Index >> 1] |= id & 0xFFFFu;
-    }
-    //else {
-    //    blockBuffer[u32Index >> 1] |= id >> 16u;
-    //}
+fn setBlockId(gid: vec3<u32>, id: u32) {
+    let u32Index = getBlockU32Index(gid);
+    blockBuffer[u32Index] = id;
 }
 
 @compute @workgroup_size(8, 1, 8)
 fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
-    let realCoord = vec3f(f32(i32(gid.x) + i32(chunkInfo.x) * chunkCoord.x), f32(gid.y), f32(i32(gid.z) + i32(chunkInfo.z) * chunkCoord.y));
-    let perlinpinpin = perlinNoise3(realCoord);
-    if (perlinpinpin < 0.0) {
-        setBlockId(gid, 0u);
+    if (uniforms.worldType==0u) {
+        if (uniforms.seed==0) {
+            debug(gid);
+            return;
+        }
+        flat(gid);
         return;
     }
-    setBlockId(gid, 1u);
+    normal(gid);
+    return;
+}
+
+fn debug(gid: vec3<u32>) {
+    if (gid.y == 0u) {
+        setBlockId(gid, 2u);
+        return;
+    }
+    if (uniforms.chunkCoord.x==0 && uniforms.chunkCoord.y==0) {
+        setBlockId(gid, 1u);
+        return;
+    }
+    setBlockId(gid, 0u);
+    //blockBuffer[u32Index] = 0xFFFFFFFFu;
+}
+
+fn flat(gid: vec3<u32>) {
+    let u32Index = getBlockU32Index(gid);
+    blockBuffer[u32Index] = (flatWorldInfoBuffer[gid.y >> 1] >> ((gid.y & 1) * 16u))& 0xFFFFu;
+}
+
+fn normal(gid: vec3<u32>) {
+    if (gid.y > 64u) {
+        return;
+    }
+    let x = f32(i32(gid.x * uniforms.chunkSize.x) * uniforms.chunkCoord.x);
+    let y = f32(gid.y);
+    let z = f32(i32(gid.z * uniforms.chunkSize.z) * uniforms.chunkCoord.y);
+    let p = vec3f(x, y*256.0, z)/4096.0;
+    let n = perlinNoise3(p);
+    
+    let u32Index = getBlockU32Index(gid);
+    if (n > 0.0) {
+        blockBuffer[u32Index] = 2u;
+    }
 }

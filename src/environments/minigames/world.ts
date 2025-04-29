@@ -115,9 +115,8 @@ export class World extends Environment {
     }
 
     loadTerrain(): void {
-        console.log("loadTerrain");
         this.scene.getEngine().hideLoadingUI();
-        if (Chunk.worldtype.type === "flat") {
+        if (this.voxelEngine.worldType.type === "flat") {
             this.voxelEngine.loadChunkwithinRenderDistance(this.player.position);
             // const x = 0;
             // const z = 0;
@@ -139,25 +138,15 @@ export class World extends Environment {
     }
 
     async loadEnvironment(worldtype?: number): Promise<void> {
-        console.log("loadEnvironment", worldtype ? "flat" : "normal");
-        worldtype = worldtype || 1;
         // worldtype should be 1 for flat world, 2 for normal world
-        Block.generateTextureAtlas(this.scene);
-        if (this.seed == 0) {
-            this.voxelEngine.loadDebugEnvironment();
-            return;
-        }
-        Chunk.worldtype = worldtype == 2 ? { type: "normal" } : {
+        worldtype = worldtype || 1; // default to flat world
+
+        this.voxelEngine.worldType = worldtype == 2 ? { type: "normal" } : {
             type: "flat",
             map: ["bedrock", "dirt", "dirt", "grass_block"]
         };
 
         Block.generateTextureAtlas(this.scene);
-        // if (this.seed == 0) {
-        //     await this.loadDebugEnvironment();
-        //     return;
-        // }
-
         this.loadTerrain();
     }
 

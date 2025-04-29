@@ -6,8 +6,8 @@ import { ChunkCompute } from "../compute_shaders/chunk/chunkCompute";
 export class Chunk extends Mesh {
     static readonly chunkSize = new Vector3(16, 256, 16);
     static readonly blockCount = this.chunkSize.x * this.chunkSize.y * this.chunkSize.z;
-    public blocks = new Uint32Array(Chunk.blockCount / 2);
-    static worldtype: { type: "flat"; map: (keyof typeof blockList)[] } | { type: "normal" } | { type: "debug" } = { type: "debug" };
+    public blocks = new Uint32Array(Chunk.blockCount);
+    static worldtype: { type: "flat"; map: (keyof typeof blockList)[] } | { type: "normal" };
 
     private static _debugChunk: Nullable<Chunk> = null;
 
@@ -15,22 +15,22 @@ export class Chunk extends Mesh {
     public indexBuffer?: DataBuffer;
 
     constructor(private coord: Vector2, public scene: LevelScene) {
-        super(`${coord.x},${coord.y}`, scene);
+        super(`${coord.x}_${coord.y}`, scene);
 
         this.position = new Vector3(coord.x * Chunk.chunkSize.x, 0, coord.y * Chunk.chunkSize.z);
 
         this.material = Block.generateMaterial(scene);
 
         // cause flickering
-        // this.occlusionType = Mesh.OCCLUSION_TYPE_OPTIMISTIC;
-        // this.occlusionQueryAlgorithmType = Mesh.OCCLUSION_ALGORITHM_TYPE_CONSERVATIVE;
+        //this.occlusionType = Mesh.OCCLUSION_TYPE_STRICT;
+        //this.occlusionQueryAlgorithmType = Mesh.OCCLUSION_ALGORITHM_TYPE_ACCURATE;
 
         // const axes = new AxesViewer(scene, 3);
         // axes.xAxis.parent = this;
         // axes.yAxis.parent = this;
         // axes.zAxis.parent = this;
-        // this.checkCollisions = true;
-        // this.receiveShadows = true;
+        this.checkCollisions = true;
+        this.receiveShadows = true;
     }
 
     public getBlockU32Index(position: Vector3) {
@@ -38,9 +38,7 @@ export class Chunk extends Mesh {
     }
 
     public getBlock(position: Vector3): number {
-        const u32Index = this.getBlockU32Index(position);
-        const packed = this.blocks[u32Index >> 1];
-        return (u32Index & 1) == 0 ? packed & 0xFFFF : (packed >> 16) & 0xFFFF;
+        return this.blocks[this.getBlockU32Index(position)];
     }
 
     public setBlock(position: Vector3, type: number): void {
@@ -55,8 +53,7 @@ export class Chunk extends Mesh {
             throw new Error(`Position ${position} is out of chunk bounds`);
         }
         const u32Index = this.getBlockU32Index(position);
-        const packed = this.blocks[u32Index >> 1];
-        this.blocks[u32Index >> 1] = (u32Index & 1) == 0 ? packed | (type & 0xFFFF) : packed | ((type & 0xFFFF) << 16);
+        this.blocks[u32Index] = type;
     }
 
     public popBlock(position: Vector3): number | null {
@@ -66,42 +63,6 @@ export class Chunk extends Mesh {
             return block;
         }
         return null;
-    }
-
-    static debugChunk(scene: LevelScene): Chunk {
-        if (!Chunk._debugChunk) {
-            Chunk._debugChunk = new Chunk(new Vector2(0, 0), scene);
-            let currentBlockTypeIndex = 1; // to skip air
-            let currentNotBlockTypeIndex = 0;
-            for (let x = 0; x < Chunk.chunkSize.x; x++) {
-                for (let z = 0; z < Chunk.chunkSize.z; z++) {
-                    Chunk._debugChunk.setBlock(new Vector3(x, 0, z), BlockType.grass_block);
-                }
-            }
-            for (let y = 3; y < Chunk.chunkSize.y; y = y + 3) {
-                for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
-                    for (let z = 0; z < Chunk.chunkSize.z; z = z + 3) {
-                        if (currentBlockTypeIndex < blockTypeList.length) {
-                            Chunk._debugChunk.setBlock(new Vector3(x, y, z), currentBlockTypeIndex);
-                            currentBlockTypeIndex++;
-                        }
-                    }
-                }
-            }
-            /*
-            for (let x = 0; x < Chunk.chunkSize.x; x = x + 3) {
-                for (let z = 0; z < Chunk.chunkSize.z; z = z + 3) {
-                    if (currentNotBlockTypeIndex < notaBlockList.length) {
-                        Chunk._debugChunk.addBlock(new Vector3(x, 4, z), notaBlockList[currentNotBlockTypeIndex]);
-                        currentNotBlockTypeIndex++;
-                    }
-                }
-            }*/
-
-            Chunk._debugChunk.setBlock(new Vector3(0, 5, 0), BlockType.grass_block);
-        };
-        console.log("debug chunk populated", Chunk._debugChunk);
-        return Chunk._debugChunk;
     }
 
     getHighestBlock(x: number, z: number): number {
