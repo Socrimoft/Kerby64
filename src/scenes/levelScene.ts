@@ -99,6 +99,9 @@ export class LevelScene extends Scene {
                 break;
 
             case loadableGame.world:
+                if (typeof classicLevel === "string") {
+                    classicLevel = Object.values(worldType).indexOf(classicLevel.toLowerCase()) + 1;
+                }
                 if (!LevelScene.isWorldTypeValid(classicLevel)) {
                     classicLevel = worldType.flat;
                 }
