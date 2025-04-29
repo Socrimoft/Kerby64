@@ -46,7 +46,6 @@ export class Block {
             return this.atlas;
         }
         this.atlas = new DynamicTexture("block_atlas", { width: 6 * this.tileSize, height: this.tileSize * blockTypeCount }, scene, true, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTUREFORMAT_RGBA);
-        console.log("atlas size: ", this.atlas.getSize());
 
         for (let i = 1; i < blockTypeCount; i++) {
             const filelist = blockList[blockTypeList[i]];

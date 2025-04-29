@@ -35,7 +35,6 @@ export class Game {
     constructor() {
         this.canvas = this.createCanvas();
         this.engine = this.createEngine();
-        console.log(this.engine.hostInformation);
         this.engine.loadingScreen = new KerbyLoadingScreen("");
         if (process.env.NODE_ENV === "development") {
             Logger.LogLevels = Logger.AllLogLevel; // all logs

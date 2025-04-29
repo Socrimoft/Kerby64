@@ -126,8 +126,6 @@ export class WorldController extends EntityController {
             this.input.isWorldPlaying = false;
             this.gui.PauseMenuVisibility = true;
             this.input.inputMap[Key.Escape] = false;
-
-            console.log("pause menu opened");
         }
     }
 
