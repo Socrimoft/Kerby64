@@ -58,7 +58,7 @@ export class ChunkCompute extends ComputeShader {
         this.setStorageBuffer("counterBuffer", this.counterBuffer);
     }
 
-    public updateGeometry(blocksBuffer: StorageBuffer): void {
+    public updateGeometry(blocksBuffer: DataBuffer): void {
         this.setStorageBuffer("chunkBuffer", blocksBuffer);
         this.counterBuffer.update(new Uint32Array([0]), 0, 4);
 

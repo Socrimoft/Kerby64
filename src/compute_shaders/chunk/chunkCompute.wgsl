@@ -21,14 +21,7 @@ fn getBlockU32Index(x: u32, y: u32, z: u32) -> u32 {
 
 fn getBlockId(x: u32, y: u32, z: u32) -> u32 {
     let u32Index = getBlockU32Index(x, y, z);
-    let packed = chunkBuffer[u32Index >> 1];
-    if ((u32Index & 1) == 0u) {
-        return packed & 0xFFFFu;
-    }
-    else {
-        let temp = packed >> 16u;
-        return temp & 0xFFFFu;
-    }
+    return chunkBuffer[u32Index];
 }
 
 fn isFilledBlock(x: u32, y: u32, z: u32) -> bool {
@@ -57,11 +50,11 @@ const normals = array<vec3<i32>, 6>(
 );
 
 const faceUVs = array<array<vec2<f32>, 4>, 6>(
-    array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0)), // +X
+    array<vec2<f32>, 4>(vec2<f32>(0, 0), vec2<f32>(0, 1), vec2<f32>(1, 1), vec2<f32>(1, 0)), // +X
     array<vec2<f32>, 4>(vec2<f32>(0, 0), vec2<f32>(0, 1), vec2<f32>(1, 1), vec2<f32>(1, 0)), // -X
     array<vec2<f32>, 4>(vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0), vec2<f32>(1, 0)), // +Y
     array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0)), // -Y
-    array<vec2<f32>, 4>(vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0), vec2<f32>(1, 0)), // +Z
+    array<vec2<f32>, 4>(vec2<f32>(1, 1), vec2<f32>(0, 1), vec2<f32>(0, 0), vec2<f32>(1, 0)), // +Z TODO: fix +Z
     array<vec2<f32>, 4>(vec2<f32>(1, 0), vec2<f32>(0, 0), vec2<f32>(0, 1), vec2<f32>(1, 1)) // -Z
 );
 
