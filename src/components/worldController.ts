@@ -2,7 +2,7 @@ import { Color4, Nullable, Ray, Vector3, AbstractMesh, PickingInfo, Tools, Logge
 import { InputManager, Key } from "../inputManager";
 import { EntityController } from "./entityController";
 import { Player } from "../actors/player";
-import { Block } from "../world/block";
+import { Block } from "../voxel/block";
 import { WorldGui } from "../gui/worldGui";
 
 export class WorldController extends EntityController {
@@ -49,8 +49,8 @@ export class WorldController extends EntityController {
             else
                 this.isJumping = false;
         }
-        else
-            this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
+        // else
+        //     this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
     }
 
     private moveBeforeRender(deltaTime: number) {
@@ -126,8 +126,6 @@ export class WorldController extends EntityController {
             this.input.isWorldPlaying = false;
             this.gui.PauseMenuVisibility = true;
             this.input.inputMap[Key.Escape] = false;
-
-            console.log("pause menu opened");
         }
     }
 

@@ -35,7 +35,6 @@ export class Game {
     constructor() {
         this.canvas = this.createCanvas();
         this.engine = this.createEngine();
-        console.log(this.engine.hostInformation);
         this.engine.loadingScreen = new KerbyLoadingScreen("");
         if (process.env.NODE_ENV === "development") {
             Logger.LogLevels = Logger.AllLogLevel; // all logs
@@ -105,13 +104,16 @@ export class Game {
         return this.canvas;
     }
     private createEngine(): GameEngine {
+        let engine: GameEngine;
         if (allowWebGPU && navigator.gpu) { // should be the synchronous variant of "await WebGPUEngine.IsSupportedAsync"
-            return new WebGPUEngine(this.canvas, this.options);
+            engine = new WebGPUEngine(this.canvas, this.options);
+            engine.initAsync().then(() => engine.getCaps().supportComputeShaders = true);
         } else {
             errorHandler(new Error(`WebGPU not supported. Try using a different browser or enable WebGPU in your browser settings.
             Go to https://caniuse.com/webgpu ?`), () => window.open("https://caniuse.com/webgpu", "_blank"));
             return new Engine(this.canvas, false, this.options);
         }
+        return engine;
     }
 
     private async main(): Promise<void> {

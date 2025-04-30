@@ -57,7 +57,6 @@ export class InputManager extends MouseManager {
         }));
         document.addEventListener("pointerlockchange", () => {
             this.isPointerLocked = document.pointerLockElement === this.canvas
-            console.log(`Pointer lock changed: ${this.isPointerLocked}`);
             if (!this.isPointerLocked) {
                 this.inputMap[Key.Escape] = true;
             }

@@ -1,21 +1,18 @@
-import { Color3, Color4, DirectionalLight, Logger, Mesh, MeshBuilder, Texture, Vector2, Vector3, VertexBuffer } from "@babylonjs/core";
+import { Color3, Color4, DirectionalLight, Mesh, MeshBuilder, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { LevelScene } from "../../scenes/levelScene";
 import { ToonMaterial } from "../../materials/toonMaterial";
-import { Block, BlockType, notaBlockList } from "../../world/block";
-import { Chunk } from "../../world/chunk";
+import { Block } from "../../voxel/block";
+import { Chunk } from "../../voxel/chunk";
+import { VoxelEngine } from "../../voxel/voxelEngine";
 
 export class World extends Environment {
-    private readonly blockSize: number = Block.size;
     private readonly dayDuration = 1200000; //20min in ms
     private readonly maxTick = 24000; // 24h in ticks
     protected readonly skyboxSize = 10; // in blocks
     private _tick = 0; //used to set skycolor
-    public static readonly renderDistance = 2; // in blocks
     private day = 0;
-    private WorldType?: { type: "flat", map: BlockType[] } | { type: "normal", noise: "SimplexPerlin3DBlock" };
-    private chunksBuffer: Record<string, Chunk> = {}; // 2D array of chunks
     private readonly knownSkyColor = {
         0: new Color3(0.447, 0.616, 0.929),
         167: new Color3(0.447, 0.616, 0.929),
@@ -44,10 +41,13 @@ export class World extends Environment {
         24000: new Color3(0.447, 0.616, 0.929)
     }
 
+    private voxelEngine: VoxelEngine;
+
     constructor(scene: LevelScene, player: Player, seed?: number) {
         super(scene, player, seed);
-        Block.scene = scene;
-        globalThis.world = this;
+        globalThis.world = this; // ??
+
+        this.voxelEngine = new VoxelEngine(scene, this.seed);
     }
 
     public get tick() {
@@ -97,28 +97,35 @@ export class World extends Environment {
         this.skybox = new Mesh("skybox", this.scene); // should be a TransformNode, but inheritance is in the way
         this.skybox.position = new Vector3(0, 0, 0);
 
-        const sun = MeshBuilder.CreatePlane("sun", { size: World.renderDistance * this.skyboxSize }, this.scene);
+        const sun = MeshBuilder.CreatePlane("sun", { size: this.voxelEngine.renderDistance * this.skyboxSize }, this.scene);
         const sunTexture = new Texture("./assets/images/world/skybox/sun.png", this.scene, undefined, undefined, Texture.NEAREST_SAMPLINGMODE);
         sunTexture.hasAlpha = true;
         sun.material = new ToonMaterial("sunMaterial", sunTexture, this.scene);
         sun.setParent(this.skybox);
-        sun.position = new Vector3(World.renderDistance * Chunk.chunkSize.x, 0, 0);
+        sun.position = new Vector3(this.voxelEngine.renderDistance * Chunk.chunkSize.x, 0, 0);
         sun.rotation.y = -Math.PI / 2;
 
-        const moon = MeshBuilder.CreatePlane("moon", { size: World.renderDistance * this.skyboxSize }, this.scene);
+        const moon = MeshBuilder.CreatePlane("moon", { size: this.voxelEngine.renderDistance * this.skyboxSize }, this.scene);
         const moonTexture = new Texture("./assets/images/world/skybox/sun.png", this.scene, undefined, undefined, Texture.NEAREST_SAMPLINGMODE);
         moonTexture.hasAlpha = true;
         moon.material = new ToonMaterial("moonMaterial", moonTexture, this.scene);
         moon.setParent(this.skybox);
-        moon.position = new Vector3(-World.renderDistance * Chunk.chunkSize.x, 0, 0);
+        moon.position = new Vector3(-this.voxelEngine.renderDistance * Chunk.chunkSize.x, 0, 0);
         moon.rotation.y = Math.PI / 2;
     }
 
-    async loadTerrain(): Promise<void> {
-        Logger.Log("loadTerrain");
+    loadTerrain(): void {
         this.scene.getEngine().hideLoadingUI();
-        if (this.WorldType?.type === "flat") {
-            let promises = await this.loadChunkwithinRenderDistance();
+        if (this.voxelEngine.worldType.type === "flat") {
+            this.voxelEngine.loadChunkwithinRenderDistance(this.player.position);
+            // const x = 0;
+            // const z = 0;
+
+            // const chunkKey = `${x}_${z}`;
+            // if (!this.chunksBuffer[chunkKey]) {
+            //     this.chunksBuffer[chunkKey] = new Chunk(new Vector2(x, z), this.scene);
+            //     this.chunksBuffer[chunkKey].populate(this.WorldType);
+            // }
 
         } /*else if (this.WorldType?.noise === "SimplexPerlin3DBlock") {
             const noise = new SimplexPerlin3DBlock(this.scene, { frequency: 0.1 });
@@ -131,22 +138,16 @@ export class World extends Environment {
     }
 
     async loadEnvironment(worldtype?: number): Promise<void> {
-        Block.makeRuntimeMaterialBuffer();
-        Block.makeRuntimeMeshBuffer();
-        if (this.seed == 0) {
-            await this.loadDebugEnvironment();
-            return;
-        }
-        worldtype = worldtype || 1;
         // worldtype should be 1 for flat world, 2 for normal world
-        this.WorldType = worldtype == 2 ? { type: "normal", noise: "SimplexPerlin3DBlock" } : {
+        worldtype = worldtype || 1; // default to flat world
+
+        this.voxelEngine.worldType = worldtype == 2 ? { type: "normal" } : {
             type: "flat",
-            map: ["bedrock", "dirt"]
+            map: ["bedrock", "dirt", "dirt", "grass_block"]
         };
-        await this.loadTerrain();
-    }
-    async loadDebugEnvironment() {
-        this.chunksBuffer["0,0"] = await Chunk.debugChunk(this.scene);
+
+        Block.generateTextureAtlas(this.scene);
+        this.loadTerrain();
     }
 
     setupLight(): void {
@@ -201,61 +202,19 @@ export class World extends Environment {
             this.day++;
         }
         this.updateSky();
-
     }
+
     afterRenderUpdate(): void {
         //get the player position to know which chunks to load
-        Logger.Log(`afterRenderUpdate ${this.player.position}`);
-        this.loadChunkwithinRenderDistance();
-
+        this.voxelEngine.loadChunkwithinRenderDistance(this.player.position);
     }
-    async loadChunkwithinRenderDistance(): Promise<Promise<Vector2>[]> {
-        const playerPosition = this.player.position;
-        const playerChunkX = Math.floor(playerPosition.x / this.blockSize);
-        const playerChunkZ = Math.floor(playerPosition.z / this.blockSize);
-        let promises: Promise<Vector2>[] = [];
-        //load the chunks around the player
-        for (let x = playerChunkX - World.renderDistance; x <= playerChunkX + World.renderDistance; x++) {
-            for (let z = playerChunkZ - World.renderDistance; z <= playerChunkZ + World.renderDistance; z++) {
-                const chunkKey = `${x}_${z}`;
-                if (!this.chunksBuffer[chunkKey]) {
-                    this.chunksBuffer[chunkKey] = new Chunk(new Vector2(x, z), this.scene);
-                    this.chunksBuffer[chunkKey].populate(this.WorldType);
-                    promises.push(this.chunksBuffer[chunkKey].populateMesh());
-                }
-            }
-        }
-        return promises;
-    }
-    public gethighestBlock(x: number, z: number): number {
-        const chunkX = Math.floor(x / this.blockSize / Chunk.chunkSize.x);
-        const chunkZ = Math.floor(z / this.blockSize / Chunk.chunkSize.z);
-        const chunkKey = `${chunkX},${chunkZ}`;
-        if (this.chunksBuffer[chunkKey]) {
-            return this.chunksBuffer[chunkKey].getHighestBlock(x - chunkX * Chunk.chunkSize.x, z - chunkZ * Chunk.chunkSize.z);
-        }
-        return 0;
-    }
-
 
     public async load(worldtype?: number): Promise<void> {
         this.setupLight();
         this.setupSkybox();
         await this.loadEnvironment(worldtype);
+        this.player.position = new Vector3(0, this.voxelEngine.gethighestBlock(0, 0) + 2, 0); // + player height
 
-        const pos = new Vector3(0, this.gethighestBlock(0, 0), 0);
-        this.player.position = pos;
-        Logger.Log(`player start position: ${pos}`);
-
-        const kinds = [VertexBuffer.PositionKind, VertexBuffer.NormalKind,
-        VertexBuffer.UVKind, VertexBuffer.ColorKind];
-        Logger.Log("vertexdata oak_leaves:");
-        kinds.forEach((kind) => {
-            Logger.Log([kind, Block.runtimeMeshBuffer["oak_leaves"].getVertexBuffer(kind)]);
-        });
-        Logger.Log("vertexdata long_grass:");
-        kinds.forEach((kind) => {
-            Logger.Log([kind, Block.runtimeMeshBuffer["long_grass"].getVertexBuffer(kind)]);
-        });
+        this.scene.onAfterRenderObservable.add(() => this.afterRenderUpdate());
     }
 }
