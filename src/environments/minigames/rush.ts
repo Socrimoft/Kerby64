@@ -1,8 +1,7 @@
-import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, MeshBuilder, ShadowGenerator, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { ToonMaterial } from "../../materials/toonMaterial";
-import { GameEntity } from "../../actors/gameEntity";
 import { LevelScene } from "../../scenes/levelScene";
 import { Koomba } from "../../actors/koomba";
 
@@ -10,46 +9,44 @@ export class Rush extends Environment {
     private segmentWidth: number = 10;
     private segmentHeight: number = 20;
     private lastSegmentX: number = -this.segmentWidth;
-    private koombas: GameEntity[] = []
-
-    constructor(scene: LevelScene, player: Player) {
-        super(scene, player);
-    }
+    private koombas: Koomba[] = [];
+    private groundMaterial?: ToonMaterial;
 
     setupSkybox(): void {
         this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
         const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
         skyboxMaterial.backFaceCulling = false;
-        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/skybox/", this.scene);
+        skyboxMaterial.reflectionTexture = new CubeTexture("./assets/images/rush/skybox/", this.scene);
         skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
         skyboxMaterial.specularColor = new Color3(0, 0, 0);
         this.skybox.material = skyboxMaterial;
+        this.skybox.infiniteDistance = true;
     }
 
     async loadEnvironment(): Promise<void> {
         for (let i = -2; i < 5; i++) {
             this.createGroundSegment(i * this.segmentWidth);
         }
-        //this.koombas[0] = new Koomba(this.scene)
-        //await this.koombas[0].loadEntityAssets(this.getLightDirection());
+        this.koombas[0] = new Koomba(this.scene);
+        await this.koombas[0].instanciate(new Vector3(10, 0, -2.5), new Vector3(0, -Math.PI / 2, 0));
     }
 
     setupLight(): void {
-        this.light = new DirectionalLight("dirLight", new Vector3(1, 1, 0), this.scene);
+        const light = new DirectionalLight("dirLight", new Vector3(1, 1, 0), this.scene);
+        light.intensity = 0.8;
+        light.diffuse = new Color3(1, 0.95, 0.8);
+        light.shadowEnabled;
     }
 
-    getLightDirection(): Vector3 {
-        return this.light ? this.light.direction.normalize() : Vector3.Zero();
-    }
-
-    setLightDirection(direction: Vector3): void {
-        if (this.light)
-            this.light.direction = direction;
+    setupShadows(): void {
+        const shadowGenerator = new ShadowGenerator(1024, this.getLight());
+        shadowGenerator.addShadowCaster(this.player.meshRef, true);
+        this.getGroundSegments().forEach(ground => ground.receiveShadows = true);
     }
 
     private createGroundSegment(x: number): void {
-        const random = Math.random();
+        const random = this.random.random();
 
         if (random < 0.2) {
             this.lastSegmentX = x;
@@ -69,28 +66,26 @@ export class Rush extends Environment {
         ground.position = new Vector3(x + this.segmentWidth / 2, heightOffset - 0.5, 0);
         ground.checkCollisions = true;
 
-        ground.material = new ToonMaterial(new Color3(0.8, 0.5, 0.25), this.getLightDirection(), false, this.scene);
+        ground.material = this.groundMaterial || (this.groundMaterial = new ToonMaterial("groundMaterial", new Color3(0, 0.6, 0), this.scene));
 
         this.pushGroundSegment(ground);
         this.lastSegmentX = x;
-        /*if (this.koombamesh && this.koombanimation) {
-            const koombaCloneX = this.koombamesh.clone("koomba" + x)
-            const koombaController = new EntityController(koombaCloneX, this.koombanimation, this.scene)
-            koombaController.beforeRenderUpdate = () => {
-                koombaCloneX.moveWithCollisions(koombaCloneX.forward.scale(10));
-            }
-            const koomba = new GameEntity(koombaCloneX, this.scene, koombaController)
-            koomba.activateEntityComponents()
-        }*/
+
+        if (this.koombas[0] && random < 0.8) {
+            const koombaClone = this.koombas[0].clone("koomba" + x, new Vector3(x, 20, 0));
+            koombaClone.activateEntityComponents();
+            this.koombas.push(koombaClone);
+            this.koombas.filter((koomba) => koomba.isDisposed);
+        }
     }
 
     beforeRenderUpdate(): void {
-        while (this.lastSegmentX < this.player.mesh.position.x + 50) {
+        while (this.lastSegmentX < this.player.position.x + 50) {
             this.createGroundSegment(this.lastSegmentX + this.segmentWidth);
         }
 
         this.setGroundSegments(this.getGroundSegments().filter(segment => {
-            if (segment.position.x + this.segmentWidth < this.player.mesh.position.x - 30) {
+            if (segment.position.x + this.segmentWidth < this.player.position.x - 30) {
                 segment.dispose();
                 return false;
             }

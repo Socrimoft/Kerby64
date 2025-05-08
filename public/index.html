@@ -3,13 +3,25 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Kerby54</title>
+    <title>Kerby64</title>
+    <script type="module" async>
+        if ('serviceWorker' in navigator && location.protocol === 'https:') {
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            } catch (error) {
+                console.log('Service Worker registration failed:', error);
+            }
+        }
+    </script>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="index.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
+    <div id="LoadingScreen">
+        <div><img src="assets/images/loading.png" alt="Spinning Image" width="100%"></div>
+    </div>
 </body>
 
 </html>

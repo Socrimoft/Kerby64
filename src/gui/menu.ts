@@ -14,11 +14,12 @@ export class Menu {
         this.ui.addControl(backgroundImage);
     }
 
-    public addTextBlock(name: string, text: string, fontSize: number, color: string = "white", top: string | number = 0, verticalAlignment: number = Control.VERTICAL_ALIGNMENT_TOP, horizontalAlignment: number = Control.HORIZONTAL_ALIGNMENT_LEFT, fontFamily?: string): void {
+    public addTextBlock(name: string, text: string, fontSize: number, color: string = "white", top: string | number = 0, left: string | number = 0, verticalAlignment: number = Control.VERTICAL_ALIGNMENT_TOP, horizontalAlignment: number = Control.HORIZONTAL_ALIGNMENT_LEFT, fontFamily?: string): void {
         const textBlock = new TextBlock(name, text);
         textBlock.fontSize = fontSize;
         textBlock.color = color;
         textBlock.top = top;
+        textBlock.left = left;
         textBlock.verticalAlignment = verticalAlignment;
         textBlock.horizontalAlignment = horizontalAlignment;
         if (fontFamily) textBlock.fontFamily = fontFamily;
