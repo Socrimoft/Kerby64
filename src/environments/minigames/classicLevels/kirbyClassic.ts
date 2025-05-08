@@ -25,18 +25,8 @@ export class KirClassic extends Environment {
         this.skybox.infiniteDistance = true;
     }
 
-    setupLight(): DirectionalLight {
-        this.light = new DirectionalLight("dirLight", new Vector3(1, 1, 0), this.scene);
-        return this.light;
-    }
-
-    getLightDirection(): Vector3 {
-        return this.light ? this.light.direction.normalize() : Vector3.Zero();
-    }
-
-    setLightDirection(direction: Vector3): void {
-        if (this.light)
-            this.light.direction = direction;
+    setupLight() {
+        const light = new DirectionalLight("dirLight", new Vector3(1, 1, -1), this.scene);
     }
 
     async loadEnvironment() {

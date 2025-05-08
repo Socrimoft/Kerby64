@@ -31,16 +31,7 @@ export class Classic extends Environment {
     }
 
     setupLight(): void {
-        this.light = this.level?.setupLight() || new DirectionalLight("light", new Vector3(1, 1, -1), this.scene);
-    }
-
-    getLightDirection(): Vector3 {
-        return this.light ? this.light.direction.normalize() : Vector3.Zero();
-    }
-
-    setLightDirection(direction: Vector3): void {
-        if (this.light)
-            this.light.direction = direction;
+        const light = this.level?.setupLight() || new DirectionalLight("light", new Vector3(1, 1, -1), this.scene);
     }
 
     beforeRenderUpdate(): void {

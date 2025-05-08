@@ -3,7 +3,7 @@ import { LevelScene } from "../scenes/levelScene";
 import { Camera2DController } from "../components/camera2DController";
 import { GameEntity } from "./gameEntity";
 import { Component } from "../components/component";
-import { Vector3 } from "@babylonjs/core";
+import { TransformNode, Vector3 } from "@babylonjs/core";
 import { EntityController } from "../components/entityController";
 import { RushController } from "../components/rushController";
 import { BirdController } from "../components/birdController";
@@ -17,7 +17,9 @@ export class Player extends GameEntity {
     static Animation = {
         Idle: "Idle",
         Run: "Run",
-        Jump: "Jump",
+        Jump_Start: "Jump_Start",
+        Jump_Air: "Jump_Air",
+        Jump_Flip: "Jump_Flip",
         Inhale: "Inhale",
         MouthFull: "MouthFull",
         SpitOut: "SpitOut",

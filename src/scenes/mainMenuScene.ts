@@ -1,7 +1,8 @@
-import { Color4, DynamicTexture, FreeCamera, MeshBuilder, Scene, SimplexPerlin3DBlock, StandardMaterial, Texture, UniversalCamera, Vector3 } from "@babylonjs/core";
+import { Color3, Color4, DirectionalLight, DynamicTexture, FreeCamera, LoadAssetContainerAsync, Mesh, MeshBuilder, PBRMaterial, Scene, SimplexPerlin3DBlock, StandardMaterial, Texture, UniversalCamera, Vector3 } from "@babylonjs/core";
 import { Button, Control, Grid, ScrollViewer, StackPanel, TextBlock, Image, InputText, Rectangle } from "@babylonjs/gui";
 import { Game, GameEngine } from "../game";
 import { Menu } from "../gui/menu";
+import { ToonMaterial } from "../materials/toonMaterial";
 
 export class MainMenuScene extends Scene {
     private indexOfClassicMode: number = 3;
@@ -15,9 +16,37 @@ export class MainMenuScene extends Scene {
     }
 
     public async load() {
-        this.clearColor = new Color4(0, 0, 0, 1);
-        let camera = new FreeCamera("camera1", new Vector3(0, 0, 0), this);
-        camera.setTarget(Vector3.Zero());
+        this.clearColor = new Color4(0.8, 0.9, 1, 1);
+        const light = new DirectionalLight("dirLight", new Vector3(0, 1, 1), this);
+        light.intensity = 0.8;
+        light.diffuse = new Color3(1, 0.95, 0.8);
+
+        const container = await LoadAssetContainerAsync("./assets/models/kerby_menuscene.glb", this);
+        const root = (container.rootNodes.length == 1 && container.rootNodes[0] instanceof Mesh) ? container.rootNodes[0] : container.createRootMesh();
+        root.name = "kerby_menuscene";
+
+        container.meshes.forEach((mesh) => {
+            if (!mesh.name.includes("Text") && !mesh.name.includes("Plane") && container && container.textures[0])
+                mesh.material = new ToonMaterial(root.name + "Material", container.textures[0], this);
+            if (container && mesh.material && mesh.material instanceof PBRMaterial)
+                mesh.material = new ToonMaterial(root.name + "Material", mesh.material.albedoColor, this);
+        });
+
+        container.addAllToScene();
+
+        const camera = this.getCameraByName("Camera");
+        if (camera)
+            this.activeCamera = camera;
+
+        const camAnim = container.animationGroups.find(ag => ag.name.toLowerCase().includes("camera"));
+        const kerbyAnim = container.animationGroups.find(ag => ag.name.toLowerCase().includes("kirby"));
+        const text1Anim = container.animationGroups.find(ag => ag.name.toLowerCase().includes("text.001"));
+        const text2Anim = container.animationGroups.find(ag => ag.name.toLowerCase().includes("text.008"));
+
+        camAnim?.play(false);
+        kerbyAnim?.play(false);
+        text1Anim?.play(false);
+        text2Anim?.play(false);
 
         this.createMainMenu();
     }
@@ -45,7 +74,7 @@ export class MainMenuScene extends Scene {
     private createMainMenu(): void {
         const guiMenu = new Menu("menu", 720);
 
-        guiMenu.addBackground("backgroundImage", "./assets/images/background.jpg");
+        // guiMenu.addBackground("backgroundImage", "./assets/images/background.jpg");
         this.addGameTitleToMenu(guiMenu);
         guiMenu.addSimpleButton("start", "Start", "20%", "10%", "rgb(255,20,147)", "black", "-10%", "0px", 10, 0, Control.VERTICAL_ALIGNMENT_BOTTOM, Control.HORIZONTAL_ALIGNMENT_CENTER, () => {
             guiMenu.ui.dispose();

@@ -1,4 +1,4 @@
-import { AbstractMesh, AnimationGroup, AssetContainer, DirectionalLight, LoadAssetContainerAsync, Mesh, PBRMaterial, ShaderMaterial, StandardMaterial, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, AnimationGroup, AssetContainer, AxesViewer, DirectionalLight, LoadAssetContainerAsync, Matrix, Mesh, MeshBuilder, PBRMaterial, ShaderMaterial, StandardMaterial, Vector3 } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import { Component } from "../components/component";
 import { ToonMaterial } from "../materials/toonMaterial";
@@ -24,6 +24,21 @@ export class GameEntity {
         this.assets = await LoadAssetContainerAsync(this.baseSourceURI + this.name + ".glb", this.scene);
         const root = (this.assets.rootNodes.length == 1 && this.assets.rootNodes[0] instanceof Mesh) ? this.assets.rootNodes[0] : this.assets.createRootMesh();
         root.name = this.name;
+
+        console.log(root.getBoundingInfo().boundingBox.minimum.y);
+
+        // debug
+        // const axes = new AxesViewer(this.scene, 1);
+        // axes.xAxis.parent = root;
+        // axes.yAxis.parent = root;
+        // axes.zAxis.parent = root;
+
+        // const debugBox = MeshBuilder.CreateBox("debugBox", { size: 1 }, this.scene);
+        // debugBox.parent = root;
+        // debugBox.isVisible = true;
+        // debugBox.material = new StandardMaterial("debugMat", this.scene);
+        // debugBox.material.wireframe = true;
+
 
         this.assets.meshes.forEach((mesh) => {
             if (this.assets && this.assets.textures[0])

@@ -42,7 +42,7 @@ export class WorldController extends EntityController {
 
         if (this.isJumping && this.jumpStartTime) {
             const elapsedTime = (performance.now() - this.jumpStartTime) / 1000;
-            const jumpVelocity = this.jumpSpeed * Math.exp(-this.k * elapsedTime);
+            const jumpVelocity = this.currentJumpSpeed * Math.exp(-this.k * elapsedTime);
 
             if (jumpVelocity > this.jumpThreshold)
                 this.entity.moveWithCollisions(new Vector3(0, jumpVelocity * deltaTime, 0));

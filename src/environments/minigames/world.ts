@@ -152,10 +152,10 @@ export class World extends Environment {
 
     setupLight(): void {
         // sun light
-        this.light = new DirectionalLight("Sun", new Vector3(0, -1, 0), this.scene);
-        this.light.intensity = 0.5;
-        this.light.shadowEnabled = true;
-        this.light.diffuse = new Color3(1, 0.95, 0.8);
+        const light = new DirectionalLight("Sun", new Vector3(0, -1, 0), this.scene);
+        light.intensity = 0.5;
+        light.shadowEnabled = true;
+        light.diffuse = new Color3(1, 0.95, 0.8);
 
         /*
         // moon light
@@ -176,14 +176,6 @@ export class World extends Environment {
         });*/
     }
 
-    getLightDirection(): Vector3 {
-        return this.light ? this.light.direction.normalize() : Vector3.Zero();
-    }
-
-    setLightDirection(direction: Vector3): void {
-        if (this.light)
-            this.light.direction = direction;
-    }
     updateSky(): void {
         this.updateSkyColor();
         this.skybox.rotation.z = this.tick / this.maxTick * 2 * Math.PI;
@@ -191,7 +183,7 @@ export class World extends Environment {
         // light direction according to the sun position
         const sunDirection = new Vector3(Math.sin(this.skybox.rotation.z), Math.cos(this.skybox.rotation.z), 0);
         //(this.scene.lights[1] as DirectionalLight).direction = new Vector3(Math.sin(this.skybox.rotation.z + Math.PI), Math.cos(this.skybox.rotation.z + Math.PI), 0);
-        this.setLightDirection(sunDirection);
+        // this.setLightDirection(sunDirection);
     }
 
     beforeRenderUpdate(): void {

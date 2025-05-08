@@ -1,4 +1,4 @@
-import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, CubeTexture, DirectionalLight, MeshBuilder, ShadowGenerator, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { Player } from "../../actors/player";
 import { ToonMaterial } from "../../materials/toonMaterial";
@@ -33,18 +33,16 @@ export class Rush extends Environment {
     }
 
     setupLight(): void {
-        this.light = new DirectionalLight("dirLight", new Vector3(1, 1, 0), this.scene);
-        this.light.intensity = 0.8;
-        this.light.diffuse = new Color3(1, 0.95, 0.8);
+        const light = new DirectionalLight("dirLight", new Vector3(1, 1, 0), this.scene);
+        light.intensity = 0.8;
+        light.diffuse = new Color3(1, 0.95, 0.8);
+        light.shadowEnabled;
     }
 
-    getLightDirection(): Vector3 {
-        return this.light ? this.light.direction.normalize() : Vector3.Zero();
-    }
-
-    setLightDirection(direction: Vector3): void {
-        if (this.light)
-            this.light.direction = direction;
+    setupShadows(): void {
+        const shadowGenerator = new ShadowGenerator(1024, this.getLight());
+        shadowGenerator.addShadowCaster(this.player.meshRef, true);
+        this.getGroundSegments().forEach(ground => ground.receiveShadows = true);
     }
 
     private createGroundSegment(x: number): void {

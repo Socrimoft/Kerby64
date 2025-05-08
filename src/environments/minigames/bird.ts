@@ -35,16 +35,7 @@ export class Bird extends Environment {
     }
 
     setupLight(): void {
-        this.light = new DirectionalLight("dirLight", new Vector3(1, 1, -1), this.scene);
-    }
-
-    getLightDirection(): Vector3 {
-        return this.light ? this.light.direction.normalize() : Vector3.Zero();
-    }
-
-    setLightDirection(direction: Vector3): void {
-        if (this.light)
-            this.light.direction = direction;
+        const light = new DirectionalLight("dirLight", new Vector3(1, 1, -1), this.scene);
     }
 
     private createGroundSegment(x: number): void {

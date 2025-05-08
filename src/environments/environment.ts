@@ -9,8 +9,6 @@ export abstract class Environment {
     protected scene: LevelScene;
     protected player: Player;
 
-    protected light?: DirectionalLight;
-
     protected skybox: Mesh;
     protected skyboxSize = 10000;
 
@@ -32,9 +30,9 @@ export abstract class Environment {
     }
 
     public getLight(): DirectionalLight {
-        if (!this.light)
+        if (this.scene.lights.length == 0)
             throw new Error("Cannot return non-instanciated light");
-        return this.light;
+        return this.scene.lights[0] as DirectionalLight;
     }
 
     protected getGroundSegments(): Array<Mesh> {
@@ -68,10 +66,11 @@ export abstract class Environment {
         await this.loadEnvironment(classicLevel);
     }
 
+    public setupShadows(): void {
+    }
+
     abstract setupSkybox(): void;
     abstract loadEnvironment(classicLevel?: number): Promise<void>;
     abstract setupLight(): void;
-    abstract getLightDirection(): Vector3;
-    abstract setLightDirection(direction: Vector3): void;
     abstract beforeRenderUpdate(): void;
 }

@@ -142,6 +142,9 @@ export class LevelScene extends Scene {
         };
 
         this.player.activateEntityComponents();
+
+        this.environment.setupShadows();
+
         this.registerBeforeRender(() => {
             this.environment!.beforeRenderUpdate();
         });

@@ -33,15 +33,14 @@ export class ClassicController extends EntityController {
     public beforeRenderUpdate(): void {
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
 
-        if (this.input.inputMap[Key.Jump] && !this.isJumping && this.remainingJumps) {
+        if (this.input.inputMap[Key.Jump] && !this.isJumping) {
             this.jumpStartTime = performance.now();
             this.isJumping = true;
-            this.remainingJumps--;
         }
 
         if (this.isJumping && this.jumpStartTime) {
             const elapsedTime = (performance.now() - this.jumpStartTime) / 1000;
-            const jumpVelocity = this.jumpSpeed * Math.exp(-this.k * elapsedTime);
+            const jumpVelocity = this.currentJumpSpeed * Math.exp(-this.k * elapsedTime);
 
             if (jumpVelocity > this.jumpThreshold)
                 this.entity.moveWithCollisions(new Vector3(0, jumpVelocity * deltaTime, 0));
@@ -49,7 +48,7 @@ export class ClassicController extends EntityController {
                 this.isJumping = false;
         }
         else
-            this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
+            this.entity.moveWithCollisions(new Vector3(0, this.currentGravity * deltaTime, 0));
 
         if (this.input.inputMap[Key.Right]) {
             this.entity.rotation = new Vector3(0, Math.PI / 2, 0);
@@ -71,7 +70,6 @@ export class ClassicController extends EntityController {
         const hit = this.scene.pickWithRay(ray);
 
         if (hit && hit.pickedMesh && !this.entity.isSameMesh(hit.pickedMesh))
-            this.remainingJumps = 3;
         if (this.entity.position.y < 0) {
             this.entity.dispose();
             Game.Instance.switchToGameOver(this.scene.score)

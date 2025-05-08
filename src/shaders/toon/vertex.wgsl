@@ -15,10 +15,15 @@ attribute uv: vec2<f32>;
 attribute color: vec4<f32>;
 #endif
 
+#ifdef SHADOWS
+uniform transformShadowMatrix: mat4x4<f32>;
+#endif
+
 varying vPositionW: vec3<f32>;
 varying vNormalW: vec3<f32>;
 varying vUV: vec2<f32>;
 varying vColor: vec4<f32>;
+varying vShadowCoord: vec4<f32>;
 
 @vertex
 fn main(input: VertexInputs) -> FragmentInputs {
@@ -47,5 +52,9 @@ fn main(input: VertexInputs) -> FragmentInputs {
     vertexOutputs.vColor = vertexInputs.color;
     #else
     vertexOutputs.vColor = vec4<f32>(1.0, 1.0, 1.0, 1.0);
+    #endif
+
+    #ifdef SHADOWS
+    vertexOutputs.vShadowCoord = uniforms.transformShadowMatrix * vec4<f32>(worldPos.xyz, 1.0);
     #endif
 }
