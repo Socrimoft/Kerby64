@@ -4,6 +4,7 @@ import { EntityController } from "./entityController";
 import { Player } from "../actors/player";
 import { Block } from "../voxel/block";
 import { WorldGui } from "../gui/worldGui";
+import { Game } from "../game";
 
 export class WorldController extends EntityController {
     private input: InputManager;
@@ -28,6 +29,7 @@ export class WorldController extends EntityController {
         this.gui = new WorldGui(player.scene);
         this.gui.makePauseMenu(() => {
             this.input.isWorldPlaying = true;
+            Game.Instance.audio.resume();
         });
 
         globalThis.gui = this.gui; // for debugging purposes
@@ -123,6 +125,7 @@ export class WorldController extends EntityController {
         }
         this.gui.PauseMenuVisibility = !this.input.isPointerLocked;
         if (this.input.inputMap[Key.Escape]) {
+            Game.Instance.audio.pause();
             this.input.isWorldPlaying = false;
             this.gui.PauseMenuVisibility = true;
             this.input.inputMap[Key.Escape] = false;

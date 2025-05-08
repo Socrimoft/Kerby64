@@ -9,6 +9,7 @@ import { GameOverScene } from "./scenes/gameOverScene";
 import toonVertexShader from "./shaders/toon/vertex.wgsl";
 import toonFragmentShader from "./shaders/toon/fragment.wgsl";
 import { KerbyLoadingScreen } from "./loadingScreen";
+import { AudioManager } from "./audio";
 
 enum State {
     MAINMENU,
@@ -28,6 +29,7 @@ export class Game {
     private cutScene!: CutSceneScene;
     private levelScene!: LevelScene;
     private gameOverScene!: GameOverScene;
+    public audio: AudioManager;
 
     private state: State = State.MAINMENU;
     private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true, antialias: true }
@@ -58,6 +60,8 @@ export class Game {
         ShaderStore.ShadersStoreWGSL["toonVertexShader"] = toonVertexShader;
         ShaderStore.ShadersStoreWGSL["toonFragmentShader"] = toonFragmentShader;
         // Animation.AllowMatricesInterpolation = true;
+
+        this.audio = new AudioManager();
 
         this.main();
     }
@@ -121,6 +125,9 @@ export class Game {
             this.engine.compatibilityMode = true; // false breaks level scenes
             await this.engine.initAsync().catch((err) => errorHandler(err));
         }
+
+        await this.audio.init().catch((err) => errorHandler(err));
+        await this.audio.unlock().catch((err) => errorHandler(err));
         let level = Game.urlParams.get("game");
         let classicLevel = Game.urlParams.get("classic") || Game.urlParams.get("worldtype");
         let seed = Game.urlParams.get("seed");
@@ -191,4 +198,4 @@ function errorHandler(error: Error, callback = () => location.reload()) {
     console.error("Error occurred:", error);
     confirm("An error occurred: " + error.message) && callback();
 }
-Game.Instance;
+globalThis.game = Game.Instance;

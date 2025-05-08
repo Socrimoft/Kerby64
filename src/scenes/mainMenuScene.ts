@@ -72,7 +72,9 @@ export class MainMenuScene extends Scene {
     }
 
     private createMainMenu(): void {
+        Game.Instance.audio.play("maintitle", { loop: true });
         const guiMenu = new Menu("menu", 720);
+        guiMenu.ui.onDisposeObservable.add(() => { Game.Instance.audio.stop("maintitle") });
 
         // guiMenu.addBackground("backgroundImage", "./assets/images/background.jpg");
         this.addGameTitleToMenu(guiMenu);
@@ -100,7 +102,11 @@ export class MainMenuScene extends Scene {
     }
 
     private createLevelSelectionMenu(title: string, selection: string[], buttonCallBack: (menu: Menu, i: number) => void): void {
+        const songToPlay = title === "Choose a game to play" ? "gameselect" : "classicmenu";
+        Game.Instance.audio.play(songToPlay, { loop: true });
         const levelSelectMenu = new Menu("levelSelectMenu", 720);
+        levelSelectMenu.ui.onDisposeObservable.add(() => { Game.Instance.audio.stop(songToPlay) });
+
         levelSelectMenu.addTextBlock("title", title, 35, "white", "-45%", Control.VERTICAL_ALIGNMENT_CENTER, Control.HORIZONTAL_ALIGNMENT_CENTER)
 
         const levels = selection;
@@ -157,9 +163,12 @@ export class MainMenuScene extends Scene {
     }
 
     private async createWorldMenu() {
+        Game.Instance.audio.play("worldmenu", { loop: true, startOffset: 27 });
         this.getEngine().displayLoadingUI();
         const worldfont = "WorldOfSpell";
         const gui = new Menu("world_setting", 1920);
+        gui.ui.onDisposeObservable.add(() => { Game.Instance.audio.stop("worldmenu"); });
+
         let isWorldNormal = true;
 
         const backgroundTexture = new DynamicTexture("backgroundTexture", { width: this.canvas.width, height: this.canvas.height }, this, undefined, Texture.NEAREST_SAMPLINGMODE);
@@ -289,6 +298,7 @@ export class MainMenuScene extends Scene {
 
     private switchToCutScene(levelToLoad: number | string, classicLevel?: number, seed?: number): void {
         this.detachControl();
+        Game.Instance.audio.stop("maintitle");
         Game.Instance.switchToCutScene(levelToLoad, classicLevel, seed);
         this.dispose();
     }

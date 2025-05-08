@@ -1,7 +1,7 @@
 import { Color4, FreeCamera, Scene, Vector3 } from "@babylonjs/core";
 import { Control } from "@babylonjs/gui";
 import { Menu } from "../gui/menu";
-import { GameEngine } from "../game";
+import { Game, GameEngine } from "../game";
 
 export class GameOverScene extends Scene {
     constructor(engine: GameEngine) {
@@ -12,7 +12,7 @@ export class GameOverScene extends Scene {
         this.clearColor = new Color4(0, 0, 0, 1);
         let camera = new FreeCamera("camera1", new Vector3(0, 0, 0), this);
         camera.setTarget(Vector3.Zero());
-
+        Game.Instance.audio.play("gameover");
         this.createGameOverMenu(score);
     }
 

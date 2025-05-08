@@ -13,7 +13,9 @@ export class CutSceneScene extends Scene {
         camera.setTarget(Vector3.Zero());
         this.clearColor = new Color4(0, 0, 0, 1);
         // GUI
+        Game.Instance.audio.play("cutscene", { loop: true });
         const cutScene = new Menu("cutscene", 720);
+        cutScene.ui.onDisposeObservable.add(() => { Game.Instance.audio.stop("cutscene") });
         if (typeof game === "string") game = game.toLowerCase();
         switch (game) {
             case 2:

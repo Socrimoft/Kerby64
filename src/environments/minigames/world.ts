@@ -6,6 +6,7 @@ import { ToonMaterial } from "../../materials/toonMaterial";
 import { Block } from "../../voxel/block";
 import { Chunk } from "../../voxel/chunk";
 import { VoxelEngine } from "../../voxel/voxelEngine";
+import { Game } from "../../game";
 
 export class World extends Environment {
     private readonly dayDuration = 1200000; //20min in ms
@@ -208,5 +209,6 @@ export class World extends Environment {
         this.player.position = new Vector3(0, this.voxelEngine.gethighestBlock(0, 0) + 2, 0); // + player height
 
         this.scene.onAfterRenderObservable.add(() => this.afterRenderUpdate());
+        Game.Instance.audio.play("world", { loop: true });
     }
 }
