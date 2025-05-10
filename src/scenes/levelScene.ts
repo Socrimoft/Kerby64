@@ -93,6 +93,8 @@ export class LevelScene extends Scene {
         const playerpos = new Vector3(0, 20, 0);
         const playerrot = new Vector3(0, Math.PI / 2, 0);
 
+        this.input.actualGame = gameToLoad;
+
         switch (gameToLoad) {
             case loadableGame.bird:
                 this.environment = new Bird(this, this.player, _seed);

@@ -7,6 +7,8 @@ export enum Key {
     Left = "q",
     Right = "d",
     Jump = " ",
+    LeftClick = "lClick",
+    RightClick = "rClick",
     Action = "LeftAlt",
     Shift = "Shift",
     Camera = "F5",
@@ -16,14 +18,27 @@ export enum Key {
     Escape = "Escape",
     Chat = "t"
 }
+
+enum Games {
+    none = 0,
+    rush = 1,
+    bird = 2,
+    world = 3,
+    classic = 4
+}
+
 export class InputManager extends MouseManager {
     public MouseMovement = { x: 0, y: 0 };
     private canvas: HTMLCanvasElement;
     public inputMap: { [key in Key]: boolean } = Object.fromEntries(
         Object.values(Key).map((key) => [key, false])
     ) as any;
-    public isWorldPlaying = false;
-    public isPointerLocked = false;
+
+    public isWorldPlaying: boolean = false;
+    public actualGame: Games = Games.none;
+    public isClassicPlaying: boolean = false;
+    public isRushPlaying: boolean = false;
+    public isPointerLocked: boolean = false;
 
     constructor(scene: Scene) {
         super(scene);
@@ -46,7 +61,8 @@ export class InputManager extends MouseManager {
                 case (Key.ScreenShot):  //F2
                 case (Key.Stats):       //F3
                 case (Key.Camera):      //F5
-                    event.sourceEvent.preventDefault();
+                    if (this.isWorldPlaying)
+                        event.sourceEvent.preventDefault();
                 default:
                     this.inputMap[event.sourceEvent.key] = event.sourceEvent.type == "keydown";
                     break;
@@ -70,10 +86,35 @@ export class InputManager extends MouseManager {
                 this.MouseMovement.y += pointerInfo.event.movementY;
             }
         });
-        // Request pointer lock for the canvas
-        this.canvas.addEventListener("click", () => {
-            if (this.isWorldPlaying && !this.isPointerLocked)
-                (this.canvas.requestPointerLock() || Promise.resolve()).catch(() => null);
+
+        // Request pointer lock for the canvas + handle clicks
+        this.canvas.addEventListener("pointerdown", (event) => {
+
+            switch (this.actualGame) {
+                case Games.classic:
+                case Games.rush:
+                    if (event.button === 0)
+                        this.inputMap[Key.LeftClick] = true;
+                    else if (event.button === 2)
+                        this.inputMap[Key.RightClick] = true;
+
+                case Games.world:
+                    if (this.isWorldPlaying && !this.isPointerLocked)
+                        (this.canvas.requestPointerLock() || Promise.resolve()).catch(() => null);
+            };
         });
+
+        this.canvas.addEventListener("pointerup", (event) => {
+            switch (this.actualGame) {
+                case Games.classic:
+                case Games.rush:
+                    if (event.button === 0)
+                        this.inputMap[Key.LeftClick] = false;
+                    else if (event.button === 2)
+                        this.inputMap[Key.RightClick] = false;
+                    break;
+            }
+        });
+
     }
 }

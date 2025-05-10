@@ -15,8 +15,9 @@ export class KirBros extends Environment {
         this.skybox.infiniteDistance = true;
     }
 
-    setupLight(): void {
+    setupLight(): boolean {
         const light = new DirectionalLight("dirLight", new Vector3(1, -1, 1), this.scene);
+        return true;
     }
 
     async loadEnvironment() {

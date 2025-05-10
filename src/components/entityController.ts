@@ -5,7 +5,7 @@ import { Ray, RayHelper, Vector3 } from "@babylonjs/core";
 
 class ExponentialInterpolator {
     public constructor() {
-        
+
     }
 }
 
