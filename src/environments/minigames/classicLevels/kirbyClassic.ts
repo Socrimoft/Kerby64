@@ -1,6 +1,4 @@
 import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3, TransformNode, Mesh } from "@babylonjs/core";
-import { Player } from "../../../actors/player";
-import { LevelScene } from "../../../scenes/levelScene";
 import { Environment } from "../../environment";
 import { ToonMaterial } from "../../../materials/toonMaterial";
 import { Portal } from "../../../actors/portal";
@@ -8,10 +6,6 @@ import { Portal } from "../../../actors/portal";
 export class KirClassic extends Environment {
     private segmentWidth: number = 6;
     private segmentHeight: number = 30;
-
-    constructor(scene: LevelScene, player: Player) {
-        super(scene, player);
-    }
 
     setupSkybox(): void {
         this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
@@ -30,7 +24,6 @@ export class KirClassic extends Environment {
     }
 
     async loadEnvironment() {
-        this.setupLight();
         for (let i = -2; i < 88; i++) {
 
             if (![40, 41, 58, 59].includes(i))

@@ -9,7 +9,7 @@ import { GameOverScene } from "./scenes/gameOverScene";
 import toonVertexShader from "./shaders/toon/vertex.wgsl";
 import toonFragmentShader from "./shaders/toon/fragment.wgsl";
 import { KerbyLoadingScreen } from "./loadingScreen";
-import { AudioManager } from "./audio";
+import { AudioManager } from "./audioManager";
 
 enum State {
     MAINMENU,

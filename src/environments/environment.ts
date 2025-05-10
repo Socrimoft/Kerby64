@@ -61,9 +61,9 @@ export abstract class Environment {
     }
 
     public async load(classicLevel?: number): Promise<void> {
+        await this.loadEnvironment(classicLevel);
         this.setupLight();
         this.setupSkybox();
-        await this.loadEnvironment(classicLevel);
     }
 
     public setupShadows(): void {

@@ -10,8 +10,12 @@ import { BirdController } from "../components/birdController";
 import { RushController } from "../components/rushController";
 import { World } from "../environments/minigames/world";
 import { WorldController } from "../components/worldController";
-import { Classic } from "../environments/minigames/classic";
 import { ClassicController } from "../components/classicController";
+import { KirClassic } from "../environments/minigames/classicLevels/kirbyClassic";
+import { KirCity } from "../environments/minigames/classicLevels/kirbyCity";
+import { KirBros } from "../environments/minigames/classicLevels/kirBros";
+import { KirbyKawaii } from "../environments/minigames/classicLevels/kirbyKawaii";
+import { KirDoom } from "../environments/minigames/classicLevels/kirDoom";
 
 enum loadableGame {
     rush = 1,
@@ -123,8 +127,10 @@ export class LevelScene extends Scene {
                 if (!LevelScene.isClassicLevelValid(classicLevel)) {
                     classicLevel = classicLoadableLevel.classic;
                 }
+                const classicClass = [KirClassic, KirCity, KirBros, KirbyKawaii, KirDoom][classicLevel];
                 const classicLevelName = Object.values(classicLoadableLevel)[classicLevel] as string;
-                this.environment = new Classic(this, this.player, _seed);
+
+                this.environment = new classicClass(this, this.player, _seed);
                 Logger.Log("Loading classic level: " + classicLevelName);
                 await this.environment.load(classicLevel);
                 this.updateNavigatorHistory({ game: "classic", seed: this.environment.seed.toString(), classic: classicLevelName });

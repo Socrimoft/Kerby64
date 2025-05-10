@@ -1,8 +1,6 @@
 import { Color3, CubeTexture, DirectionalLight, MeshBuilder, ShadowGenerator, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
-import { Player } from "../../actors/player";
 import { ToonMaterial } from "../../materials/toonMaterial";
-import { LevelScene } from "../../scenes/levelScene";
 import { Koomba } from "../../actors/koomba";
 
 export class Rush extends Environment {

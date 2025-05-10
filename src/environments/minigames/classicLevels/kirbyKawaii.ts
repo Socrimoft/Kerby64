@@ -1,12 +1,7 @@
 import { Color3, CubeTexture, DirectionalLight, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
-import { Player } from "../../../actors/player";
-import { LevelScene } from "../../../scenes/levelScene";
 import { Environment } from "../../environment";
 
 export class KirbyKawaii extends Environment {
-    constructor(scene: LevelScene, player: Player) {
-        super(scene, player);
-    }
 
     setupSkybox(): void {
         this.skybox.position = new Vector3(0, this.skyboxSize / 8, 0);
