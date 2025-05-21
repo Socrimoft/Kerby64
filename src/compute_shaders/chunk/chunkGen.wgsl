@@ -187,7 +187,7 @@ fn debug(gid: vec3<u32>) {
         setBlockId(gid, 1u);
         return;
     }
-    setBlockId(gid, 0u);
+    setBlockId(gid, 37u);
     //blockBuffer[u32Index] = 0xFFFFFFFFu;
 }
 

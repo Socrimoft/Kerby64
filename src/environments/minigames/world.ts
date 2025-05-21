@@ -113,6 +113,12 @@ export class World extends Environment {
         moon.setParent(this.skybox);
         moon.position = new Vector3(-this.voxelEngine.renderDistance * Chunk.chunkSize.x, 0, 0);
         moon.rotation.y = Math.PI / 2;
+
+        // fog
+        this.scene.fogMode = 1; // FogExp
+        this.scene.fogDensity = 0.01;
+        this.scene.fogStart = 0;
+        this.scene.fogColor = new Color3(0.5, 0.5, 0.5);
     }
 
     loadTerrain(): void {
@@ -200,13 +206,16 @@ export class World extends Environment {
     afterRenderUpdate(): void {
         //get the player position to know which chunks to load
         this.voxelEngine.loadChunkwithinRenderDistance(this.player.position);
+        if (this.tick % 2 === 0)
+            Block.updatewaterTexture();
     }
 
     public async load(worldtype?: number): Promise<void> {
         this.setupLight();
         this.setupSkybox();
         await this.loadEnvironment(worldtype);
-        this.player.position = new Vector3(0, this.voxelEngine.gethighestBlock(0, 0) + 2, 0); // + player height
+        this.player.position = new Vector3(0, 250, 0);
+        //this.player.position = new Vector3(0, this.voxelEngine.gethighestBlock(0, 0) + 2, 0); // + player height
 
         this.scene.onAfterRenderObservable.add(() => this.afterRenderUpdate());
         Game.Instance.audio.play("world", { loop: true });

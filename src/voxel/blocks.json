@@ -316,6 +316,14 @@
             "debug2.png",
             "debug2.png",
             "debug2.png"
+        ],
+        "water": [
+            "water.png",
+            "water.png",
+            "water.png",
+            "water.png",
+            "water.png",
+            "water.png"
         ]
     }
 }

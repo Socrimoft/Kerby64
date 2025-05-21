@@ -61,16 +61,33 @@ export class VoxelEngine {
         const playerChunkZ = Math.floor(playerPosition.z / Chunk.chunkSize.z);
 
         if (this.lastPlayerChunkPosition && this.lastPlayerChunkPosition.x == playerChunkX && this.lastPlayerChunkPosition.y == playerChunkZ)
-            return;
+            return; // no need to update if the player is in the same chunk as before
 
+        // the player has moved to a new chunk
+        // calculate the new chunk coordinates
         this.lastPlayerChunkPosition = new Vector2(playerChunkX, playerChunkZ);
 
         const visibleKeys = new Set<string>();
-        //load the chunks around the player
-        for (let x = playerChunkX - this.renderDistance; x <= playerChunkX + this.renderDistance; x++)
-            for (let z = playerChunkZ - this.renderDistance; z <= playerChunkZ + this.renderDistance; z++)
-                visibleKeys.add(`${x}_${z}`);
+        let currentchunkX = playerChunkX;
+        let currentchunkZ = playerChunkZ;
+        visibleKeys.add(`${currentchunkX}_${currentchunkZ}`);
+        for (let i = 1; i <= this.renderDistance; i++) {
+            visibleKeys.add(`${--currentchunkX}_${currentchunkZ}`);
+            for (let j = 1; j <= 2 * (i - 1) + 1; j++) {
+                visibleKeys.add(`${currentchunkX}_${++currentchunkZ}`);
+            }
+            for (let j = 1; j <= 2 * i; j++) {
+                visibleKeys.add(`${++currentchunkX}_${currentchunkZ}`);
+            }
+            for (let j = 1; j <= 2 * i; j++) {
+                visibleKeys.add(`${currentchunkX}_${--currentchunkZ}`);
+            }
+            for (let j = 1; j <= 2 * i; j++) {
+                visibleKeys.add(`${--currentchunkX}_${currentchunkZ}`);
+            }
+        }
 
+        // remove chunks that are not visible anymore
         for (const key of Object.keys(this.chunksBuffer)) {
             if (!visibleKeys.has(key)) {
                 this.chunksBuffer[key].dispose();
@@ -78,6 +95,7 @@ export class VoxelEngine {
             }
         }
 
+        // compute the chunks that are not loaded yet
         for (const key of visibleKeys) {
             if (!this.chunksBuffer[key]) {
                 const chunkCoord = VoxelEngine.keytoChunkPosition(key);
