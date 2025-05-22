@@ -20,6 +20,7 @@ export class CutSceneScene extends Scene {
         switch (game) {
             case 2:
             case "bird":
+                cutScene.addBackground("cutscene", "assets/images/cutscene/kirbybirdTrasition.png");
                 cutScene.addSimpleButton("next", "Next", "100px", "40px", "rgb(124,252,0)", "black", "-20px", "-60px", 10, 0,
                     Control.VERTICAL_ALIGNMENT_BOTTOM, Control.HORIZONTAL_ALIGNMENT_RIGHT, this.exitCutScene.bind(this));
                 break;
