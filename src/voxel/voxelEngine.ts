@@ -111,40 +111,43 @@ export class VoxelEngine {
         return new Vector2(...key.split("_", 2).map(Number));
     }
 
-    private populateChunk(chunk: Chunk): Promise<void> {
-        return new Promise((resolve) => {
-            // generate the blocks' chunk using the compute shader
-            this.chunkGen.generateChunk(chunk).then((blockBuffer) => {
-                this.chunkCompute.waitForReady().then(() => {
-                    // update geometry
-                    this.chunkCompute.updateGeometry(blockBuffer);
+    private async populateChunk(chunk: Chunk): Promise<void> {
+        // generate the blocks' chunk using the compute shader
+        const blockBuffer = await this.chunkGen.generateChunk(chunk);
 
-                    const webGpuEngine: WebGPUEngine = this.scene.getEngine() as WebGPUEngine;
+        // update the chunk's blocks
+        await blockBuffer.read(0, Chunk.blockCount * 4, chunk.blocks, true);
 
-                    webGpuEngine._device.queue.onSubmittedWorkDone().then(() => {
-                        const counterData: Uint32Array = new Uint32Array(1);
-                        webGpuEngine.readFromStorageBuffer(this.chunkCompute.counterBuffer.getBuffer(), 0, 4, counterData, true).then(() => {
-                            chunk.setupBuffers(counterData[0], this.chunkCompute.getVertexBuffer(), this.chunkCompute.getIndexBuffer());
+        // update mesh geometry
+        const facesCount = await this.chunkCompute.updateGeometry(blockBuffer);
 
-                            chunk.refreshBoundingInfo();
+        chunk.setupBuffers(facesCount, this.chunkCompute.getVertexBuffer(), this.chunkCompute.getIndexBuffer());
+    }
 
-                            resolve();
-                        });
-                    });
-                });
-            });
-
-
-        });
+    public async makeFirstChunk(): Promise<void> {
+        const fakeChunk = new Chunk(new Vector2(this.renderDistance, this.renderDistance), this.scene);
+        const chunk = new Chunk(new Vector2(0, 0), this.scene);
+        fakeChunk.setParent(this.world); // this is a fake chunk to avoid first chunk bug gen
+        chunk.setParent(this.world);
+        this.chunksBuffer["0_0"] = chunk;
+        const fakerenderloop = () => console.log("fake chunk render loop");
+        this.scene.getEngine().runRenderLoop(fakerenderloop); // fake render loop bc waitforReady need a renderloop
+        await this.populateChunk(fakeChunk)
+        await this.populateChunk(chunk)
+        fakeChunk.dispose();
+        this.scene.getEngine().stopRenderLoop(fakerenderloop);
     }
 
     public gethighestBlock(x: number, z: number): number {
         const chunkX = Math.floor(x / Block.size / Chunk.chunkSize.x);
         const chunkZ = Math.floor(z / Block.size / Chunk.chunkSize.z);
         const chunkKey = `${chunkX}_${chunkZ}`;
-        if (this.chunksBuffer[chunkKey]) {
+        if (!this.chunksBuffer[chunkKey]) {
+            // If the chunk is not loaded, we can't get the highest block
+            return Chunk.chunkSize.y - 1; // return the maximum height
+        }
+        else {
             return this.chunksBuffer[chunkKey].getHighestBlock(x - chunkX * Chunk.chunkSize.x, z - chunkZ * Chunk.chunkSize.z);
         }
-        return 0;
     }
 }

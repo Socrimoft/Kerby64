@@ -8,7 +8,7 @@ export class Chunk extends Mesh {
     static readonly blockCount = this.chunkSize.x * this.chunkSize.y * this.chunkSize.z;
     public blocks = new Uint32Array(Chunk.blockCount);
     static worldtype: { type: "flat"; map: (keyof typeof blockList)[] } | { type: "normal" };
-
+    public ready = false;
     private static _debugChunk: Nullable<Chunk> = null;
 
     public vertexBuffer?: DataBuffer;
@@ -67,7 +67,7 @@ export class Chunk extends Mesh {
 
     getHighestBlock(x: number, z: number): number {
         let y = Chunk.chunkSize.y - 1;
-        while (y > 0 && this.getBlock(new Vector3(x, y, z))) {
+        while (y > 0 && !this.getBlock(new Vector3(x, y, z))) {
             y--;
         }
         return y;
@@ -98,6 +98,9 @@ export class Chunk extends Mesh {
         this.setVerticesBuffer(new VertexBuffer(this.scene.getEngine(), this.vertexBuffer, VertexBuffer.UVKind, true, false, 48, false, 32, 2, VertexBuffer.FLOAT, true, true));
 
         this.setIndexBuffer(this.indexBuffer, totalVertices, totalIndices, true);
+
+        this.refreshBoundingInfo();
+        this.ready = true;
     }
 
     private destroyBuffers() {
@@ -105,10 +108,13 @@ export class Chunk extends Mesh {
             (this.vertexBuffer.underlyingResource as GPUBuffer).destroy();
         if (this.indexBuffer)
             (this.indexBuffer.underlyingResource as GPUBuffer).destroy();
+        this.vertexBuffer = undefined;
+        this.indexBuffer = undefined;
     }
 
     public dispose(doNotRecurse?: boolean, disposeMaterialAndTextures?: boolean): void {
-        super.dispose(doNotRecurse, disposeMaterialAndTextures);
+        this.geometry?.clearCachedData();
         (this.scene.getEngine() as WebGPUEngine)._device.queue.onSubmittedWorkDone().then(() => this.destroyBuffers());
+        super.dispose(doNotRecurse, disposeMaterialAndTextures);
     }
 }

@@ -121,40 +121,19 @@ export class World extends Environment {
         this.scene.fogColor = new Color3(0.5, 0.5, 0.5);
     }
 
-    loadTerrain(): void {
-        this.scene.getEngine().hideLoadingUI();
-        if (this.voxelEngine.worldType.type === "flat") {
-            this.voxelEngine.loadChunkwithinRenderDistance(this.player.position);
-            // const x = 0;
-            // const z = 0;
-
-            // const chunkKey = `${x}_${z}`;
-            // if (!this.chunksBuffer[chunkKey]) {
-            //     this.chunksBuffer[chunkKey] = new Chunk(new Vector2(x, z), this.scene);
-            //     this.chunksBuffer[chunkKey].populate(this.WorldType);
-            // }
-
-        } /*else if (this.WorldType?.noise === "SimplexPerlin3DBlock") {
-            const noise = new SimplexPerlin3DBlock(this.scene, { frequency: 0.1 });
-            noise.setScale(1, 1, 1);
-            noise.setOffset(0, 0, 0);
-            noise.setNoiseScale(1, 1, 1);
-            noise.setNoiseOffset(0, 0, 0);
-            noise.setBlockSize(Chunk.chunkSize.x * this.blockSize, Chunk.chunkSize.y * this.blockSize, Chunk.chunkSize.z * this.blockSize);
-        }*/
-    }
-
     async loadEnvironment(worldtype?: number): Promise<void> {
         // worldtype should be 1 for flat world, 2 for normal world
         worldtype = worldtype || 1; // default to flat world
 
         this.voxelEngine.worldType = worldtype == 2 ? { type: "normal" } : {
             type: "flat",
-            map: ["bedrock", "dirt", "dirt", "grass_block"]
+            map: ["bedrock", "dirt", "dirt", "water"]
         };
 
         Block.generateTextureAtlas(this.scene);
-        this.loadTerrain();
+        await this.voxelEngine.makeFirstChunk();
+        this.scene.getEngine().hideLoadingUI();
+        // TODO: setup custom loading screen for world loading
     }
 
     setupLight(): void {
@@ -189,7 +168,7 @@ export class World extends Environment {
         this.skybox.position = this.player.position;
         // light direction according to the sun position
         const sunDirection = new Vector3(Math.sin(this.skybox.rotation.z), Math.cos(this.skybox.rotation.z), 0);
-        //(this.scene.lights[1] as DirectionalLight).direction = new Vector3(Math.sin(this.skybox.rotation.z + Math.PI), Math.cos(this.skybox.rotation.z + Math.PI), 0);
+        (this.scene.lights[0] as DirectionalLight).direction = sunDirection;
         // this.setLightDirection(sunDirection);
     }
 
@@ -214,8 +193,7 @@ export class World extends Environment {
         this.setupLight();
         this.setupSkybox();
         await this.loadEnvironment(worldtype);
-        this.player.position = new Vector3(0, 250, 0);
-        //this.player.position = new Vector3(0, this.voxelEngine.gethighestBlock(0, 0) + 2, 0); // + player height
+        this.player.position = new Vector3(0, this.voxelEngine.gethighestBlock(0, 0) + 2, 0); // + player height
 
         this.scene.onAfterRenderObservable.add(() => this.afterRenderUpdate());
         Game.Instance.audio.play("world", { loop: true });

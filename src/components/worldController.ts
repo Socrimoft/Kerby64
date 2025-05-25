@@ -14,6 +14,7 @@ export class WorldController extends EntityController {
     private blockPicked: Nullable<Block> = null;
     protected linearSpeed = 5;     // ?blocks/s
     private gui: WorldGui;
+    public creative: boolean = true; // if true, player can fly and has no gravity
     private oldHitMesh: Nullable<AbstractMesh> = null;
 
     constructor(player: Player, input: InputManager) {
@@ -36,23 +37,30 @@ export class WorldController extends EntityController {
     }
 
     private jumpBeforeRender(deltaTime: number) {
-        // jump if jump's key is pressed and not already jumping
-        if (this.input.inputMap[Key.Jump] && !this.isJumping) {
-            this.jumpStartTime = performance.now();
-            this.isJumping = true;
-        }
+        if (this.creative == false) {
+            // jump if jump's key is pressed and not already jumping
+            if (this.input.inputMap[Key.Jump] && !this.isJumping) {
+                this.jumpStartTime = performance.now();
+                this.isJumping = true;
+            }
 
-        if (this.isJumping && this.jumpStartTime) {
-            const elapsedTime = (performance.now() - this.jumpStartTime) / 1000;
-            const jumpVelocity = this.currentJumpSpeed * Math.exp(-this.k * elapsedTime);
+            if (this.isJumping && this.jumpStartTime) {
+                const elapsedTime = (performance.now() - this.jumpStartTime) / 1000;
+                const jumpVelocity = this.currentJumpSpeed * Math.exp(-this.k * elapsedTime);
 
-            if (jumpVelocity > this.jumpThreshold)
-                this.entity.moveWithCollisions(new Vector3(0, jumpVelocity * deltaTime, 0));
+                if (jumpVelocity > this.jumpThreshold)
+                    this.entity.moveWithCollisions(new Vector3(0, jumpVelocity * deltaTime, 0));
+                else
+                    this.isJumping = false;
+            }
             else
-                this.isJumping = false;
+                this.entity.moveWithCollisions(new Vector3(0, this.currentGravity * deltaTime, 0));
+        } else {
+            const dir = +this.input.inputMap[Key.Jump] - +this.input.inputMap[Key.Ctrl];
+            if (dir) {
+                this.entity.moveWithCollisions(new Vector3(0, dir * this.linearSpeed * deltaTime, 0));
+            }
         }
-        // else
-        //     this.entity.moveWithCollisions(new Vector3(0, this.gravity * deltaTime, 0));
     }
 
     private moveBeforeRender(deltaTime: number) {

@@ -212,27 +212,27 @@ export class MainMenuScene extends Scene {
         const WorldNormalBtn = new Button("WorldNormal");
         modeColumn.addControl(WorldNormalBtn, 0, 0);
         WorldNormalBtn.addControl(new TextBlock("Normal", "Normal"));
-        WorldNormalBtn.thickness = 0;
-        WorldNormalBtn.disabledColor = "white";
+        WorldNormalBtn.thickness = 1;
+        WorldNormalBtn.disabledColor = "grey";
         WorldNormalBtn.focusedColor = "white";
-        WorldNormalBtn.isEnabled = false;
+        WorldNormalBtn.background = "white";
 
         const WorldFlatBtn = new Button("WorldFlat");
         WorldFlatBtn.addControl(new TextBlock("Flat", "Flat"));
-        WorldFlatBtn.thickness = 0;
-        WorldFlatBtn.disabledColor = "white";
+        WorldFlatBtn.thickness = 1;
+        WorldFlatBtn.disabledColor = "grey";
         WorldFlatBtn.focusedColor = "white";
-        WorldFlatBtn.isEnabled = false;
+        WorldFlatBtn.background = "grey";
         modeColumn.addControl(WorldFlatBtn, 0, 1);
 
         // WorldNormalBtn.isEnabled is set to false when WorldNormal is selected
         WorldNormalBtn.onPointerClickObservable.add(() => {
-            isWorldNormal = WorldFlatBtn.isEnabled = !(WorldNormalBtn.isEnabled = false);
+            isWorldNormal = true;
             WorldFlatBtn.background = "grey";
             WorldNormalBtn.background = "white";
         });
         WorldFlatBtn.onPointerClickObservable.add(() => {
-            WorldNormalBtn.isEnabled = !(isWorldNormal = WorldFlatBtn.isEnabled = false);
+            isWorldNormal = false;
             WorldNormalBtn.background = "grey";
             WorldFlatBtn.background = "white";
 
@@ -276,9 +276,8 @@ export class MainMenuScene extends Scene {
         const play = new Button("playbtn");
         const playText = new TextBlock("playText", "Play");
         play.addControl(playText);
-        const seed = () => seedInput.text.length > 0 ? parseInt(seedInput.text) : undefined;
+        const seed = () => seedInput.text.length > 0 ? parseInt(seedInput.text, 36) : undefined;
         play.pointerUpAnimation = () => this.switchToCutScene("world", 1 + +isWorldNormal, seed());
-        // world do not have cutscene, it skip directly to the game
         bottomGrid.addControl(play, 0, 1);
         play.paddingLeft = "10%";
 

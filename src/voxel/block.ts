@@ -1,4 +1,4 @@
-import { Color4, DynamicTexture, Engine, Texture } from "@babylonjs/core";
+import { Color3, Color4, DynamicTexture, Engine, Texture } from "@babylonjs/core";
 import { LevelScene } from "../scenes/levelScene";
 import blocks from "./blocks.json";
 import { ToonMaterial } from "../materials/toonMaterial";
@@ -20,7 +20,7 @@ export class Block {
     private static atlas: DynamicTexture;
     private static waterStill: DynamicTexture;
     private static waterFlow: DynamicTexture;
-    private static _waterStillAnim: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 = 0;
+    private static _waterAnim: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 = 0;
     private static atlasMaterial: ToonMaterial;
     public static tileSize = 32;
     public static size = 1;
@@ -67,6 +67,7 @@ export class Block {
             };
         });
     }
+
     public static generateTextureAtlas(scene: LevelScene): DynamicTexture {
         // make texture atlas
         if (this.atlas) {
@@ -74,32 +75,36 @@ export class Block {
         }
         // generate water textures
         let filelist = ["water_still.png", "water_flow.png"];
-        ["waterStill", "waterFlow"].forEach((name, index) => {
+        ["waterStill", "waterFlow"].map((name) => {
             let canvas = document.createElement("canvas");
             canvas.width = this.tileSize;
             canvas.height = 32 * this.tileSize;
             canvas.getContext("2d", { willReadFrequently: true })
-            this[name] = new DynamicTexture(name, { width: this.tileSize, height: 32 * this.tileSize }, scene, false, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTUREFORMAT_RGBA);
+            return this[name] = new DynamicTexture(name, canvas, scene, false, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTUREFORMAT_RGBA);
+        }).forEach((texture, index) => {
+            texture.hasAlpha = true;
             let image = new Image();
             image.src = Block.rootURI + filelist[index];
             image.onload = () => {
-                this[name].getContext().drawImage(image, 0, 0); // Adjust placement on canvas
-                const imageData: ImageData = this[name].getContext().getImageData(0, 0, this.tileSize, this.tileSize);
+                texture.getContext().drawImage(image, 0, 0); // Adjust placement on canvas
+                const imageData: ImageData = texture.getContext().getImageData(0, 0, this.tileSize, 32 * this.tileSize);
 
                 const color = this.getFaceColors("water");
-                /*
                 for (let j = 0; j < imageData.data.length; j += 4) {
 
                     imageData.data[j] *= color[0].r;
                     imageData.data[j + 1] *= color[0].g;
                     imageData.data[j + 2] *= color[0].b;
-                }*/
-                this[name].getContext().putImageData(imageData, 0, 0);
-                this[name].update(undefined, undefined, true);
+                }
+                texture.getContext().putImageData(imageData, 0, 0);
+                texture.update(undefined, undefined, true);
             };
         });
-
-        this.atlas = new DynamicTexture("block_atlas", { width: 6 * this.tileSize, height: this.tileSize * blockTypeCount }, scene, true, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTUREFORMAT_RGBA);
+        let canvas = document.createElement("canvas");
+        canvas.width = this.tileSize * 6;
+        canvas.height = this.tileSize * blockTypeCount;
+        canvas.getContext("2d", { willReadFrequently: true })
+        this.atlas = new DynamicTexture("block_atlas", canvas, scene, true, Texture.NEAREST_SAMPLINGMODE, Engine.TEXTUREFORMAT_RGBA);
         this.atlas.hasAlpha = true;
         const imageresult: Promise<void>[] = [];
         for (let i = 1; i < blockTypeCount; i++) {
@@ -123,18 +128,19 @@ export class Block {
 
         return this.atlas;
     }
+
     public static updatewaterTexture() {
         const waterIndex = blockTypeList.indexOf("water");
-        const imageData = this.waterFlow.getContext().getImageData(0, this._waterStillAnim * this.tileSize, this.tileSize, this.tileSize);
+        const flowData = this.waterFlow.getContext().getImageData(0, this._waterAnim * this.tileSize, this.tileSize, this.tileSize);
+        const stillData = this.waterStill.getContext().getImageData(0, this._waterAnim * this.tileSize, this.tileSize, this.tileSize);
         const context = this.atlas.getContext();
-        [0, 1, 2, 3, 4, 5].forEach((i) => context.putImageData(imageData, i * this.tileSize, waterIndex * this.tileSize));
+        [0, 1, 2, 3, 4, 5].forEach((i) => context.putImageData(i != 2 && i != 3 ? flowData : stillData, i * this.tileSize, waterIndex * this.tileSize));
         this.atlas.update(undefined, undefined, true);
-        this._waterStillAnim++;
-        if (this._waterStillAnim > 31) {
-            this._waterStillAnim = 0;
+        this._waterAnim++;
+        if (this._waterAnim > 31) {
+            this._waterAnim = 0;
         }
     }
-
 
     public static getTextureAtlas(): DynamicTexture {
         return this.atlas;

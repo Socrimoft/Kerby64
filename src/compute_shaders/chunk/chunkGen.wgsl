@@ -7,156 +7,168 @@ struct Uniforms {
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 @group(0) @binding(1) var<storage, read_write> blockBuffer: array<u32>;
 @group(0) @binding(2) var<storage, read> flatWorldInfoBuffer: array<u32>;
+@group(0) @binding(3) var<storage, read_write> buf: array<f32>;
 
-//
-// GLSL modulo function
-fn modVec4(a: vec4f, b: vec4f) -> vec4f {
-    return vec4f(trueMod(a.x, b.x), trueMod(a.y, b.y), trueMod(a.z, b.z), trueMod(a.w, b.w));
+fn noise_permute_vec2f(x: vec2<f32>) -> vec2<f32> {
+    return (((x * 34.0) + 10.0) * x) % 289.0;
 }
 
-fn modVec3(a: vec3f, b: vec3f) -> vec3f {
-    return vec3f(trueMod(a.x, b.x), trueMod(a.y, b.y), trueMod(a.z, b.z));
+fn noise_fade_vec2f(x: vec2<f32>) -> vec2<f32> {
+    return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
 }
 
-fn trueMod(x: f32, y: f32) -> f32 {
-    return x - y * floor(x / y);
+fn noise_permute_vec3f(x: vec3<f32>) -> vec3<f32> {
+    return (((x * 34.0) + 10.0 + vec3f(f32(uniforms.seed))) * x) % 289.0;
 }
 
-// MIT License. © Stefan Gustavson, Munrocket
-fn permute4(x: vec4f) -> vec4f {
-    return modVec4(((x * 34. + 1.) * x + vec4f(f32(uniforms.seed))), vec4f(289.));
+fn noise_fade_vec3f(x: vec3<f32>) -> vec3<f32> {
+    return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
 }
 
-fn taylorInvSqrt4(r: vec4f) -> vec4f {
-    return 1.79284291400159 - 0.85373472095314 * r;
+fn noise_permute_vec4f(x: vec4<f32>) -> vec4<f32> {
+    return (((x * 34.0) + 10.0 + vec4f(f32(uniforms.seed))) * x) % 289.0;
 }
 
-fn fade3(t: vec3f) -> vec3f {
-    return t * t * t * (t * (t * 6. - 15.) + 10.);
+fn noise_fade_vec4f(x: vec4<f32>) -> vec4<f32> {
+    return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
 }
 
-fn fade2(t: vec2f) -> vec2f {
-    return t * t * t * (t * (t * 6. - 15.) + 10.);
-}
+fn noise_perlin_vec2f(p: vec2<f32>) -> f32 {
+    var pi = floor(p.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
+    pi = pi % 289.0;    // to avoid trauncation effects in permutation
 
-fn perlinNoise2(P: vec2f) -> f32 {
-    var Pi: vec4f = floor(P.xyxy) + vec4f(0., 0., 1., 1.);
-    let Pf = fract(P.xyxy) - vec4f(0., 0., 1., 1.);
-    Pi = modVec4(Pi, vec4f(289.));
-    // To avoid truncation effects in permutation
-    let ix = Pi.xzxz;
-    let iy = Pi.yyww;
-    let fx = Pf.xzxz;
-    let fy = Pf.yyww;
-    let i = permute4(permute4(ix) + iy);
-    var gx: vec4f = 2. * fract(i * 0.0243902439) - 1.;
-    // 1/41 = 0.024...
-    let gy = abs(gx) - 0.5;
+    let pf = fract(p.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
+
+    let ix = pi.xzxz;
+    let iy = pi.yyww;
+    let fx = pf.xzxz;
+    let fy = pf.yyww;
+
+    let i = noise_permute_vec4f(noise_permute_vec4f(ix) + iy);
+
+    var gx = fract(i * (1.0 / 41.0)) * 2.0 - 1.0;
+    let gy = abs(gx) - 0.5 ;
     let tx = floor(gx + 0.5);
     gx = gx - tx;
-    var g00: vec2f = vec2f(gx.x, gy.x);
-    var g10: vec2f = vec2f(gx.y, gy.y);
-    var g01: vec2f = vec2f(gx.z, gy.z);
-    var g11: vec2f = vec2f(gx.w, gy.w);
-    let norm = 1.79284291400159 - 0.85373472095314 * vec4f(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11));
-    g00 = g00 * norm.x;
-    g01 = g01 * norm.y;
-    g10 = g10 * norm.z;
-    g11 = g11 * norm.w;
-    let n00 = dot(g00, vec2f(fx.x, fy.x));
-    let n10 = dot(g10, vec2f(fx.y, fy.y));
-    let n01 = dot(g01, vec2f(fx.z, fy.z));
-    let n11 = dot(g11, vec2f(fx.w, fy.w));
-    let fade_xy = fade2(Pf.xy);
-    let n_x = mix(vec2f(n00, n01), vec2f(n10, n11), vec2f(fade_xy.x));
+
+    var g00 = vec2(gx.x, gy.x);
+    var g10 = vec2(gx.y, gy.y);
+    var g01 = vec2(gx.z, gy.z);
+    var g11 = vec2(gx.w, gy.w);
+
+    let norm = inverseSqrt(vec4(
+        dot(g00, g00),
+        dot(g01, g01),
+        dot(g10, g10),
+        dot(g11, g11)
+    ));
+    g00 *= norm.x;
+    g01 *= norm.y;
+    g10 *= norm.z;
+    g11 *= norm.w;
+
+    let n00 = dot(g00, vec2(fx.x, fy.x));
+    let n10 = dot(g10, vec2(fx.y, fy.y));
+    let n01 = dot(g01, vec2(fx.z, fy.z));
+    let n11 = dot(g11, vec2(fx.w, fy.w));
+
+    let fade_xy = noise_fade_vec2f(pf.xy);
+    let n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
     let n_xy = mix(n_x.x, n_x.y, fade_xy.y);
     return 2.3 * n_xy;
 }
 
-fn perlinNoise3(P: vec3f) -> f32 {
-    var Pi0: vec3f = floor(P);
-    // Integer part for indexing
+fn noise_perlin_vec3f(p: vec3<f32>) -> f32 {
+    var pi0 = floor(p);     // Integer part for indexing
+    var pi1 = pi0 + 1.0;    // Integer part + 1
+    pi0 = pi0 % 289.0;
+    pi1 = pi1 % 289.0;
+    let pf0 = fract(p);     // Fractional part for interpolation
+    let pf1 = pf0 - 1.0;    // Fractional part - 1.0
+    let ix = vec4(pi0.x, pi1.x, pi0.x, pi1.x);
+    let iy = vec4(pi0.yy, pi1.yy);
+    let iz0 = pi0.zzzz;
+    let iz1 = pi1.zzzz;
 
-    var Pi1: vec3f = Pi0 + vec3f(1.);
-    // Integer part + 1
+    let ixy = noise_permute_vec4f(noise_permute_vec4f(ix) + iy);
+    let ixy0 = noise_permute_vec4f(ixy + iz0);
+    let ixy1 = noise_permute_vec4f(ixy + iz1);
 
-    Pi0 = modVec3(Pi0, vec3f(289.));
-
-    Pi1 = modVec3(Pi1, vec3f(289.));
-
-    let Pf0 = fract(P);
-    // Fractional part for interpolation
-
-    let Pf1 = Pf0 - vec3f(1.);
-    // Fractional part - 1.
-    let ix = vec4f(Pi0.x, Pi1.x, Pi0.x, Pi1.x);
-    let iy = vec4f(Pi0.yy, Pi1.yy);
-
-    let iz0 = Pi0.zzzz;
-
-    let iz1 = Pi1.zzzz;
-
-    let ixy = permute4(permute4(ix) + iy);
-    let ixy0 = permute4(ixy + iz0);
-    let ixy1 = permute4(ixy + iz1);
-
-    var gx0: vec4f = ixy0 / 7.;
-    var gy0: vec4f = fract(floor(gx0) / 7.) - 0.5;
+    var gx0 = ixy0 * (1.0 / 7.0);
+    var gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;
     gx0 = fract(gx0);
-    var gz0: vec4f = vec4f(0.5) - abs(gx0) - abs(gy0);
-    var sz0: vec4f = step(gz0, vec4f(0.));
-    gx0 = gx0 + sz0 * (step(vec4f(0.), gx0) - 0.5);
-    gy0 = gy0 + sz0 * (step(vec4f(0.), gy0) - 0.5);
+    let gz0 = 0.5 - abs(gx0) - abs(gy0);
+    let sz0 = step(gz0, vec4(0.0));
+    gx0 -= sz0 * (step(vec4(0.0), gx0) - 0.5);
+    gy0 -= sz0 * (step(vec4(0.0), gy0) - 0.5);
 
-    var gx1: vec4f = ixy1 / 7.;
-    var gy1: vec4f = fract(floor(gx1) / 7.) - 0.5;
+    var gx1 = ixy1 * (1.0 / 7.0);
+    var gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;
     gx1 = fract(gx1);
-    var gz1: vec4f = vec4f(0.5) - abs(gx1) - abs(gy1);
-    var sz1: vec4f = step(gz1, vec4f(0.));
-    gx1 = gx1 - sz1 * (step(vec4f(0.), gx1) - 0.5);
-    gy1 = gy1 - sz1 * (step(vec4f(0.), gy1) - 0.5);
+    let gz1 = 0.5 - abs(gx1) - abs(gy1);
+    let sz1 = step(gz1, vec4(0.0));
+    gx1 -= sz1 * (step(vec4(0.0), gx1) - 0.5);
+    gy1 -= sz1 * (step(vec4(0.0), gy1) - 0.5);
 
-    var g000: vec3f = vec3f(gx0.x, gy0.x, gz0.x);
-    var g100: vec3f = vec3f(gx0.y, gy0.y, gz0.y);
-    var g010: vec3f = vec3f(gx0.z, gy0.z, gz0.z);
-    var g110: vec3f = vec3f(gx0.w, gy0.w, gz0.w);
-    var g001: vec3f = vec3f(gx1.x, gy1.x, gz1.x);
-    var g101: vec3f = vec3f(gx1.y, gy1.y, gz1.y);
-    var g011: vec3f = vec3f(gx1.z, gy1.z, gz1.z);
-    var g111: vec3f = vec3f(gx1.w, gy1.w, gz1.w);
+    var g000 = vec3(gx0.x, gy0.x, gz0.x);
+    var g100 = vec3(gx0.y, gy0.y, gz0.y);
+    var g010 = vec3(gx0.z, gy0.z, gz0.z);
+    var g110 = vec3(gx0.w, gy0.w, gz0.w);
+    var g001 = vec3(gx1.x, gy1.x, gz1.x);
+    var g101 = vec3(gx1.y, gy1.y, gz1.y);
+    var g011 = vec3(gx1.z, gy1.z, gz1.z);
+    var g111 = vec3(gx1.w, gy1.w, gz1.w);
 
-    let norm0 = taylorInvSqrt4(vec4f(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));
-    g000 = g000 * norm0.x;
-    g010 = g010 * norm0.y;
-    g100 = g100 * norm0.z;
-    g110 = g110 * norm0.w;
-    let norm1 = taylorInvSqrt4(vec4f(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));
-    g001 = g001 * norm1.x;
-    g011 = g011 * norm1.y;
-    g101 = g101 * norm1.z;
-    g111 = g111 * norm1.w;
+    let norm0 = inverseSqrt(vec4(
+        dot(g000, g000),
+        dot(g010, g010),
+        dot(g100, g100),
+        dot(g110, g110)
+    ));
+    g000 *= norm0.x;
+    g010 *= norm0.y;
+    g100 *= norm0.z;
+    g110 *= norm0.w;
+    let norm1 = inverseSqrt(vec4(
+        dot(g001, g001),
+        dot(g011, g011),
+        dot(g101, g101),
+        dot(g111, g111)
+    ));
+    g001 *= norm1.x;
+    g011 *= norm1.y;
+    g101 *= norm1.z;
+    g111 *= norm1.w;
 
-    let n000 = dot(g000, Pf0);
-    let n100 = dot(g100, vec3f(Pf1.x, Pf0.yz));
-    let n010 = dot(g010, vec3f(Pf0.x, Pf1.y, Pf0.z));
-    let n110 = dot(g110, vec3f(Pf1.xy, Pf0.z));
-    let n001 = dot(g001, vec3f(Pf0.xy, Pf1.z));
-    let n101 = dot(g101, vec3f(Pf1.x, Pf0.y, Pf1.z));
-    let n011 = dot(g011, vec3f(Pf0.x, Pf1.yz));
-    let n111 = dot(g111, Pf1);
+    let n000 = dot(g000, pf0);
+    let n100 = dot(g100, vec3(pf1.x, pf0.yz));
+    let n010 = dot(g010, vec3(pf0.x, pf1.y, pf0.z));
+    let n110 = dot(g110, vec3(pf1.xy, pf0.z));
+    let n001 = dot(g001, vec3(pf0.xy, pf1.z));
+    let n101 = dot(g101, vec3(pf1.x, pf0.y, pf1.z));
+    let n011 = dot(g011, vec3(pf0.x, pf1.yz));
+    let n111 = dot(g111, pf1);
 
-    var fade_xyz: vec3f = fade3(Pf0);
-    let temp = vec4f(f32(fade_xyz.z));
-    // simplify after chrome bug fix
-    let n_z = mix(vec4f(n000, n100, n010, n110), vec4f(n001, n101, n011, n111), temp);
-    let n_yz = mix(n_z.xy, n_z.zw, vec2f(f32(fade_xyz.y)));
-    // simplify after chrome bug fix
+    let fade_xyz = noise_fade_vec3f(pf0);
+    let n_z = mix(
+        vec4(n000, n100, n010, n110),
+        vec4(n001, n101, n011, n111),
+        fade_xyz.z
+    );
+    let n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);
     let n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);
     return 2.2 * n_xyz;
 }
 
+
 fn getBlockU32Index(gid: vec3<u32>) -> u32 {
     return gid.x + gid.y * uniforms.chunkSize.x + gid.z * uniforms.chunkSize.x * uniforms.chunkSize.y;
+}
+
+fn getRealCoord(gid: vec3<u32>) -> vec3f {
+    return vec3f(f32(gid.x) + f32(uniforms.chunkCoord.x) * f32(uniforms.chunkSize.x),
+                  f32(gid.y),
+                  f32(gid.z) + f32(uniforms.chunkCoord.y) * f32(uniforms.chunkSize.z));
 }
 
 fn setBlockId(gid: vec3<u32>, id: u32) {
@@ -164,30 +176,42 @@ fn setBlockId(gid: vec3<u32>, id: u32) {
     blockBuffer[u32Index] = id;
 }
 
-@compute @workgroup_size(8, 1, 8)
+@compute @workgroup_size(16, 1, 16)
 fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    var localGid = gid;
     if (uniforms.worldType==0u) {
-        if (uniforms.seed==0) {
-            debug(gid);
-            return;
+        for (var i: u32 = 0u; i < 5u; i++) {
+            flat(localGid);
+            localGid.y += 1u;
         }
-        flat(gid);
+        if (uniforms.seed==0) {
+            debug(localGid);
+        }
         return;
     }
-    normal(gid);
-    return;
+    let globalPos = getRealCoord(gid);
+    let temperature = noise_perlin_vec2f((globalPos.xz +  vec2f(f32(uniforms.seed),f32(uniforms.seed))*256.)/256.);
+    let humidity = noise_perlin_vec2f((globalPos.xz +  vec2f(f32(-uniforms.seed),f32(uniforms.seed))*256.)/128.);
+    let continentalness = noise_perlin_vec2f((globalPos.xz +  vec2f(f32(uniforms.seed),f32(-uniforms.seed))*256.)/64.);
+    let erosion = noise_perlin_vec2f((globalPos.xz +  vec2f(f32(-uniforms.seed),f32(-uniforms.seed))*256.)/32.);
+    let weirdness = noise_perlin_vec2f((globalPos.xz +  vec2f(f32(uniforms.seed),f32(uniforms.seed))*256.)/16.);
+    let peaksandvalleys = 1. - abs(3.0 * abs(weirdness) - 2.0);
+    let depth = 0.;
+
+    for (var i: u32 = 0u; i < uniforms.chunkSize.y; i++) {
+        normal(localGid);
+        localGid.y += 1u;
+    }
 }
 
 fn debug(gid: vec3<u32>) {
-    if (gid.y == 0u) {
-        setBlockId(gid, 2u);
-        return;
+    if (uniforms.chunkCoord.x==0 && uniforms.chunkCoord.y==0 && gid.x%3==0 && gid.z%3==0) {
+        let x = gid.x/3u;
+        let z = gid.z/3u;
+
+        setBlockId(gid,1u + x + u32(floor(f32(uniforms.chunkSize.x)/3.))*z);
     }
-    if (uniforms.chunkCoord.x==0 && uniforms.chunkCoord.y==0) {
-        setBlockId(gid, 1u);
-        return;
-    }
-    setBlockId(gid, 37u);
+    //setBlockId(gid, 37u);
     //blockBuffer[u32Index] = 0xFFFFFFFFu;
 }
 
@@ -200,14 +224,12 @@ fn normal(gid: vec3<u32>) {
     if (gid.y > 64u) {
         return;
     }
-    let x = f32(i32(gid.x * uniforms.chunkSize.x) * uniforms.chunkCoord.x);
-    let y = f32(gid.y);
-    let z = f32(i32(gid.z * uniforms.chunkSize.z) * uniforms.chunkCoord.y);
-    let p = vec3f(x, y*256.0, z)/4096.0;
-    let n = perlinNoise3(p);
-    
+    var p = getRealCoord(gid);
+    let n = noise_perlin_vec3f(p/32.0);
+
     let u32Index = getBlockU32Index(gid);
+    buf[u32Index] = n;
     if (n > 0.0) {
-        blockBuffer[u32Index] = 2u;
+        blockBuffer[u32Index] = (gid.y%32u)+1;
     }
 }

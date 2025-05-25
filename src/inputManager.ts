@@ -7,15 +7,16 @@ export enum Key {
     Left = "q",
     Right = "d",
     Jump = " ",
-    LeftClick = "lClick",
-    RightClick = "rClick",
-    Action = "LeftAlt",
-    Shift = "Shift",
-    Camera = "F5",
-    Stats = "F3",
-    ScreenShot = "F2",
-    Hud = "F1",
-    Escape = "Escape",
+    LeftClick = "lclick",
+    RightClick = "rclick",
+    Action = "leftalt",
+    Shift = "shift",
+    Ctrl = "control",
+    Camera = "f5",
+    Stats = "f3",
+    ScreenShot = "f2",
+    Hud = "f1",
+    Escape = "escape",
     Chat = "t"
 }
 
@@ -48,10 +49,13 @@ export class InputManager extends MouseManager {
         scene.actionManager = new ActionManager(scene);
         this.inputMap[Key.Escape] = true; // simulate keydown to bring the pause menu in the event of pointer not being locked
         scene.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnKeyDownTrigger, (event) => {
-            switch (event.sourceEvent.key as Key) {
+            const key = event.sourceEvent.key.toLowerCase();
+            switch (key as Key) {
                 case (Key.Escape):
                     if (this.isWorldPlaying && !this.isPointerLocked) {
                         //event.sourceEvent.preventDefault();
+                        this.MouseMovement.x = 0;
+                        this.MouseMovement.y = 0;
                         this.isWorldPlaying = false;
                     };
                     break;
@@ -61,15 +65,16 @@ export class InputManager extends MouseManager {
                 case (Key.ScreenShot):  //F2
                 case (Key.Stats):       //F3
                 case (Key.Camera):      //F5
+                case (Key.Action):     //LeftAlt
+                default:
                     if (this.isWorldPlaying)
                         event.sourceEvent.preventDefault();
-                default:
-                    this.inputMap[event.sourceEvent.key] = event.sourceEvent.type == "keydown";
+                    this.inputMap[key] = event.sourceEvent.type == "keydown";
                     break;
             }
         }));
         scene.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnKeyUpTrigger, (event) => {
-            this.inputMap[event.sourceEvent.key] = event.sourceEvent.type == "keydown";
+            this.inputMap[event.sourceEvent.key.toLowerCase()] = event.sourceEvent.type == "keydown";
         }));
         document.addEventListener("pointerlockchange", () => {
             this.isPointerLocked = document.pointerLockElement === this.canvas
@@ -99,8 +104,10 @@ export class InputManager extends MouseManager {
                         this.inputMap[Key.RightClick] = true;
 
                 case Games.world:
-                    if (this.isWorldPlaying && !this.isPointerLocked)
-                        (this.canvas.requestPointerLock() || Promise.resolve()).catch(() => null);
+                    if (this.isWorldPlaying && !this.isPointerLocked) {
+                        const lockRequest = this.canvas.requestPointerLock() as Promise<void> | null;
+                        if (lockRequest) lockRequest.catch(() => null);
+                    }
             };
         });
 

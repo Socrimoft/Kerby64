@@ -10,12 +10,14 @@ export class ChunkGen extends ComputeShader {
     private blockBuffer: StorageBuffer;
     private flatWorldInfoBuffer: StorageBuffer;
     private _worldType: { type: "flat"; map: (keyof typeof BlockType)[]; } | { type: "normal"; };
+    testBuf: StorageBuffer;
     constructor(private engine: WebGPUEngine, private seed: number) {
         super("chunkGen", engine, { computeSource: chunkGenSource }, {
             bindingsMapping: {
                 "uniforms": { group: 0, binding: 0 },
                 "blockBuffer": { group: 0, binding: 1 },
                 "flatWorldInfoBuffer": { group: 0, binding: 2 },
+                "buf": { group: 0, binding: 3 },
             }
         });
         this.uniformsBuffer = new UniformBuffer(this.engine);
@@ -39,8 +41,11 @@ export class ChunkGen extends ComputeShader {
         this.blockBuffer = new StorageBuffer(this.engine, Chunk.blockCount * 4, Constants.BUFFER_CREATIONFLAG_READWRITE);
         this.setStorageBuffer("blockBuffer", this.blockBuffer);
 
+        this.testBuf = new StorageBuffer(this.engine, Chunk.blockCount * 4, Constants.BUFFER_CREATIONFLAG_READWRITE);
+        this.setStorageBuffer("buf", this.testBuf);
+
         this.dispatchParamsBuffer = new StorageBuffer(this.engine, 3 * 4, Constants.BUFFER_CREATIONFLAG_INDIRECT | Constants.BUFFER_CREATIONFLAG_READWRITE);
-        this.dispatchParamsBuffer.update(new Uint32Array([Chunk.chunkSize.x / 8, Chunk.chunkSize.y, Chunk.chunkSize.z / 8]));
+        this.dispatchParamsBuffer.update(new Uint32Array([1, 1, 1]));
     }
 
     public set worldType(worldtype: { type: "flat"; map: (keyof typeof BlockType)[] } | { type: "normal" }) {
@@ -65,22 +70,17 @@ export class ChunkGen extends ComputeShader {
         return this._worldType;
     }
 
-    public async generateChunk(chunk: Chunk): Promise<DataBuffer> {
-        return new Promise((resolve) => {
-            this.blockBuffer.update(chunk.blocks);
-            this.uniformsBuffer.updateInt2("chunkCoord", chunk.position.x, chunk.position.z);
-            this.uniformsBuffer.update();
-            if (chunk.blocks[0] !== BlockType.bedrock) {
-                this.dispatchIndirect(this.dispatchParamsBuffer);
-            }
-            if (chunk.name === "0,0") {
-                this.blockBuffer.read().then((data) => { console.log("chunk data", data); });
-            }
-            this.engine._device.queue.onSubmittedWorkDone().then(() => {
-                resolve(this.blockBuffer.getBuffer());
-            });
-        });
-        // todo next, wait for this coputershader to finish and use this buffer as blocks buffer to compute chunk mesh
+    public async generateChunk(chunk: Chunk): Promise<StorageBuffer> {
+        this.blockBuffer.update(chunk.blocks);
+        this.uniformsBuffer.updateInt2("chunkCoord", chunk.position.x / Chunk.chunkSize.x, chunk.position.z / Chunk.chunkSize.z);
+        this.uniformsBuffer.update();
+        if (chunk.blocks[0] !== BlockType.bedrock) {
+            await this.waitForReady();
+            this.dispatchIndirect(this.dispatchParamsBuffer);
+        }
+        await this.engine._device.queue.onSubmittedWorkDone();
+        //console.log("testBuf", chunk.position.x / Chunk.chunkSize.x, chunk.position.z / Chunk.chunkSize.z, this.testBuf.getBuffer());
+        return this.blockBuffer;
     }
     public waitForReady(): Promise<void> {
         return new Promise((resolve) => {

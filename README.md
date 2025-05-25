@@ -10,7 +10,8 @@ custom-made shader material and compute shaders, and dynamic rendering
 techniques.
 
 A GitHub action is configured to deploy the latest version of the game online.
-You can access it at [https://kerby54.pages.dev/](https://kerby54.pages.dev/)
+You can access it at
+[https://kerby64.socrimoft.games/](https://kerby64.socrimoft.games/)
 
 **IMPORTANT**: A [WebGPU-compatible browser](https://caniuse.com/webgpu) is
 needed to run the game (e.g., Chrome, Edge)
@@ -79,15 +80,15 @@ Next, follow thoses procedures:
    ```
 
 4. Open your browser and navigate to:
-   ```
-   http://localhost:8080
-   ```
+   [http://localhost:8080](http://localhost:8080)
 
 ## Acknowledgments
 
 - [Babylon.js](https://www.babylonjs.com/) for the rendering engine.
 - [Lunehiver](https://open.spotify.com/intl-fr/artist/5wHJFgKLG9GDdUWH4Xu8Ka)
   for the original soundtrack.
+- [bevy-interstellar](https://github.com/bevy-interstellar/wgsl_noise) for his
+  implementation of Perlin Noise in WGSL
 
 Note: While making the game, some contents that are not under an open source
 license were used as placeholder. It is possible that some of them still

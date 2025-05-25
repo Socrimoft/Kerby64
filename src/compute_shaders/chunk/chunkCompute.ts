@@ -58,11 +58,18 @@ export class ChunkCompute extends ComputeShader {
         this.setStorageBuffer("counterBuffer", this.counterBuffer);
     }
 
-    public updateGeometry(blocksBuffer: DataBuffer): void {
+    public async updateGeometry(blocksBuffer: StorageBuffer) {
         this.setStorageBuffer("chunkBuffer", blocksBuffer);
         this.counterBuffer.update(new Uint32Array([0]), 0, 4);
 
+        await this.waitForReady();
         this.dispatchIndirect(this.dispatchParamsBuffer);
+
+        await this.engine._device.queue.onSubmittedWorkDone();
+        const counterData: Uint32Array = new Uint32Array(1);
+        await this.engine.readFromStorageBuffer(this.counterBuffer.getBuffer(), 0, 4, counterData, true)
+        
+        return counterData[0]; // faces count
     }
 
     // magouille
