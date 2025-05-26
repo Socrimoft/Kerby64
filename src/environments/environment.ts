@@ -1,4 +1,4 @@
-import { CreateBox, DirectionalLight, Mesh, Vector3 } from "@babylonjs/core";
+import { CreateBox, DirectionalLight, IShadowGenerator, Mesh, ShadowGenerator, Vector3 } from "@babylonjs/core";
 import { Player } from "../actors/player";
 import { GameEntity } from "../actors/gameEntity";
 import { LevelScene } from "../scenes/levelScene";
@@ -35,7 +35,14 @@ export abstract class Environment {
         return this.scene.lights[0] as DirectionalLight;
     }
 
-    protected getGroundSegments(): Array<Mesh> {
+    public getShadowGenerator(): ShadowGenerator {
+        const sg = this.getLight().getShadowGenerator();
+        if (!sg)
+            throw new Error("Cannot return an undefined Shadow Generator");
+        return sg as ShadowGenerator;
+    }
+
+    public getGroundSegments(): Array<Mesh> {
         return this.groundSegments;
     }
 
@@ -64,6 +71,7 @@ export abstract class Environment {
         this.setupLight();
         this.setupSkybox();
         await this.loadEnvironment(classicLevel);
+        this.setupShadows();
     }
 
     public setupShadows(): void {

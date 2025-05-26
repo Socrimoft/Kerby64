@@ -25,8 +25,6 @@ export class GameEntity {
         const root = (this.assets.rootNodes.length == 1 && this.assets.rootNodes[0] instanceof Mesh) ? this.assets.rootNodes[0] : this.assets.createRootMesh();
         root.name = this.name;
 
-        console.log(root.getBoundingInfo().boundingBox.minimum.y);
-
         // debug
         // const axes = new AxesViewer(this.scene, 1);
         // axes.xAxis.parent = root;

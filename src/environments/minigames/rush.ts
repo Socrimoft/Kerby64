@@ -1,4 +1,4 @@
-import { Color3, CubeTexture, DirectionalLight, MeshBuilder, ShadowGenerator, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
+import { CascadedShadowGenerator, Color3, CubeTexture, DirectionalLight, MeshBuilder, ShadowGenerator, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { Environment } from "../environment";
 import { ToonMaterial } from "../../materials/toonMaterial";
 import { Koomba } from "../../actors/koomba";
@@ -31,16 +31,20 @@ export class Rush extends Environment {
     }
 
     setupLight(): void {
-        const light = new DirectionalLight("dirLight", new Vector3(1, 1, 0), this.scene);
+        const light = new DirectionalLight("dirLight", new Vector3(-1, -1, 0), this.scene);
         light.intensity = 0.8;
         light.diffuse = new Color3(1, 0.95, 0.8);
         light.shadowEnabled;
+        light.autoCalcShadowZBounds = true;
     }
 
     setupShadows(): void {
-        const shadowGenerator = new ShadowGenerator(1024, this.getLight());
-        shadowGenerator.addShadowCaster(this.player.meshRef, true);
-        this.getGroundSegments().forEach(ground => ground.receiveShadows = true);
+        const shadowGenerator = new CascadedShadowGenerator(1024, this.getLight());
+        shadowGenerator.usePercentageCloserFiltering = true;
+        shadowGenerator.transparencyShadow = true;
+        shadowGenerator.useBlurExponentialShadowMap = true;
+        shadowGenerator.bias = 0.001;
+        shadowGenerator.shadowMaxZ = 50;
     }
 
     private createGroundSegment(x: number): void {
@@ -64,7 +68,8 @@ export class Rush extends Environment {
         ground.position = new Vector3(x + this.segmentWidth / 2, heightOffset - 0.5, 0);
         ground.checkCollisions = true;
 
-        ground.material = this.groundMaterial || (this.groundMaterial = new ToonMaterial("groundMaterial", new Color3(0, 0.6, 0), this.scene));
+        ground.material = new ToonMaterial("groundMaterial", new Color3(0, 0.6, 0), this.scene);
+        ground.receiveShadows = true;
 
         this.pushGroundSegment(ground);
         this.lastSegmentX = x;

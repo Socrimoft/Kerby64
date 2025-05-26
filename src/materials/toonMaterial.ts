@@ -1,4 +1,4 @@
-import { BaseTexture, Color3, Constants, DirectionalLight, DynamicTexture, IShadowGenerator, Material, Matrix, Nullable, Scene, ShaderLanguage, ShaderMaterial, ShadowGenerator, StorageBuffer, TextureSampler, Vector4, WebGPUEngine } from "@babylonjs/core";
+import { BaseTexture, Color3, Constants, DirectionalLight, DynamicTexture, IShadowGenerator, Material, Matrix, Nullable, Scene, ShaderLanguage, ShaderMaterial, ShadowDepthWrapper, ShadowGenerator, StorageBuffer, TextureSampler, Vector4, WebGPUEngine } from "@babylonjs/core";
 
 enum LightOffsets {
     DIFFUSE_R = 0,
@@ -30,8 +30,12 @@ export class ToonMaterial extends ShaderMaterial {
                 attributes: ["position", "normal", "uv"],
                 uniformBuffers: ["Scene", "Mesh"],
                 shaderLanguage: ShaderLanguage.WGSL,
+                needAlphaBlending: true,
+                needAlphaTesting: true
             }
         );
+
+        this.shadowDepthWrapper = new ShadowDepthWrapper(this, scene);
 
         this.directionalLights = scene.lights.filter(light => light instanceof DirectionalLight);
 
@@ -66,19 +70,6 @@ export class ToonMaterial extends ShaderMaterial {
         this.setVector4("rimColor", new Vector4(1, 1, 1, 1));
         this.setFloat("rimAmount", 0.716);
         this.setFloat("rimThreshold", 0.1);
-
-
-        let shadowGenerator: Nullable<IShadowGenerator> = null;
-        if (scene.lights[0])
-            shadowGenerator = scene.lights[0].getShadowGenerator();
-        console.log(shadowGenerator);
-        if (shadowGenerator) {
-            console.log("shadow");
-            this.setTexture("shadowMap", shadowGenerator.getShadowMap() as BaseTexture);
-            console.log(shadowGenerator.getShadowMap());
-            this.setMatrix("transformShadowMatrix", shadowGenerator.getTransformMatrix());
-            this.setDefine("SHADOWS", true);
-        }
 
         scene.onBeforeRenderObservable.add(() => {
             const currentData = this.computeLightData();

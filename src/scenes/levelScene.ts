@@ -143,15 +143,14 @@ export class LevelScene extends Scene {
             default:
                 this.environment = new Rush(this, this.player, _seed);
                 await this.environment.load();
-                this.updateNavigatorHistory({ game: "rush", seed: this.environment.seed.toString() });
                 await this.player.instanciate(playerpos, playerrot, this.input);
+                this.environment.getShadowGenerator().getShadowMap()?.renderList?.push(this.player.meshRef);
+                this.updateNavigatorHistory({ game: "rush", seed: this.environment.seed.toString() });
                 this.player.addComponent(new RushController(this.player, this.input));
                 break;
         };
 
         this.player.activateEntityComponents();
-
-        this.environment.setupShadows();
 
         this.registerBeforeRender(() => {
             this.environment!.beforeRenderUpdate();

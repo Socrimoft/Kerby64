@@ -31,6 +31,27 @@ fn isFilledBlock(x: u32, y: u32, z: u32) -> bool {
     return getBlockId(x, y, z) != 0u;
 }
 
+fn isPositionInChunk(pos: vec3<i32>) -> bool {
+    return pos.x >= 0 && pos.y >= 0 && pos.z >= 0 && pos.x < i32(uniforms.chunkSize.x) && pos.y < i32(uniforms.chunkSize.y) && pos.z < i32(uniforms.chunkSize.z);
+}
+
+fn getAdjacentNormals(faceNormal: vec3<i32>, vertex: vec3<f32>) -> array<vec3<i32>, 2> {
+    var adj_normals: array<vec3<i32>, 2>;
+
+    if (abs(faceNormal.x) == 1) {
+        adj_normals[0] = vec3<i32>(0, i32(sign(vertex.y)), 0);
+        adj_normals[1] = vec3<i32>(0, 0, i32(sign(vertex.z)));
+    } else if (abs(faceNormal.y) == 1) {
+        adj_normals[0] = vec3<i32>(i32(sign(vertex.x)), 0, 0);
+        adj_normals[1] = vec3<i32>(0, 0, i32(sign(vertex.z)));
+    } else {
+        adj_normals[0] = vec3<i32>(i32(sign(vertex.x)), 0, 0);
+        adj_normals[1] = vec3<i32>(0, i32(sign(vertex.y)), 0);
+    }
+
+    return adj_normals;
+}
+
 const vertices = array<array<vec3<f32>, 4>, 6>(
     array<vec3<f32>, 4>(vec3<f32>(0.5, 0.5, -0.5), vec3<f32>(0.5, -0.5, -0.5), vec3<f32>(0.5, -0.5, 0.5), vec3<f32>(0.5, 0.5, 0.5)), // face +X
     array<vec3<f32>, 4>(vec3<f32>(-0.5, 0.5, 0.5), vec3<f32>(-0.5, -0.5, 0.5), vec3<f32>(-0.5, -0.5, -0.5), vec3<f32>(-0.5, 0.5, -0.5)), // face -X
@@ -67,31 +88,39 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     }
 
     let blockId = getBlockId(gid.x, gid.y, gid.z);
-
     let atlasSize = vec2<f32>(tile_size * 6, tile_size * f32(uniforms.blockTypeCount));
+
+    let i32_pos = vec3<i32>(i32(gid.x), i32(gid.y), i32(gid.z));
+    let position = vec3<f32>(f32(gid.x), f32(gid.y), f32(gid.z));
 
     for (var face: u32 = 0u; face < 6u; face++)
     {
         let normal = normals[face];
-        let neighbor = vec3<i32>(i32(gid.x) + normal.x, i32(gid.y) + normal.y, i32(gid.z) + normal.z);
+        let neighbor = i32_pos + normal;
 
-        if (neighbor.x < 0 || neighbor.y < 0 || neighbor.z < 0 ||
-        neighbor.x >= i32(uniforms.chunkSize.x) || neighbor.y >= i32(uniforms.chunkSize.y) || neighbor.z >= i32(uniforms.chunkSize.z) ||
-        !isFilledBlock(u32(neighbor.x), u32(neighbor.y), u32(neighbor.z))) {
-            // handle concurrency
+        if (!isPositionInChunk(neighbor) || !isFilledBlock(u32(neighbor.x), u32(neighbor.y), u32(neighbor.z))) {
+
             let baseIndex = atomicAdd(&counterBuffer, 1u);
             var vertexIndex = baseIndex * 4u;
             var indexIndex = baseIndex * 6u;
 
-            let position = vec3<f32>(f32(gid.x), f32(gid.y), f32(gid.z));
-
             let tileOffset = vec2<f32>(f32(face) * tile_size, f32(blockId) * tile_size);
 
             for (var v: u32 = 0u; v < 4u; v++) {
-                vertexBuffer[vertexIndex + v].position = position + vertices[face][v];
-                vertexBuffer[vertexIndex + v].normal = vec3<f32>(normal);
-                let uv = tileOffset + faceUVs[face][v] * tile_size;
-                vertexBuffer[vertexIndex + v].uv = vec2<f32>(uv.x / atlasSize.x, 1 - uv.y / atlasSize.y);
+                let vertex = vertices[face][v];
+                let adj_normals = getAdjacentNormals(normal, vertex);
+                let adj_blocks = array<vec3<i32>, 2>(i32_pos + adj_normals[0], i32_pos + adj_normals[1]);
+
+                if ((isPositionInChunk(adj_blocks[0]) && getBlockId(u32(adj_blocks[0].x), u32(adj_blocks[0].y), u32(adj_blocks[0].z))==blockId) ||
+                    (isPositionInChunk(adj_blocks[1]) && getBlockId(u32(adj_blocks[1].x), u32(adj_blocks[1].y), u32(adj_blocks[1].z))==blockId)) {
+                    let vertexIndex = atomicAdd(&counterBuffer, 1u);
+                    vertexBuffer[vertexIndex].position = position + vertices[face][v];
+                    vertexBuffer[vertexIndex].normal = vec3<f32>(normal);
+
+                    // ancien UV mapping
+                    let uv = tileOffset + faceUVs[face][v] * tile_size;
+                    vertexBuffer[vertexIndex].uv = vec2<f32>(uv.x / atlasSize.x, 1 - uv.y / atlasSize.y);
+                }
             }
 
             indexBuffer[indexIndex] = vertexIndex + 0u;
