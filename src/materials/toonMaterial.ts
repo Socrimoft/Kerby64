@@ -1,4 +1,4 @@
-import { BaseTexture, Color3, Constants, DirectionalLight, DynamicTexture, IShadowGenerator, Material, Matrix, Nullable, Scene, ShaderLanguage, ShaderMaterial, ShadowGenerator, StorageBuffer, TextureSampler, Vector4, WebGPUEngine } from "@babylonjs/core";
+import { BaseTexture, Color3, DirectionalLight, DynamicTexture, IShadowGenerator, Material, Nullable, Scene, ShaderLanguage, ShaderMaterial, StorageBuffer, Vector4, WebGPUEngine } from "@babylonjs/core";
 
 enum LightOffsets {
     DIFFUSE_R = 0,
@@ -13,15 +13,19 @@ const FLOATS_PER_LIGHT = 7;
 
 const MIN_BUFFER_SIZE = 32;
 
+/**
+ * ToonMaterial is a custom shader material for rendering objects with a toon shading effect.\
+ * It supports directional lights, texture or color input, and various material properties.\
+ * It also handles shadow mapping if a shadow generator is present in the scene. (wip)
+ * 
+ */
 export class ToonMaterial extends ShaderMaterial {
     private directionalLights: Array<DirectionalLight>;
     private prevLightData: Float32Array;
     public lightsBuffer: StorageBuffer;
 
     constructor(name: string, textureOrColor: BaseTexture | Color3, scene: Scene) {
-        super(
-            name,
-            scene,
+        super(name, scene,
             {
                 vertex: "toon",
                 fragment: "toon"
@@ -30,8 +34,7 @@ export class ToonMaterial extends ShaderMaterial {
                 attributes: ["position", "normal", "uv"],
                 uniformBuffers: ["Scene", "Mesh"],
                 shaderLanguage: ShaderLanguage.WGSL,
-            }
-        );
+            });
 
         this.directionalLights = scene.lights.filter(light => light instanceof DirectionalLight);
 
@@ -88,7 +91,11 @@ export class ToonMaterial extends ShaderMaterial {
             }
         });
     }
-
+    
+    /**
+     * Computes the light data for all directional lights in the scene.\
+     * @returns light data for all directional lights.\
+     */
     private computeLightData(): Float32Array {
         const data = new Float32Array(this.directionalLights.length * FLOATS_PER_LIGHT);
         this.directionalLights.forEach((light, index) => {

@@ -1,10 +1,13 @@
-import { Color4, FreeCamera, Scene, Vector3 } from "@babylonjs/core";
+import { Color4, FreeCamera, Scene, Vector3, WebGPUEngine } from "@babylonjs/core";
 import { Control } from "@babylonjs/gui";
 import { Menu } from "../gui/menu";
-import { Game, GameEngine } from "../game";
+import { Game } from "../game";
 
+/**
+ * This class is used to display the game over screen, with options to retry or go back to the title screen.\
+ */
 export class GameOverScene extends Scene {
-    constructor(engine: GameEngine) {
+    constructor(engine: WebGPUEngine) {
         super(engine);
     }
 
@@ -16,6 +19,10 @@ export class GameOverScene extends Scene {
         this.createGameOverMenu(score);
     }
 
+    /**
+     * Creates the game over menu with options to retry or go back to the title screen.
+     * @param score The score to display on the game over screen, if available.
+     */
     private createGameOverMenu(score?: number): void {
         const guiMenu = new Menu("gameOverMenu", 720);
 
@@ -28,4 +35,3 @@ export class GameOverScene extends Scene {
         guiMenu.addSimpleButton("goback", "Title screen", "10%", "10%", undefined, "green", "-10%", undefined, 1, undefined, undefined, undefined, () => { window.location.href = window.location.origin + window.location.pathname });
     }
 }
-

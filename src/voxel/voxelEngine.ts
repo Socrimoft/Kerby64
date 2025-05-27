@@ -5,6 +5,11 @@ import { Block, blockList } from "./block";
 import { LevelScene } from "../scenes/levelScene";
 import { ChunkGen } from "../compute_shaders/chunk/chunkGen";
 
+/**
+ * VoxelEngine class manages the voxel world, including chunk generation and rendering.
+ * It handles the loading of chunks within a specified render distance from the player.
+ * It uses compute shaders for efficient chunk generation and updates the scene with the generated chunks.
+ */
 export class VoxelEngine {
     private scene: LevelScene;
 
@@ -29,12 +34,15 @@ export class VoxelEngine {
 
         this.world = new TransformNode("world", scene);
     }
+    
     set worldType(worldtype: { type: "flat"; map: (keyof typeof blockList)[] } | { type: "normal" }) {
         this.chunkGen.worldType = worldtype;
     }
+
     public get worldType() {
         return this.chunkGen.worldType as any;
     }
+
     private enqueueChunk(chunk: Chunk) {
         this.chunkGenerationQueue.push(chunk);
         this.processChunkQueue();

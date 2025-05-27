@@ -54,9 +54,11 @@ export class World extends Environment {
     public get tick() {
         return Math.floor(this._tick);
     }
+
     public set tick(newtick: number) {
         this._tick = newtick;
     }
+
     private set skyColor(newcolor: Color4 | Color3) {
         this.scene.clearColor = newcolor instanceof Color4 ? newcolor : newcolor.toColor4();
     }
@@ -92,7 +94,10 @@ export class World extends Environment {
             );
         }
     }
-    // there is no skybox, but 2 planes with a diffuseTexture to handle the image transparency
+
+    /**
+     * this is no skybox, but 2 planes with a diffuseTexture to handle the image transparency
+    */
     setupSkybox(): void {
         this.skybox.dispose();
         this.skybox = new Mesh("skybox", this.scene); // should be a TransformNode, but inheritance is in the way
@@ -162,6 +167,12 @@ export class World extends Environment {
         });*/
     }
 
+    /**
+     * Updates the skybox rotation and color based on the current tick.
+     * The skybox rotates around the Z-axis, simulating the movement of the sun.
+     * The sky color is updated based on the current tick, using predefined colors for specific ticks.
+     * The light direction is set according to the sun's position.
+     */
     updateSky(): void {
         this.updateSkyColor();
         this.skybox.rotation.z = this.tick / this.maxTick * 2 * Math.PI;
@@ -172,6 +183,10 @@ export class World extends Environment {
         // this.setLightDirection(sunDirection);
     }
 
+    /**
+     * Called before the scene is rendered, this method updates the tick based on the elapsed time since the last frame.
+     * It also updates the sky color based on the current tick.
+     */
     beforeRenderUpdate(): void {
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000;
         this.tick = this._tick + deltaTime * 20; //bypass math.floor to keep accuracy
@@ -182,6 +197,10 @@ export class World extends Environment {
         this.updateSky();
     }
 
+    /**
+     * Called after the scene is rendered, this method loads chunks within the render distance of the player.
+     * It also updates the water texture every 2 ticks.
+     */
     afterRenderUpdate(): void {
         //get the player position to know which chunks to load
         this.voxelEngine.loadChunkwithinRenderDistance(this.player.position);

@@ -1,21 +1,32 @@
-import { Color3, Color4, DirectionalLight, DynamicTexture, FreeCamera, LoadAssetContainerAsync, Mesh, MeshBuilder, PBRMaterial, Scene, SimplexPerlin3DBlock, StandardMaterial, Texture, UniversalCamera, Vector3 } from "@babylonjs/core";
-import { Button, Control, Grid, ScrollViewer, StackPanel, TextBlock, Image, InputText, Rectangle } from "@babylonjs/gui";
-import { Game, GameEngine } from "../game";
+import { Color3, Color4, DirectionalLight, DynamicTexture, LoadAssetContainerAsync, Mesh, PBRMaterial, Scene, Texture, Vector3, WebGPUEngine } from "@babylonjs/core";
+import { Button, Control, Grid, ScrollViewer, StackPanel, TextBlock, Image, InputText } from "@babylonjs/gui";
+import { Game } from "../game";
 import { Menu } from "../gui/menu";
 import { ToonMaterial } from "../materials/toonMaterial";
 
+/**
+ * MainMenuScene class represents the main menu of the game.
+ * It extends the Scene class and initializes the main menu UI,
+ * loads assets, and handles user interactions for starting the game or navigating to different modes.
+ * @todo Show the pixar intro only the first time the game is started using sessionStorage.
+ * @todo remake those menu using html/css instead of babylonjs gui.
+ * @extends Scene
+ */
 export class MainMenuScene extends Scene {
     private indexOfClassicMode: number = 3;
     private indexOfWorldMode = 2;
     private canvas: HTMLCanvasElement;
 
-    constructor(engine: GameEngine) {
+    constructor(engine: WebGPUEngine) {
         super(engine);
-        this.canvas = engine.getRenderingCanvas() || null as any;
-
+        this.canvas = engine.getRenderingCanvas()!; // there is always a canvas
     }
-
-    public async load() {
+    
+    /**
+     * Loads asynchronously the main menu scene by setting up the environment, lights, camera, and UI elements.
+     * @returns A promise that resolves when the scene is fully loaded.
+     */
+    public async load(): Promise<void> {
         this.clearColor = new Color4(0.8, 0.9, 1, 1);
         const light = new DirectionalLight("dirLight", new Vector3(0, 1, 1), this);
         light.intensity = 0.8;
@@ -51,11 +62,15 @@ export class MainMenuScene extends Scene {
         this.createMainMenu();
     }
 
-    private firstClassicCallback(menu: Menu, i: number) {
+    /**
+     * Callback function for the game selection menu.
+     * It handles the user's selection of a game mode and navigates to the appropriate level selection or cutscene.
+     */
+    private gameSelectionCallback(menu: Menu, i: number) {
         menu.ui.dispose();
         switch (i) {
             case (this.indexOfClassicMode):
-                this.createLevelSelectionMenu("Choose a level to play", ["Level 1", "Level 2", "Level 3", "Level 4", "Level 5"], this.secondClassicCallBack.bind(this));
+                this.createLevelSelectionMenu("Choose a level to play", ["Level 1", "Level 2", "Level 3", "Level 4", "Level 5"], this.classicSelectionCallback.bind(this));
                 return;
             case (this.indexOfWorldMode):
                 this.createWorldMenu();
@@ -66,11 +81,20 @@ export class MainMenuScene extends Scene {
         }
     }
 
-    private secondClassicCallBack(menu: Menu, i: number) {
+    /**
+     * Callback to switch to the cutscene of the according classic level.
+     */
+    private classicSelectionCallback(menu: Menu, i: number) {
         menu.ui.dispose();
         this.switchToCutScene(this.indexOfClassicMode + 1, i);
     }
 
+    /**
+     * Creates the main menu UI with a title, start button, and GitHub link.
+     * It plays background music and sets up the menu layout.
+     * The start button navigates to the level selection menu.
+     * @todo Add a background image to the main menu.
+     */
     private createMainMenu(): void {
         Game.Instance.audio.play("maintitle", { loop: true });
         const guiMenu = new Menu("menu", 720);
@@ -80,12 +104,15 @@ export class MainMenuScene extends Scene {
         this.addGameTitleToMenu(guiMenu);
         guiMenu.addSimpleButton("start", "Start", "20%", "10%", "rgb(255,20,147)", "black", "-10%", "0px", 10, 0, Control.VERTICAL_ALIGNMENT_BOTTOM, Control.HORIZONTAL_ALIGNMENT_CENTER, () => {
             guiMenu.ui.dispose();
-            this.createLevelSelectionMenu("Choose a game to play", ["Kirby Rush", "Kirby Bird", "Kirby World", "Kirby Classic"], this.firstClassicCallback.bind(this));
+            this.createLevelSelectionMenu("Choose a game to play", ["Kirby Rush", "Kirby Bird", "Kirby World", "Kirby Classic"], this.gameSelectionCallback.bind(this));
         });
         guiMenu.addImageButton("github", "", "./assets/images/github.png", "40px", "40px", "40px", "40px", "", "black", "10px", "10px", 10, 0, Control.VERTICAL_ALIGNMENT_TOP, Control.HORIZONTAL_ALIGNMENT_LEFT, () => {
             window.open("https://github.com/Socrimoft/Kerby64");
         });
     }
+    /**
+     * Add the game title to the menu.
+     */
     private addGameTitleToMenu(menu: Menu) {
         const verticalAlign = Control.VERTICAL_ALIGNMENT_CENTER;
         const horizontalAlign = Control.HORIZONTAL_ALIGNMENT_CENTER;
@@ -101,6 +128,12 @@ export class MainMenuScene extends Scene {
 
     }
 
+    /**
+     * Create a generic selection menu.\
+     * This menu allows the user to select a game or level to play.\
+     * It displays a title, a list of selectable items, and a button to play the selected item.\
+     * The button callback function is called with the menu and the index of the selected item.
+     */
     private createLevelSelectionMenu(title: string, selection: string[], buttonCallBack: (menu: Menu, i: number) => void): void {
         const songToPlay = title === "Choose a game to play" ? "gameselect" : "classicmenu";
         Game.Instance.audio.play(songToPlay, { loop: true });
@@ -162,6 +195,12 @@ export class MainMenuScene extends Scene {
         });
     }
 
+    /**
+     * Creates the world menu UI for selecting the world type and seed.
+     * It allows the user to choose between a normal or flat world, enter a seed for world generation,
+     * and start the game with the selected options.
+     * The menu includes buttons for playing the game and going back to the main menu.
+     */
     private async createWorldMenu() {
         Game.Instance.audio.play("worldmenu", { loop: true, startOffset: 27 });
         this.getEngine().displayLoadingUI();
@@ -287,7 +326,7 @@ export class MainMenuScene extends Scene {
         back.pointerUpAnimation = () => {
             gui.ui.dispose();
             backgroundTexture.dispose();
-            this.createLevelSelectionMenu("Choose a game to play", ["Kirby Rush", "Kirby Bird", "Kirby World", "Kirby Classic"], this.firstClassicCallback.bind(this));
+            this.createLevelSelectionMenu("Choose a game to play", ["Kirby Rush", "Kirby Bird", "Kirby World", "Kirby Classic"], this.gameSelectionCallback.bind(this));
         };
         back.paddingRight = "10%";
         bottomGrid.addControl(back, 0, 0);
@@ -295,6 +334,9 @@ export class MainMenuScene extends Scene {
         this.getEngine().hideLoadingUI();
     }
 
+    /**
+     * Switches to a cutscene scene to load a specific level.
+     */
     private switchToCutScene(levelToLoad: number | string, classicLevel?: number, seed?: number): void {
         this.detachControl();
         Game.Instance.audio.stop("maintitle");

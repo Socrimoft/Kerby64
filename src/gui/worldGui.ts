@@ -1,13 +1,23 @@
 import { AdvancedDynamicTexture, Button, Grid, TextBlock } from "@babylonjs/gui";
 import { LevelScene } from "../scenes/levelScene";
 
+/**
+ * The WorldGui class manages the user interface for the game world.\
+ * It includes functionality for displaying stats, a pause menu, and toggling UI visibility.
+ * @todo Implement stats and main UI functionality.
+*/
 export class WorldGui {
+    /** The UI layer for world */
     private ui: AdvancedDynamicTexture;
-    private statGrid: Grid; // Grid for stats
-    private uiGrid: Grid; // Grid for game elements (inventory bar, health bar, etc.)
-    private pauseGrid!: Grid; // Grid for pause menu
+    /** Grid for stats */
+    private statGrid: Grid;
+    /** Grid for the main UI */
+    private uiGrid: Grid;
+    /** Grid for the pause menu */
+    private pauseGrid!: Grid;
     public isPaused = false;
-    private isStatActive = false; // Flag to track if stats are visible
+    /**Flag to track if stats are visible*/
+    private isStatActive = false; // 
 
     constructor(public scene: LevelScene) {
         this.ui = AdvancedDynamicTexture.CreateFullscreenUI("WorldGUI", true, this.scene, AdvancedDynamicTexture.NEAREST_SAMPLINGMODE, true);
@@ -19,10 +29,17 @@ export class WorldGui {
         this.uiGrid.addColumnDefinition(0.5);
         this.uiGrid.addColumnDefinition(0.25);
     }
+    /**
+     * Toggles the visibility of the pause grid.
+     */
     public set PauseMenuVisibility(isVisible: boolean) {
         this.pauseGrid.isVisible = this.isPaused = isVisible;
     }
 
+    /**
+     * Toggles the visibility of the UI and updates the stat grid visibility accordingly.
+     * Usually called when the player presses the toggle UI button.
+     */
     toggleUIVisibility() {
         this.uiGrid.isVisible = !this.uiGrid.isVisible;
         if (this.isStatActive)
@@ -47,11 +64,11 @@ export class WorldGui {
         statMenu.addControl(leftStat, 0, 0);
         const rightStat = new TextBlock("rightStat", "Right Stat");
         statMenu.addControl(rightStat, 0, 2);
-
-
-
         return statMenu;
     }
+    /**
+     * @todo
+     */
     updateStatGrid() { }
 
     makePauseMenu(resumeCallback: () => void) {

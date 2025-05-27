@@ -1,8 +1,6 @@
 import { Color3, CubeTexture, DirectionalLight, MeshBuilder, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { Environment } from "../environment";
-import { Player } from "../../actors/player";
-import { LevelScene } from "../../scenes/levelScene";
 import { ToonMaterial } from "../../materials/toonMaterial";
 
 export class Bird extends Environment {

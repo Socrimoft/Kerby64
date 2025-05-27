@@ -1,5 +1,3 @@
-# Kerby64
-
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/socrimoft/Kerby64?label=Version&color=green)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![GitHub package.json dev/peer/optional dependency version](https://img.shields.io/github/package-json/dependency-version/socrimoft/Kerby64/dev/%40babylonjs%2Fcore?label=Babylon.js&color=orange)](https://doc.babylonjs.com/whats-new/)
@@ -8,6 +6,12 @@
 [Babylon.js](https://babylonjs.com/). It features procedural terrain generation,
 custom-made shader material and compute shaders, and dynamic rendering
 techniques.
+
+<iframe width="560" height="315"
+src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+frameborder="0"
+allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+allowfullscreen></iframe>
 
 A GitHub action is configured to deploy the latest version of the game online.
 You can access it at

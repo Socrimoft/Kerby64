@@ -1,6 +1,9 @@
 import { AudioEngineV2, CreateAudioEngineAsync, CreateSoundAsync, IStaticSoundPlayOptions, StaticSound } from "@babylonjs/core";
 
-
+/**
+ * enum for sound file names.\
+ * This enum is used to map sound names to their file names.
+ */
 enum SoundFileName {
     maintitle = "maintitle.ogg",
     gameselect = "gameselect.flac",
@@ -20,6 +23,11 @@ enum SoundFileName {
 
 type Sounds = keyof typeof SoundFileName;
 
+/**
+ * AudioManager class to manage audio in the game.\
+ * It initializes the audio engine, loads sounds, and provides methods to play, stop, pause, and resume sounds.
+ * @todo fix audio engine blocking game loading
+ */
 export class AudioManager {
     private readonly root = "/assets/audio/";
     private audioEngine: AudioEngineV2 = null as any;

@@ -1,7 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine, Logger, ShaderStore, WebGPUEngine } from "@babylonjs/core";
+import { Logger, ShaderStore, WebGPUEngine } from "@babylonjs/core";
 import { MainMenuScene } from "./scenes/mainMenuScene";
 import { CutSceneScene } from "./scenes/cutSceneScene";
 import { LevelScene } from "./scenes/levelScene";
@@ -11,20 +11,31 @@ import toonFragmentShader from "./shaders/toon/fragment.wgsl";
 import { KerbyLoadingScreen } from "./loadingScreen";
 import { AudioManager } from "./audioManager";
 
+/**
+ * Enum representing the different states of the game.
+ * @kind MainMenu - The main menu state of the game.
+ * @kind CutScene - The cutscene state of the game.
+ * @kind Level - The level state of the game.
+ * @kind GameOver - The game over state of the game.
+ */
 enum State {
     MAINMENU,
     CUTSCENE,
     LEVEL,
     GAMEOVER
 }
-export type GameEngine = Engine | WebGPUEngine
 
-const allowWebGPU = true;
-
+/**
+ * The Game class is the main entry point for the game.
+ * It initializes the game engine, creates the canvas, and manages the game states.
+ * It also handles switching between different scenes such as the main menu, cutscene, level, and game over.
+ * It is a singleton class, meaning only one instance of it can exist at a time.
+ * The singleton instance can be accessed via `Game.Instance` and is created when `DOMContentLoad` event fires.
+ */
 export class Game {
     private static instance: Game;
     public canvas: HTMLCanvasElement;
-    public engine: GameEngine
+    public engine: WebGPUEngine;
     private mainMenuScene!: MainMenuScene;
     private cutScene!: CutSceneScene;
     private levelScene!: LevelScene;
@@ -35,6 +46,9 @@ export class Game {
     private options = { doNotHandleContextLost: false, audioEngine: true, renderEvenInBackground: true, antialias: true }
 
     constructor() {
+        if (navigator.gpu === undefined) {
+            errorHandler(new Error("WebGPU not supported. Try using a different browser or enable WebGPU in your browser settings."));
+        }
         this.canvas = this.createCanvas();
         this.engine = this.createEngine();
         this.engine.loadingScreen = new KerbyLoadingScreen("");
@@ -65,15 +79,26 @@ export class Game {
 
         this.main();
     }
+
     public static get urlParams() {
         return new URLSearchParams(window.location.search);
     }
 
-    public static get Instance() {
+    /**
+     * Singleton instance accessor of the Game class.
+     * This ensures that only one instance of the Game class is created throughout the application.
+     * @return The singleton instance of the Game class.
+     */
+    public static get Instance(): Game {
         return this.instance || (this.instance = new this());
     }
 
-    public get CurrentScene() {
+    /**
+     * Accessor for the current scene based on the game state.
+     * This allows easy access to the current scene without needing to check the state manually.
+     * @return The current scene based on the game state.
+     */
+    public get CurrentScene(): MainMenuScene | CutSceneScene | LevelScene | GameOverScene {
         switch (this.state) {
             case State.CUTSCENE:
                 return this.cutScene;
@@ -86,6 +111,10 @@ export class Game {
         }
     }
 
+    /**
+     * Creates a canvas element for the game to render on.
+     * This canvas will fill the entire viewport and will be appended to the body of the document.
+     */
     private createCanvas(): HTMLCanvasElement {
         document.documentElement.style["overflow"] = "hidden";
         document.documentElement.style.overflow = "hidden";
@@ -107,34 +136,39 @@ export class Game {
 
         return this.canvas;
     }
-    private createEngine(): GameEngine {
-        let engine: GameEngine;
-        if (allowWebGPU && navigator.gpu) { // should be the synchronous variant of "await WebGPUEngine.IsSupportedAsync"
-            engine = new WebGPUEngine(this.canvas, this.options);
+
+    /**
+     * Creates a WebGPUEngine instance for rendering the game.
+     * If WebGPU is not supported, the game will not start and an error will be logged.
+     */
+    private createEngine(): WebGPUEngine {
+        const engine = new WebGPUEngine(this.canvas, this.options);
+        if (navigator.gpu) { // should be the synchronous variant of "await WebGPUEngine.IsSupportedAsync"
             engine.initAsync().then(() => engine.getCaps().supportComputeShaders = true);
         } else {
             errorHandler(new Error(`WebGPU not supported. Try using a different browser or enable WebGPU in your browser settings.
             Go to https://caniuse.com/webgpu ?`), () => window.open("https://caniuse.com/webgpu", "_blank"));
-            return new Engine(this.canvas, false, this.options);
         }
         return engine;
     }
 
     private async main(): Promise<void> {
-        if (this.engine instanceof WebGPUEngine) {
-            this.engine.compatibilityMode = true; // false breaks level scenes
-            await this.engine.initAsync().catch((err) => errorHandler(err));
-        }
+        this.engine.displayLoadingUI();
+        this.engine.compatibilityMode = true; // false breaks level scenes
 
+        await this.engine.initAsync().catch((err) => errorHandler(err));
         await this.audio.init().catch((err) => errorHandler(err));
         await this.audio.unlock().catch((err) => errorHandler(err));
+
         let level = Game.urlParams.get("game");
         let classicLevel = Game.urlParams.get("classic") || Game.urlParams.get("worldtype");
         let seed = Game.urlParams.get("seed");
+
         if (level)
             await this.switchToCutScene(level, classicLevel || undefined, seed ? +seed : undefined);
         else
             await this.switchToMainMenu();
+        this.engine.hideLoadingUI();
 
         this.engine.runRenderLoop(() => {
             this.CurrentScene.render();
@@ -143,6 +177,7 @@ export class Game {
         window.addEventListener("resize", () => {
             this.engine.resize();
         });
+
     }
 
     public async switchToMainMenu() {
@@ -194,8 +229,10 @@ export class Game {
         this.engine.hideLoadingUI();
     }
 }
+
 function errorHandler(error: Error, callback = () => location.reload()) {
     console.error("Error occurred:", error);
     confirm("An error occurred: " + error.message) && callback();
 }
-globalThis.game = Game.Instance;
+
+document.addEventListener("DOMContentLoaded", () => Game.Instance);

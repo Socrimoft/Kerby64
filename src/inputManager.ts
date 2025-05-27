@@ -1,6 +1,9 @@
-import { ActionManager, ExecuteCodeAction, PointerEventTypes, Scene } from "@babylonjs/core";
+import { ActionManager, ExecuteCodeAction, Scene } from "@babylonjs/core";
 import { InputManager as MouseManager } from "@babylonjs/core/Inputs/scene.inputManager";
 
+/**
+ * Enum for keyboard keys used in every game.
+ */
 export enum Key {
     Up = "z",
     Down = "s",
@@ -28,17 +31,52 @@ enum Games {
     classic = 4
 }
 
+/**
+ * The InputManager class handles input events for the game.\
+ * It extends the MouseManager class to capture mouse events and pointer lock state.\
+ * It manages keyboard input for various game controls and provides a way to track mouse movement.
+ */
 export class InputManager extends MouseManager {
+    /**
+     * The mouse movement since the game has retrieved the data.\
+     * This is used to rotate the camera in the world game.\
+     * It is not reset automatically, unless the pointer is not locked.
+     */
     public MouseMovement = { x: 0, y: 0 };
+    /**
+     * The canvas used to capture the mouse events.\
+     * This is used to request pointer lock and handle mouse events.
+     */
     private canvas: HTMLCanvasElement;
+    /**
+     * Map of input keys to their pressed state.\
+     * This is used to track which keys are currently pressed down.\
+     * The keys are defined in the `Key` enum.\
+     * The keys are set to `false` by default, and are set to `true` when the key is pressed down.
+     * @example
+     * inputMap[Key.Up] == true // the up key is pressed down
+     * inputMap[Key.Down] == false // the down key is not pressed down
+     */
     public inputMap: { [key in Key]: boolean } = Object.fromEntries(
         Object.values(Key).map((key) => [key, false])
     ) as any;
-
+    /**
+     * Flag to indicate if the world game is currently being played.\
+     * This is used to determine if the game is in the world mode or not.
+     * @deprecated use `actualGame` instead.
+     * @todo Remove this in the future.
+     */
     public isWorldPlaying: boolean = false;
+    /**
+     * The game currently being played.\
+     * This is used to determine which game is currently active and what controls to apply.\
+     * `F1` open the github page in classic and rush, but not in world, it toggles the UI)
+     */
     public actualGame: Games = Games.none;
-    public isClassicPlaying: boolean = false;
-    public isRushPlaying: boolean = false;
+    /**
+     * Flag to indicate if the pointer is currently locked to the canvas.\
+     * This is used to determine if the mouse movement should be captured or not.
+     */
     public isPointerLocked: boolean = false;
 
     constructor(scene: Scene) {

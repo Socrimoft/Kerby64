@@ -5,6 +5,10 @@ import { LevelScene } from "../scenes/levelScene";
 import { Random } from "../random";
 import { Game } from "../game";
 
+/**
+ * Abstract class for game environments.\
+ * This class is used to set up the environment for the game, including the skybox, ground segments, static objects, and entities.\
+ */
 export abstract class Environment {
     protected scene: LevelScene;
     protected player: Player;
