@@ -5,22 +5,22 @@ import { InputManager as MouseManager } from "@babylonjs/core/Inputs/scene.input
  * Enum for keyboard keys used in every game.
  */
 export enum Key {
-    Up = "z",
-    Down = "s",
-    Left = "q",
-    Right = "d",
-    Jump = " ",
+    Up = 'KeyW',
+    Down = "KeyS",
+    Left = "KeyA",
+    Right = "KeyD",
+    Jump = "Space",
     LeftClick = "lclick",
     RightClick = "rclick",
-    Action = "leftalt",
-    Shift = "shift",
-    Ctrl = "control",
-    Camera = "f5",
-    Stats = "f3",
-    ScreenShot = "f2",
-    Hud = "f1",
-    Escape = "escape",
-    Chat = "t"
+    Action = "AltLeft",
+    Shift = "ShiftLeft",
+    Ctrl = "ControlLeft",
+    Camera = "F5",
+    Stats = "F3",
+    ScreenShot = "F2",
+    Hud = "F1",
+    Escape = "Escape",
+    Chat = "KeyT"
 }
 
 enum Games {
@@ -87,7 +87,7 @@ export class InputManager extends MouseManager {
         scene.actionManager = new ActionManager(scene);
         this.inputMap[Key.Escape] = true; // simulate keydown to bring the pause menu in the event of pointer not being locked
         scene.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnKeyDownTrigger, (event) => {
-            const key = event.sourceEvent.key.toLowerCase();
+            const key = event.sourceEvent.code;
             switch (key as Key) {
                 case (Key.Escape):
                     if (this.isWorldPlaying && !this.isPointerLocked) {
@@ -112,7 +112,7 @@ export class InputManager extends MouseManager {
             }
         }));
         scene.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnKeyUpTrigger, (event) => {
-            this.inputMap[event.sourceEvent.key.toLowerCase()] = event.sourceEvent.type == "keydown";
+            this.inputMap[event.sourceEvent.code] = event.sourceEvent.type == "keydown";
         }));
         document.addEventListener("pointerlockchange", () => {
             this.isPointerLocked = document.pointerLockElement === this.canvas
