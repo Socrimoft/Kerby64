@@ -24,7 +24,7 @@ needed to run the game (e.g., Chrome, Edge)
 
 1. [Games list](#games-list)
 2. [The team](#the-team)
-3. [Project structure](#project-structure)
+3. [Project structure and documentation](#project-structure-and-documentation)
 4. [How to run locally](#how-to-run-locally)
 5. [Acknowledgments](#acknowledgments)
 
@@ -44,7 +44,11 @@ needed to run the game (e.g., Chrome, Edge)
 - **Ludovic CLOLOT**, aka [Ludoclt](https://github.com/Ludoclt): Rush
 
 ## Project structure and documentation
-Latest documentation is available here : [kerby64.socrimoft.games/docs](kerby64.socrimoft.games/docs)
+Latest documentation is available at [kerby64.socrimoft.games/docs](https://kerby64.socrimoft.games/docs) or can be made locally with the command 
+```bash
+npm doc
+```
+Here's how the game is organized:
 ```
 Kerby64/
 ├── src/
