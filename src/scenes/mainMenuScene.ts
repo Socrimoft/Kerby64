@@ -1,4 +1,4 @@
-import { Color3, Color4, DirectionalLight, DynamicTexture, LoadAssetContainerAsync, Mesh, PBRMaterial, Scene, Texture, Vector3, WebGPUEngine } from "@babylonjs/core";
+import { Color3, Color4, DirectionalLight, DynamicTexture, LoadAssetContainerAsync, Mesh, PBRMaterial, Scene, Texture, UniversalCamera, Vector3, WebGPUEngine } from "@babylonjs/core";
 import { Button, Control, Grid, ScrollViewer, StackPanel, TextBlock, Image, InputText } from "@babylonjs/gui";
 import { Game } from "../game";
 import { Menu } from "../gui/menu";
@@ -21,7 +21,7 @@ export class MainMenuScene extends Scene {
         super(engine);
         this.canvas = engine.getRenderingCanvas()!; // there is always a canvas
     }
-    
+
     /**
      * Loads asynchronously the main menu scene by setting up the environment, lights, camera, and UI elements.
      * @returns A promise that resolves when the scene is fully loaded.
@@ -31,34 +31,6 @@ export class MainMenuScene extends Scene {
         const light = new DirectionalLight("dirLight", new Vector3(0, 1, 1), this);
         light.intensity = 0.8;
         light.diffuse = new Color3(1, 0.95, 0.8);
-
-        const container = await LoadAssetContainerAsync("./assets/models/kerby_menuscene.glb", this);
-        const root = (container.rootNodes.length == 1 && container.rootNodes[0] instanceof Mesh) ? container.rootNodes[0] : container.createRootMesh();
-        root.name = "kerby_menuscene";
-
-        container.meshes.forEach((mesh) => {
-            if (!mesh.name.includes("Text") && !mesh.name.includes("Plane") && container && container.textures[0])
-                mesh.material = new ToonMaterial(root.name + "Material", container.textures[0], this);
-            if (container && mesh.material && mesh.material instanceof PBRMaterial)
-                mesh.material = new ToonMaterial(root.name + "Material", mesh.material.albedoColor, this);
-        });
-
-        container.addAllToScene();
-
-        const camera = this.getCameraByName("Camera");
-        if (camera)
-            this.activeCamera = camera;
-
-        const camAnim = container.animationGroups.find(ag => ag.name.toLowerCase().includes("camera"));
-        const kerbyAnim = container.animationGroups.find(ag => ag.name.toLowerCase().includes("kirby"));
-        const text1Anim = container.animationGroups.find(ag => ag.name.toLowerCase().includes("text.001"));
-        const text2Anim = container.animationGroups.find(ag => ag.name.toLowerCase().includes("text.008"));
-
-        camAnim?.play(false);
-        kerbyAnim?.play(false);
-        text1Anim?.play(false);
-        text2Anim?.play(false);
-
         this.createMainMenu();
     }
 

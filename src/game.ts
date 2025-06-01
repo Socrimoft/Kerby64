@@ -10,6 +10,7 @@ import toonVertexShader from "./shaders/toon/vertex.wgsl";
 import toonFragmentShader from "./shaders/toon/fragment.wgsl";
 import { KerbyLoadingScreen } from "./loadingScreen";
 import { AudioManager } from "./audioManager";
+import { IntroScene } from "./scenes/introScene";
 
 /**
  * Enum representing the different states of the game.
@@ -19,6 +20,7 @@ import { AudioManager } from "./audioManager";
  * @kind GameOver - The game over state of the game.
  */
 enum State {
+    INTRO,
     MAINMENU,
     CUTSCENE,
     LEVEL,
@@ -36,6 +38,7 @@ export class Game {
     private static instance: Game;
     public canvas: HTMLCanvasElement;
     public engine: WebGPUEngine;
+    private introScene!: IntroScene;
     private mainMenuScene!: MainMenuScene;
     private cutScene!: CutSceneScene;
     private levelScene!: LevelScene;
@@ -98,8 +101,10 @@ export class Game {
      * This allows easy access to the current scene without needing to check the state manually.
      * @return The current scene based on the game state.
      */
-    public get CurrentScene(): MainMenuScene | CutSceneScene | LevelScene | GameOverScene {
+    public get CurrentScene(): IntroScene | MainMenuScene | CutSceneScene | LevelScene | GameOverScene {
         switch (this.state) {
+            case State.INTRO:
+                return this.introScene;
             case State.CUTSCENE:
                 return this.cutScene;
             case State.LEVEL:
