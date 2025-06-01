@@ -3,6 +3,13 @@ import { LevelScene } from "../scenes/levelScene";
 import { Component } from "../components/component";
 import { ToonMaterial } from "../materials/toonMaterial";
 
+/**
+ * Generic class for game entities.\
+ * This class is used to create and manage game entities within minigames.\
+ * It handles instantiation, cloning, animation registration, and component management.\
+ * It also provides methods for mesh manipulation and collision handling.\
+ * It is designed to be extended by specific game entities, such as players or enemies.\
+ */
 export class GameEntity {
     public scene: LevelScene;
     public name: string;

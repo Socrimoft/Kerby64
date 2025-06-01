@@ -3,6 +3,11 @@ import { Environment } from "../environment";
 import { ToonMaterial } from "../../materials/toonMaterial";
 import { Koomba } from "../../actors/koomba";
 
+/**
+ * Rush minigame environment.
+ * Recreates the rush game with koombas as the enemies.\
+ * TODO: Add more enemies and obstacles.\
+ */
 export class Rush extends Environment {
     private segmentWidth: number = 10;
     private segmentHeight: number = 20;

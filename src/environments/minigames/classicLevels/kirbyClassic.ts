@@ -3,6 +3,12 @@ import { Environment } from "../../environment";
 import { ToonMaterial } from "../../../materials/toonMaterial";
 import { Portal } from "../../../actors/portal";
 
+/**
+ * KirClassic Environment Class
+ * Remake of the first level of Kirby's Dream Land.\
+ * This environment features a classic platformer style with ground segments, fences, logs.\
+ * go though the portal at the end to finish the level.\
+ */
 export class KirClassic extends Environment {
     private segmentWidth: number = 6;
     private segmentHeight: number = 30;

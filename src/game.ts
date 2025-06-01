@@ -14,6 +14,7 @@ import { IntroScene } from "./scenes/introScene";
 
 /**
  * Enum representing the different states of the game.
+ * @kind Intro - Pixar intro.
  * @kind MainMenu - The main menu state of the game.
  * @kind CutScene - The cutscene state of the game.
  * @kind Level - The level state of the game.
@@ -172,7 +173,7 @@ export class Game {
         if (level)
             await this.switchToCutScene(level, classicLevel || undefined, seed ? +seed : undefined);
         else
-            await this.switchToMainMenu();
+            await this.switchToIntro();
         this.engine.hideLoadingUI();
 
         this.engine.runRenderLoop(() => {
@@ -184,6 +185,21 @@ export class Game {
         });
 
     }
+    /**
+     * Switches to the intro scene of the game.
+     * This method initializes the intro scene and waits for it to be ready before switching the state.
+     */
+    public async switchToIntro() {
+        this.engine.displayLoadingUI();
+
+        this.introScene = new IntroScene(this.engine);
+        this.introScene.load();
+
+        // finish setup
+        await this.introScene.whenReadyAsync();
+        this.engine.hideLoadingUI();
+        this.state = State.INTRO;
+    }
 
     public async switchToMainMenu() {
         this.engine.displayLoadingUI();
@@ -191,6 +207,7 @@ export class Game {
         this.mainMenuScene = new MainMenuScene(this.engine);
         this.mainMenuScene.load();
 
+        console.log("Switching to main menu scene");
         // finish setup
         await this.mainMenuScene.whenReadyAsync();
         this.engine.hideLoadingUI();

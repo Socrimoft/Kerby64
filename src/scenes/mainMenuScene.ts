@@ -27,10 +27,11 @@ export class MainMenuScene extends Scene {
      * @returns A promise that resolves when the scene is fully loaded.
      */
     public async load(): Promise<void> {
-        this.clearColor = new Color4(0.8, 0.9, 1, 1);
+        this.clearColor = new Color4(0.3215686274509804, 0.45490196078431374, 0.6784313725490196, 1);
         const light = new DirectionalLight("dirLight", new Vector3(0, 1, 1), this);
         light.intensity = 0.8;
         light.diffuse = new Color3(1, 0.95, 0.8);
+        new UniversalCamera("Camera", new Vector3(0, 0, 0), this);
         this.createMainMenu();
     }
 

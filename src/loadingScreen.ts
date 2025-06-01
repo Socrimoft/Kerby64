@@ -36,7 +36,6 @@ export class KerbyLoadingScreen implements ILoadingScreen {
     public displayLoadingUI() {
         if (!this.isVisible) {
             this.div.style.display = "initial";
-            this.ptimeout = setTimeout(() => { this.displaystuckEngineMsg() }, 4000); // wait 4 seconds before displaying the stuck message
             return;
         }
     }
@@ -47,6 +46,5 @@ export class KerbyLoadingScreen implements ILoadingScreen {
             clearTimeout(this.ptimeout); // clear the timeout to prevent displaying the stuck message
             this.ptimeout = null;
         }
-        this.p.style.display = "none"; // hide the stuck message if it was displayed
     }
 }

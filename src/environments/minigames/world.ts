@@ -8,6 +8,15 @@ import { Chunk } from "../../voxel/chunk";
 import { VoxelEngine } from "../../voxel/voxelEngine";
 import { Game } from "../../game";
 
+/**
+ * World environment.\
+ * Recreates Minecraft with our voxel engine.\
+ * The player should walk around and interact with the world.\
+ * The world is generated procedurally based on a seed.\
+ * The world has a day/night cycle with a skybox that changes color based on the time of day.\
+ * The world has a flat or normal terrain based on the world type.\
+ * The world has a render distance that determines how many chunks are loaded around the player.\
+ */
 export class World extends Environment {
     private readonly dayDuration = 1200000; //20min in ms
     private readonly maxTick = 24000; // 24h in ticks

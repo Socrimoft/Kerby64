@@ -5,20 +5,20 @@ import { AudioEngineV2, CreateAudioEngineAsync, CreateSoundAsync, IStaticSoundPl
  * This enum is used to map sounds to their file names.
  */
 enum SoundFileName {
-    maintitle = "3.mp3",
-    gameselect = "gameselect.flac",
-    rush = "2.mp3",
-    classicmenu = "classicmenu.flac",
-    classic1 = "5.mp3",
-    classic2 = "5.mp3",
-    classic3 = "5.mp3",
-    classic4 = "5.mp3",
-    classic5 = "5.mp3",
-    bird = "bird.flac",
-    worldmenu = "worldmenu.flac",
-    world = "7.mp3",
-    cutscene = "9.mp3",
-    gameover = "10.mp3",
+    maintitle = "kerby.mp3",
+    gameselect = "high_in_the_clouds.mp3",
+    rush = "kerby.mp3",
+    classicmenu = "high_in_the_clouds.mp3",
+    classic1 = "run_ran_run.mp3",
+    classic2 = "run_ran_run.mp3",
+    classic3 = "run_ran_run.mp3",
+    classic4 = "run_ran_run.mp3",
+    classic5 = "run_ran_run.mp3",
+    bird = "testosterone3.mp3",
+    worldmenu = "high_in_the_clouds.mp3",
+    world = "contemplation.mp3",
+    cutscene = "farewell.mp3",
+    gameover = "bonus.mp3",
 }
 
 type Sounds = keyof typeof SoundFileName;
@@ -37,7 +37,7 @@ export class AudioManager {
 
     constructor() {
         this.readynessPromise = new Promise<void>((resolve, reject) => {
-            CreateAudioEngineAsync({ disableDefaultUI: true }).then((engine) => {
+            CreateAudioEngineAsync({ disableDefaultUI: true, volume: 0.5 }).then((engine) => {
                 this.audioEngine = engine;
                 console.log("Audio engine created successfully.");
                 Promise.allSettled(Object.keys(SoundFileName).map(async (sound) => ([sound, await CreateSoundAsync(sound, this.root + SoundFileName[sound], undefined, engine)] as [Sounds, StaticSound]))).then((results) => {

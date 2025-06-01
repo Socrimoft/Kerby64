@@ -1,4 +1,4 @@
-import { Color3, Color4, DirectionalLight, LoadAssetContainerAsync, Mesh, PBRMaterial, Scene, Vector3, WebGPUEngine } from "@babylonjs/core";
+import { Color3, Color4, DirectionalLight, LoadAssetContainerAsync, Mesh, PBRMaterial, Scene, UniversalCamera, Vector3, WebGPUEngine } from "@babylonjs/core";
 import { Game } from "../game";
 import { ToonMaterial } from "../materials/toonMaterial";
 
@@ -28,6 +28,8 @@ export class IntroScene extends Scene {
             const root = (container.rootNodes.length == 1 && container.rootNodes[0] instanceof Mesh) ? container.rootNodes[0] : container.createRootMesh();
             root.name = "kerby_menuscene";
 
+            sessionStorage.setItem("isFirstLoading", "1");
+
             container.meshes.forEach((mesh) => {
                 if (!mesh.name.includes("Text") && !mesh.name.includes("Plane") && container && container.textures[0])
                     mesh.material = new ToonMaterial(root.name + "Material", container.textures[0], this);
@@ -50,18 +52,20 @@ export class IntroScene extends Scene {
             kerbyAnim?.play(false);
             text1Anim?.play(false);
             text2Anim?.play(false);
-            kerbyAnim?.onAnimationEndObservable.add(() => this.switchMainMenuScene());
+            kerbyAnim?.onAnimationEndObservable.add(() => this.switchMainMenuScene(), undefined, true, undefined, true);
         } else {
-            this.switchMainMenuScene();
+            new UniversalCamera("Camera", new Vector3(0, 1, -10), this);
+            console.log("Intro scene already loaded, switching to main menu directly.");
+            return await this.switchMainMenuScene();
         }
     }
 
     /**
      * Switches to the mainMenu
      */
-    private switchMainMenuScene(): void {
+    private async switchMainMenuScene() {
         this.detachControl();
-        Game.Instance.switchToMainMenu();
+        await Game.Instance.switchToMainMenu();
         this.dispose();
     }
 }

@@ -3,6 +3,12 @@ import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { Environment } from "../environment";
 import { ToonMaterial } from "../../materials/toonMaterial";
 
+/**
+ * Bird minigame environment.\
+ * Recreates the flappyBird game with kerby as the player.\
+ * The player must run through the pipes to score points.\
+ * The pipes are randomly (seeded) generated.\
+ */
 export class Bird extends Environment {
     private segmentWidth: number = 6;
     private segmentHeight: number = 30;

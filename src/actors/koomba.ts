@@ -4,6 +4,10 @@ import { Component } from "../components/component";
 import { GameEntity } from "./gameEntity";
 import { KoombaController } from "../components/koombaController";
 
+/**
+ * Class representing a Koomba entity in the game.\
+ * This class extends the GameEntity class and provides specific functionality for the Koomba character.
+ */
 export class Koomba extends GameEntity {
     static Animation = {
         Walk: "Take 001"
