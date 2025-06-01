@@ -48,14 +48,16 @@ needed to run the game (e.g., Chrome, Edge)
 ```
 Kerby64/
 ├── src/
-│   ├── compute_shaders/    # Compute shader WGSL files
-│   ├── voxel/              # Voxel-related logic (e.g., chunks, blocks)
-│   ├── world/              # World generation and management
-│   └── game.ts             # Entry point of the application
-├── public/                 # Static assets (e.g., textures, models)
-├── package.json            # Project dependencies and scripts
-├── README.md               # Project documentation (you are here)
-└── tsconfig.json           # TypeScript configuration
+|   ├── */                    # 
+│   ├── audioManager.ts       # Class that instanciate AudioEngineV2
+│   ├── inputManager.ts       # InputHandler keyboard and mouse
+│   ├── loadingScreen.ts      # Class for the Loading screen
+│   ├── random.ts             # Class for the seeded random function
+│   └── game.ts               # Entry point of the application
+├── public/                   # Static assets (e.g., textures, models, music, ...)
+├── package.json              # Project dependencies and scripts
+├── README.md                 # Project description (you are here)
+└── tsconfig.json             # TypeScript configuration
 ```
 
 ## How to run locally
@@ -92,7 +94,8 @@ Next, follow thoses procedures:
 - [Lunehiver](https://open.spotify.com/intl-fr/artist/5wHJFgKLG9GDdUWH4Xu8Ka)
   for the original soundtrack.
 - [bevy-interstellar](https://github.com/bevy-interstellar/wgsl_noise) for his
-  implementation of Perlin Noise in WGSL
+  implementation of Perlin Noise in WGSL.
+- [Faithfulpack](https://faithfulpack.net/) for the GUI and blocks texture on world.
 
 Note: While making the game, some contents that are not under an open source
 license were used as placeholder. It is possible that some of them still

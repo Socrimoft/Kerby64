@@ -9,6 +9,7 @@
     "noImplicitAny": false,
     "sourceMap": true,
     "preserveConstEnums": true,
+    "skipLibCheck": true,
     "lib": [
       "dom",
       "es6"
