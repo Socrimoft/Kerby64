@@ -43,8 +43,8 @@ needed to run the game (e.g., Chrome, Edge)
 - **Loïc ANDRÉ**, aka [Loic-An](https://github.com/Loic-An): World
 - **Ludovic CLOLOT**, aka [Ludoclt](https://github.com/Ludoclt): Rush
 
-## Project structure
-
+## Project structure and documentation
+Latest documentation is available here : [kerby64.socrimoft.games/docs](kerby64.socrimoft.games/docs)
 ```
 Kerby64/
 ├── src/

@@ -4,7 +4,7 @@
   "description": "Kerby mini game",
   "main": "src/game.ts",
   "scripts": {
-    "prebuild": "typedoc --out public/docs",
+    "prebuild": "typedoc --out dist/docs",
     "build": "cross-env-shell NODE_ENV=production && mkdir -p dist && rm -r dist && node updateprecacheversionsw.js $(git rev-parse --short HEAD) && webpack",
     "start": "cross-env NODE_ENV=development webpack-dev-server --port 8080",
     "doc": "typedoc"
