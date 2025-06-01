@@ -2,23 +2,23 @@ import { AudioEngineV2, CreateAudioEngineAsync, CreateSoundAsync, IStaticSoundPl
 
 /**
  * enum for sound file names.\
- * This enum is used to map sound names to their file names.
+ * This enum is used to map sounds to their file names.
  */
 enum SoundFileName {
-    maintitle = "maintitle.ogg",
+    maintitle = "3.mp3",
     gameselect = "gameselect.flac",
-    rush = "rush.flac",
+    rush = "2.mp3",
     classicmenu = "classicmenu.flac",
-    classic1 = "classic1.flac",
-    classic2 = "classic2.flac",
-    classic3 = "classic3.flac",
-    classic4 = "classic4.flac",
-    classic5 = "classic5.flac",
+    classic1 = "5.mp3",
+    classic2 = "5.mp3",
+    classic3 = "5.mp3",
+    classic4 = "5.mp3",
+    classic5 = "5.mp3",
     bird = "bird.flac",
     worldmenu = "worldmenu.flac",
-    world = "world.flac",
-    cutscene = "cutscene.ogg",
-    gameover = "gameover.ogg",
+    world = "7.mp3",
+    cutscene = "9.mp3",
+    gameover = "10.mp3",
 }
 
 type Sounds = keyof typeof SoundFileName;
