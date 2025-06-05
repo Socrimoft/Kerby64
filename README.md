@@ -44,11 +44,16 @@ needed to run the game (e.g., Chrome, Edge)
 - **Ludovic CLOLOT**, aka [Ludoclt](https://github.com/Ludoclt): Rush
 
 ## Project structure and documentation
-Latest documentation is available at [kerby64.socrimoft.games/docs](https://kerby64.socrimoft.games/docs) or can be made locally with the command 
+
+Latest documentation is available at [socrimoft.github.io](socrimoft.github.io)
+or can be made locally with the command
+
 ```bash
-npm doc
+npm run doc
 ```
+
 Here's how the game is organized:
+
 ```
 Kerby64/
 ├── src/
@@ -99,7 +104,8 @@ Next, follow thoses procedures:
   for the original soundtrack.
 - [bevy-interstellar](https://github.com/bevy-interstellar/wgsl_noise) for his
   implementation of Perlin Noise in WGSL.
-- [Faithfulpack](https://faithfulpack.net/) for the GUI and blocks texture on world.
+- [Faithfulpack](https://faithfulpack.net/) for the GUI and blocks texture on
+  world.
 
 Note: While making the game, some contents that are not under an open source
 license were used as placeholder. It is possible that some of them still
