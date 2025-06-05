@@ -45,8 +45,9 @@ needed to run the game (e.g., Chrome, Edge)
 
 ## Project structure and documentation
 
-Latest documentation is available at [socrimoft.github.io](socrimoft.github.io)
-or can be made locally with the command
+Latest documentation is available at
+[socrimoft.github.io/Kerby64/](https://socrimoft.github.io/Kerby64/) or can be
+made locally with the command
 
 ```bash
 npm run doc
